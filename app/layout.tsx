@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import { Suspense } from "react"
 import "./globals.css"
 import { PersistentAudioPlayer } from "@/components/persistent-audio-player"
+import { AuthProvider } from "@/lib/auth/context"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,8 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans ${inter.variable} antialiased`}>
-        <Suspense fallback={null}>{children}</Suspense>
-        <PersistentAudioPlayer />
+        <AuthProvider>
+          <Suspense fallback={null}>{children}</Suspense>
+          <PersistentAudioPlayer />
+        </AuthProvider>
       </body>
     </html>
   )

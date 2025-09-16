@@ -1,27 +1,29 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 @import "tw-animate-css";
 
 :root {
   /* Updated to light beige theme with warm tones */
-  --background: oklch(0.95 0.02 85); /* Light beige background */
-  --foreground: oklch(0.15 0 0); /* Dark text */
-  --card: oklch(0.98 0.01 85); /* Slightly lighter beige for cards */
-  --card-foreground: oklch(0.15 0 0);
-  --popover: oklch(0.98 0.01 85);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.2 0 0); /* Dark primary */
-  --primary-foreground: oklch(0.98 0.01 85);
-  --secondary: oklch(0.9 0.02 85); /* Muted beige */
-  --secondary-foreground: oklch(0.2 0 0);
-  --muted: oklch(0.9 0.02 85);
-  --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.9 0.02 85);
-  --accent-foreground: oklch(0.2 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.98 0.01 85);
-  --border: oklch(0.85 0.02 85); /* Subtle beige border */
-  --input: oklch(0.92 0.02 85);
-  --ring: oklch(0.6 0 0);
+  --background: 38 15% 95%; /* Light beige background */
+  --foreground: 0 0% 15%; /* Dark text */
+  --card: 38 10% 98%; /* Slightly lighter beige for cards */
+  --card-foreground: 0 0% 15%;
+  --popover: 38 10% 98%;
+  --popover-foreground: 0 0% 15%;
+  --primary: 0 0% 20%; /* Dark primary */
+  --primary-foreground: 38 10% 98%;
+  --secondary: 38 10% 90%; /* Muted beige */
+  --secondary-foreground: 0 0% 20%;
+  --muted: 38 10% 90%;
+  --muted-foreground: 0 0% 45%;
+  --accent: 38 10% 90%;
+  --accent-foreground: 0 0% 20%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 38 10% 98%;
+  --border: 38 10% 85%; /* Subtle beige border */
+  --input: 38 10% 92%;
+  --ring: 0 0% 60%;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -117,17 +119,17 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-gray-200;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[oklch(0.95_0.02_85)] text-[oklch(0.15_0_0)];
   }
 }
 
 @layer components {
   /* Removed all custom wwfm classes and kept only working NTS classes */
   .nts-card {
-    @apply bg-card border border-border transition-all duration-200 hover:border-foreground/20;
+    @apply bg-card border border-gray-300 transition-all duration-200 hover:border-gray-400;
   }
 
   .nts-text-caps {
@@ -144,4 +146,17 @@
     @apply bg-transparent border border-foreground/20 text-foreground hover:bg-foreground hover:text-background transition-all duration-200 font-bold uppercase text-sm;
     letter-spacing: 0.05em;
   }
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 30s linear infinite;
 }

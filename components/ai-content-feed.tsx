@@ -28,7 +28,7 @@ export function AIContentFeed() {
                 value="blog"
                 className="text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background"
               >
-                Episodes
+                Blog
               </TabsTrigger>
               <TabsTrigger
                 value="deep"
@@ -260,7 +260,7 @@ export function AIContentFeed() {
 
             <TabsContent value="blog" className="mt-4">
               <div className="text-center py-8 text-muted-foreground">
-                <p>Episodes will be filtered here</p>
+                <p>Blog posts will be filtered here</p>
               </div>
             </TabsContent>
 

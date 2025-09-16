@@ -4,11 +4,14 @@ import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SearchModal } from "@/components/search-modal"
+import { NewsTicker } from "@/components/news-ticker"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import Image from "next/image"
+import { useAuth } from "@/lib/auth/context"
 
 export function Header() {
   const [searchModalOpen, setSearchModalOpen] = useState(false)
+  const { user, loading } = useAuth()
 
   return (
     <>
@@ -18,7 +21,7 @@ export function Header() {
             <div className="flex items-center">
               <Link href="/" className="flex items-center">
                 <Image
-                  src="/images/rhythm-lab-logo.svg"
+                  src="/images/rlr_logo.png"
                   alt="Rhythm Lab Radio"
                   width={120}
                   height={40}
@@ -80,7 +83,7 @@ export function Header() {
                   className="nts-text-caps text-sm font-bold hover:bg-transparent hover:text-gray-700 px-0 text-black"
                   style={{ color: "#000000" }}
                 >
-                  ARCHIVE
+                  WEEKLY SHOW
                 </Button>
               </Link>
               <Button
@@ -105,23 +108,39 @@ export function Header() {
 
               {/* Auth buttons for desktop */}
               <div className="hidden md:flex items-center gap-3">
-                <Link href="/login" passHref>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background text-sm px-4 py-2"
-                  >
-                    Log In
-                  </Button>
-                </Link>
-                <Link href="/signup" passHref>
-                  <Button
-                    size="sm"
-                    className="bg-foreground text-background hover:bg-foreground/90 text-sm px-4 py-2"
-                  >
-                    Sign Up
-                  </Button>
-                </Link>
+                {loading ? (
+                  <div className="text-sm text-muted-foreground">Loading...</div>
+                ) : user ? (
+                  <Link href="/profile" passHref>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background text-sm px-4 py-2"
+                    >
+                      Profile
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/login" passHref>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background text-sm px-4 py-2"
+                      >
+                        Log In
+                      </Button>
+                    </Link>
+                    <Link href="/signup" passHref>
+                      <Button
+                        size="sm"
+                        className="bg-foreground text-background hover:bg-foreground/90 text-sm px-4 py-2"
+                      >
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
 
               <div className="md:hidden">
@@ -184,7 +203,7 @@ export function Header() {
                           className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
                           style={{ color: "#000000" }}
                         >
-                          ARCHIVE
+                          WEEKLY SHOW
                         </Button>
                       </Link>
                       <Button
@@ -199,21 +218,36 @@ export function Header() {
                       {/* Auth buttons for mobile */}
                       <div className="border-t border-border/30 pt-6 mt-6">
                         <div className="flex flex-col gap-3">
-                          <Link href="/login" passHref>
-                            <Button
-                              variant="outline"
-                              className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background w-full"
-                            >
-                              Log In
-                            </Button>
-                          </Link>
-                          <Link href="/signup" passHref>
-                            <Button
-                              className="bg-foreground text-background hover:bg-foreground/90 w-full"
-                            >
-                              Sign Up
-                            </Button>
-                          </Link>
+                          {loading ? (
+                            <div className="text-sm text-muted-foreground text-center">Loading...</div>
+                          ) : user ? (
+                            <Link href="/profile" passHref>
+                              <Button
+                                variant="outline"
+                                className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background w-full"
+                              >
+                                Profile
+                              </Button>
+                            </Link>
+                          ) : (
+                            <>
+                              <Link href="/login" passHref>
+                                <Button
+                                  variant="outline"
+                                  className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background w-full"
+                                >
+                                  Log In
+                                </Button>
+                              </Link>
+                              <Link href="/signup" passHref>
+                                <Button
+                                  className="bg-foreground text-background hover:bg-foreground/90 w-full"
+                                >
+                                  Sign Up
+                                </Button>
+                              </Link>
+                            </>
+                          )}
                         </div>
                       </div>
                     </nav>
@@ -224,6 +258,8 @@ export function Header() {
           </div>
         </div>
       </header>
+
+      <NewsTicker />
 
       <SearchModal open={searchModalOpen} onOpenChange={setSearchModalOpen} />
     </>

@@ -8,7 +8,7 @@ export function ArchiveDiscoverySection() {
       {/* Archive Shows Section */}
       <div>
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2 mb-4">📁 Mixcloud Archive</h2>
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2 mb-4">📁 Weekly Show</h2>
           <div className="grid grid-cols-1 gap-4">
             {/* Featured Archive Show */}
             <Card className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl">
