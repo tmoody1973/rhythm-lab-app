@@ -3,70 +3,63 @@
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react"
-
-interface Track {
-  id: string
-  title: string
-  artist: string
-  duration: number
-  src: string
-}
+import { Play, Pause, Volume2, VolumeX } from "lucide-react"
+import { useRadio } from "@/lib/radio/context"
 
 export function PersistentAudioPlayer() {
   const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [volume, setVolume] = useState(1)
+  const [volume, setVolume] = useState(0.5)
   const [isMuted, setIsMuted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
 
-  // Sample track - replace with actual track data
-  const currentTrack: Track = {
-    id: "1",
-    title: "International Anthem IRL",
-    artist: "Carlos Niño & King Hippo",
-    duration: 3600, // 1 hour
-    src: "/placeholder-audio.mp3", // Replace with actual audio source
-  }
+  const { currentSong, isLive, isLoading: radioLoading } = useRadio()
+
+  const streamUrl = "https://wyms.streamguys1.com/rhythmLabRadio?platform=rlr_app"
 
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
 
-    const updateTime = () => setCurrentTime(audio.currentTime)
-    const updateDuration = () => setDuration(audio.duration)
+    audio.volume = volume
 
-    audio.addEventListener("timeupdate", updateTime)
-    audio.addEventListener("loadedmetadata", updateDuration)
-    audio.addEventListener("ended", () => setIsPlaying(false))
+    const handleLoadStart = () => setIsLoading(true)
+    const handleCanPlay = () => setIsLoading(false)
+    const handleError = () => {
+      setIsLoading(false)
+      setIsPlaying(false)
+    }
+
+    audio.addEventListener("loadstart", handleLoadStart)
+    audio.addEventListener("canplay", handleCanPlay)
+    audio.addEventListener("error", handleError)
 
     return () => {
-      audio.removeEventListener("timeupdate", updateTime)
-      audio.removeEventListener("loadedmetadata", updateDuration)
-      audio.removeEventListener("ended", () => setIsPlaying(false))
+      audio.removeEventListener("loadstart", handleLoadStart)
+      audio.removeEventListener("canplay", handleCanPlay)
+      audio.removeEventListener("error", handleError)
     }
-  }, [])
+  }, [volume])
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     const audio = audioRef.current
     if (!audio) return
 
-    if (isPlaying) {
-      audio.pause()
-    } else {
-      audio.play()
+    try {
+      if (isPlaying) {
+        audio.pause()
+        setIsPlaying(false)
+      } else {
+        setIsLoading(true)
+        await audio.play()
+        setIsPlaying(true)
+      }
+    } catch (error) {
+      console.error('Audio playback failed:', error)
+      setIsPlaying(false)
+    } finally {
+      setIsLoading(false)
     }
-    setIsPlaying(!isPlaying)
-  }
-
-  const handleSeek = (value: number[]) => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    const newTime = value[0]
-    audio.currentTime = newTime
-    setCurrentTime(newTime)
   }
 
   const handleVolumeChange = (value: number[]) => {
@@ -92,67 +85,68 @@ export function PersistentAudioPlayer() {
     }
   }
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.floor(time % 60)
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`
-  }
-
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#1e2332] border-t border-border/30 backdrop-blur-sm z-50">
-      <audio ref={audioRef} src={currentTrack.src} />
+    <div className="fixed bottom-0 left-0 right-0 bg-card border-t-2 border-border/50 backdrop-blur-sm z-50 shadow-lg">
+      <audio ref={audioRef} src={streamUrl} preload="none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4 py-3">
+
           {/* Track Info */}
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex-shrink-0" />
+            <div className="w-12 h-12 bg-muted border border-border/50 overflow-hidden rounded flex-shrink-0">
+              <img
+                src={currentSong?.image || "/abstract-music-visualization-dark.jpg"}
+                alt="Album artwork"
+                className="w-full h-full object-cover"
+              />
+            </div>
             <div className="min-w-0">
-              <h4 className="text-sm font-medium text-white truncate">{currentTrack.title}</h4>
-              <p className="text-xs text-muted-foreground truncate">{currentTrack.artist}</p>
+              <div className="flex items-center gap-2 mb-1">
+                {isLive && (
+                  <div className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
+                    LIVE
+                  </div>
+                )}
+                <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                  RHYTHM LAB RADIO
+                </span>
+              </div>
+              <h4 className="text-sm font-medium text-foreground truncate">
+                {radioLoading ? 'Loading...' : currentSong?.artist || 'Rhythm Lab Radio'}
+              </h4>
+              <p className="text-xs text-muted-foreground truncate">
+                {radioLoading ? 'Fetching current track...' : currentSong?.song || 'Live Electronic Music'}
+              </p>
             </div>
           </div>
 
-          {/* Controls */}
+          {/* Play/Pause Control */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-white">
-              <SkipBack className="h-4 w-4" />
-            </Button>
-
             <Button
               variant="ghost"
               size="sm"
               onClick={togglePlay}
-              className="h-10 w-10 p-0 bg-white/10 hover:bg-white/20 text-white"
+              disabled={isLoading}
+              className="h-10 w-10 p-0 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
             >
-              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
-            </Button>
-
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-white">
-              <SkipForward className="h-4 w-4" />
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="h-5 w-5" />
+              ) : (
+                <Play className="h-5 w-5 ml-0.5" />
+              )}
             </Button>
           </div>
 
-          {/* Progress */}
-          <div className="hidden md:flex items-center gap-2 flex-1 max-w-md">
-            <span className="text-xs text-muted-foreground w-10 text-right">{formatTime(currentTime)}</span>
-            <Slider
-              value={[currentTime]}
-              max={duration || 100}
-              step={1}
-              onValueChange={handleSeek}
-              className="flex-1"
-            />
-            <span className="text-xs text-muted-foreground w-10">{formatTime(duration)}</span>
-          </div>
-
-          {/* Volume */}
+          {/* Volume Control */}
           <div className="hidden lg:flex items-center gap-2 w-32">
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleMute}
-              className="h-8 w-8 p-0 text-muted-foreground hover:text-white"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
             >
               {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </Button>
@@ -164,16 +158,12 @@ export function PersistentAudioPlayer() {
               className="flex-1"
             />
           </div>
-        </div>
 
-        {/* Mobile Progress Bar */}
-        <div className="md:hidden pb-2">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-            <span>{formatTime(currentTime)}</span>
-            <span className="flex-1" />
-            <span>{formatTime(duration)}</span>
+          {/* Stream Status */}
+          <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+            <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+            <span>{isPlaying ? 'STREAMING' : 'OFFLINE'}</span>
           </div>
-          <Slider value={[currentTime]} max={duration || 100} step={1} onValueChange={handleSeek} className="w-full" />
         </div>
       </div>
     </div>

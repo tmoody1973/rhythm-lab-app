@@ -15,7 +15,7 @@ export function Header() {
 
   return (
     <>
-      <header className="bg-background border-b border-border sticky top-0 z-50">
+      <header className="bg-white border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -150,7 +150,7 @@ export function Header() {
                       <span className="text-lg">☰</span>
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="right" className="bg-background border-border">
+                  <SheetContent side="right" className="bg-white border-border">
                     <nav className="flex flex-col gap-6 mt-8">
                       <Link href="/" passHref>
                         <Button
