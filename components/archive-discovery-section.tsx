@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { FavoriteButton } from "@/components/favorite-button"
 
 export function ArchiveDiscoverySection() {
   return (
@@ -51,7 +52,19 @@ export function ArchiveDiscoverySection() {
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>2h 15m • 3.2k plays</span>
+                  <div className="flex items-center gap-3">
+                    <span>2h 15m • 3.2k plays</span>
+                    <FavoriteButton
+                      content={{
+                        id: "archive-ambient-vol-12",
+                        title: "AMBIENT SOUNDSCAPES VOL. 12",
+                        type: 'show',
+                        image: "/ambient-ethereal-soundscape-with-floating-particle.jpg",
+                        description: "A journey through ethereal soundscapes and atmospheric textures"
+                      }}
+                      size="sm"
+                    />
+                  </div>
                   <Button size="sm" className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white text-sm px-4 py-2">
                     ▶ Play
                   </Button>
@@ -100,7 +113,19 @@ export function ArchiveDiscoverySection() {
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>1h 45m • 2.1k plays</span>
+                  <div className="flex items-center gap-3">
+                    <span>1h 45m • 2.1k plays</span>
+                    <FavoriteButton
+                      content={{
+                        id: "archive-deep-house-sessions-47",
+                        title: "DEEP HOUSE SESSIONS #47",
+                        type: 'show',
+                        image: "/placeholder-eqe3b.png",
+                        description: "Underground deep house selections from Detroit and Chicago"
+                      }}
+                      size="sm"
+                    />
+                  </div>
                   <Button size="sm" className="bg-[#00d4ff] hover:bg-[#00b8e6] text-black text-sm px-4 py-2">
                     ▶ Play
                   </Button>
@@ -149,7 +174,19 @@ export function ArchiveDiscoverySection() {
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>2h 30m • 1.8k plays</span>
+                  <div className="flex items-center gap-3">
+                    <span>2h 30m • 1.8k plays</span>
+                    <FavoriteButton
+                      content={{
+                        id: "archive-jazz-fusion-explorations",
+                        title: "JAZZ FUSION EXPLORATIONS",
+                        type: 'show',
+                        image: "/placeholder-yjpx3.png",
+                        description: "Electric jazz journeys from the 70s to contemporary fusion"
+                      }}
+                      size="sm"
+                    />
+                  </div>
                   <Button size="sm" className="bg-[#f59e0b] hover:bg-[#d97706] text-white text-sm px-4 py-2">
                     ▶ Play
                   </Button>
@@ -198,7 +235,19 @@ export function ArchiveDiscoverySection() {
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>3h 00m • 4.5k plays</span>
+                  <div className="flex items-center gap-3">
+                    <span>3h 00m • 4.5k plays</span>
+                    <FavoriteButton
+                      content={{
+                        id: "archive-techno-underground",
+                        title: "TECHNO UNDERGROUND",
+                        type: 'show',
+                        image: "/placeholder-ptd6l.png",
+                        description: "Raw techno from Berlin's underground scene and beyond"
+                      }}
+                      size="sm"
+                    />
+                  </div>
                   <Button size="sm" className="bg-[#10b981] hover:bg-[#059669] text-white text-sm px-4 py-2">
                     ▶ Play
                   </Button>

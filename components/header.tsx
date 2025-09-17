@@ -111,6 +111,7 @@ export function Header() {
                 <span className="text-lg">🔍</span>
               </Button>
 
+
               {/* Auth buttons for desktop */}
               <div className="hidden md:flex items-center gap-3">
                 {!mounted || loading ? (

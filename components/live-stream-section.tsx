@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { NowPlaying } from "@/components/now-playing"
+import { FavoriteButton } from "@/components/favorite-button"
 import { useRadio } from "@/lib/radio/context"
 import type { Song } from "@/lib/database/types"
 
@@ -246,6 +247,19 @@ export function LiveStreamSection() {
                 <p className="text-sm font-medium uppercase tracking-widest text-muted-foreground truncate transition-all duration-300">
                   {track.song.toUpperCase()}
                 </p>
+              </div>
+
+              {/* Favorite Button */}
+              <div className="flex-shrink-0">
+                <FavoriteButton
+                  track={{
+                    title: track.song,
+                    artist: track.artist,
+                    album: track.release,
+                    image: track.image
+                  }}
+                  size="sm"
+                />
               </div>
 
               {/* Time */}

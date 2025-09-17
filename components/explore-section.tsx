@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { FavoriteButton } from "@/components/favorite-button"
 import { sb } from "@/src/lib/storyblok"
 import Link from "next/link"
 
@@ -323,10 +324,22 @@ export function ExploreSection() {
 
                   {/* Footer */}
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      {item.content?.duration || item.content?.read_time || '5 min read'}
-                      {item.content?.plays && ` • ${item.content.plays} plays`}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span>
+                        {item.content?.duration || item.content?.read_time || '5 min read'}
+                        {item.content?.plays && ` • ${item.content.plays} plays`}
+                      </span>
+                      <FavoriteButton
+                        content={{
+                          id: item.id.toString(),
+                          title: item.name,
+                          type: item.type === 'blog' ? 'blog_post' : item.type === 'deep-dive' ? 'deep_dive' : 'artist_profile',
+                          image: item.content?.featured_image?.filename,
+                          description: item.content?.intro || item.content?.description
+                        }}
+                        size="sm"
+                      />
+                    </div>
                     {item.type === 'deep-dive' && (
                       <Link href={`${routePrefix}/${item.slug}`}>
                         <Button

@@ -2,6 +2,7 @@ import { Header } from "@/components/header"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { FavoriteButton } from "@/components/favorite-button"
 
 export default function ProfilesPage() {
   const profiles = [
@@ -166,7 +167,19 @@ export default function ProfilesPage() {
                       ))}
                     </div>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{profile.duration} • {profile.plays} plays</span>
+                      <div className="flex items-center gap-3">
+                        <span>{profile.duration} • {profile.plays} plays</span>
+                        <FavoriteButton
+                          content={{
+                            id: profile.id.toString(),
+                            title: profile.title,
+                            type: 'artist_profile',
+                            image: profile.image,
+                            description: profile.description
+                          }}
+                          size="sm"
+                        />
+                      </div>
                       <Button
                         size="sm"
                         className="text-white text-sm px-6 py-2"
@@ -231,7 +244,19 @@ export default function ProfilesPage() {
                       ))}
                     </div>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span className="text-xs">{profile.duration} • {profile.plays} plays</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs">{profile.duration} • {profile.plays} plays</span>
+                        <FavoriteButton
+                          content={{
+                            id: profile.id.toString(),
+                            title: profile.title,
+                            type: 'artist_profile',
+                            image: profile.image,
+                            description: profile.description
+                          }}
+                          size="sm"
+                        />
+                      </div>
                       <Button
                         size="sm"
                         className="text-white text-xs px-3 py-1"

@@ -40,9 +40,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Parse live track favorites (which store track info in item_id)
+    // Parse favorites based on type
     const processedFavorites = favorites.map(fav => {
       if (fav.item_type === 'live_track') {
+        // Parse live track favorites (which store track info in item_id)
         const [artist, title] = fav.item_id.split('||')
         return {
           ...fav,
@@ -53,6 +54,8 @@ export async function GET(request: NextRequest) {
           }
         }
       }
+      // For other content types (blog_post, deep_dive, artist_profile, show)
+      // item_id is the actual ID and we don't need to parse it
       return fav
     })
 
@@ -93,23 +96,32 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { track, action } = body
+    const { track, content, action } = body
 
-    if (!track || !track.title || !track.artist) {
+    let itemId: string
+    let itemType: string
+
+    if (track && track.title && track.artist) {
+      // Handle live tracks
+      itemId = `${track.artist}||${track.title}`
+      itemType = 'live_track'
+    } else if (content && content.id && content.title && content.type) {
+      // Handle blog posts, deep dives, profiles, etc.
+      itemId = content.id
+      itemType = content.type
+    } else {
       return NextResponse.json(
-        { error: 'Track title and artist are required' },
+        { error: 'Either track (with title and artist) or content (with id, title, and type) is required' },
         { status: 400 }
       )
     }
-
-    const itemId = `${track.artist}||${track.title}`
 
     if (action === 'remove') {
       const { error } = await supabase
         .from('user_favorites')
         .delete()
         .eq('user_id', session.user.id)
-        .eq('item_type', 'live_track')
+        .eq('item_type', itemType)
         .eq('item_id', itemId)
 
       if (error) {
@@ -127,7 +139,7 @@ export async function POST(request: NextRequest) {
         .from('user_favorites')
         .insert({
           user_id: session.user.id,
-          item_type: 'live_track',
+          item_type: itemType,
           item_id: itemId,
         })
 

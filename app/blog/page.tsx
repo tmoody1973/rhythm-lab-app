@@ -2,6 +2,7 @@ import { Header } from "@/components/header"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { FavoriteButton } from "@/components/favorite-button"
 import { sb } from "@/src/lib/storyblok"
 import Link from "next/link"
 import { Metadata } from 'next'
@@ -196,7 +197,19 @@ export default async function BlogPage() {
                           )}
                         </div>
                         <div className="flex items-center justify-between text-sm text-muted-foreground">
-                          <span>{calculateReadTime(post.content?.content || post.content?.body)}</span>
+                          <div className="flex items-center gap-3">
+                            <span>{calculateReadTime(post.content?.content || post.content?.body)}</span>
+                            <FavoriteButton
+                              content={{
+                                id: post.id,
+                                title: post.name,
+                                type: 'blog_post',
+                                image: post.content?.featured_image?.filename,
+                                description: post.content?.intro
+                              }}
+                              size="sm"
+                            />
+                          </div>
                           <Link href={`/blog/${post.slug}`}>
                             <Button
                               size="sm"
@@ -292,7 +305,19 @@ export default async function BlogPage() {
                             )}
                           </div>
                           <div className="flex items-center justify-between text-sm text-muted-foreground">
-                            <span className="text-xs">{calculateReadTime(post.content?.content || post.content?.body)}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs">{calculateReadTime(post.content?.content || post.content?.body)}</span>
+                              <FavoriteButton
+                                content={{
+                                  id: post.id,
+                                  title: post.name,
+                                  type: 'blog_post',
+                                  image: post.content?.featured_image?.filename,
+                                  description: post.content?.intro
+                                }}
+                                size="sm"
+                              />
+                            </div>
                             <Link href={`/blog/${post.slug}`}>
                               <Button
                                 size="sm"

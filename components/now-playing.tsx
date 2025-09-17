@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { FavoriteButton } from "@/components/favorite-button"
 import type { Song } from "@/lib/database/types"
 
 interface NowPlayingProps {
@@ -143,13 +144,26 @@ export function NowPlaying({
         </div>
 
         {/* Current track */}
-        <div>
-          <h3 className="font-bold text-foreground text-lg leading-tight">
-            {displayTitle}
-          </h3>
-          <p className="text-muted-foreground">
-            {displayArtist}
-          </p>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h3 className="font-bold text-foreground text-lg leading-tight">
+              {displayTitle}
+            </h3>
+            <p className="text-muted-foreground">
+              {displayArtist}
+            </p>
+          </div>
+          <div className="ml-3 flex-shrink-0">
+            <FavoriteButton
+              track={{
+                title: displayTitle,
+                artist: displayArtist,
+                album: currentSong?.release,
+                image: currentSong?.image
+              }}
+              size="md"
+            />
+          </div>
         </div>
 
         {/* Additional track info */}

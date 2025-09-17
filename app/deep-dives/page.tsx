@@ -2,6 +2,7 @@ import { Header } from "@/components/header"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { FavoriteButton } from "@/components/favorite-button"
 import { sb } from "@/src/lib/storyblok"
 import Link from "next/link"
 import { Metadata } from 'next'
@@ -279,12 +280,26 @@ export default async function DeepDivesPage() {
                       )}
                     </div>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>
-                        {hasDeepDives
-                          ? `${dive.content?.duration || '45m'} • ${dive.content?.plays || dive.content?.play_count || '1.2k'} plays`
-                          : `${dive.duration} • ${dive.plays} plays`
-                        }
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span>
+                          {hasDeepDives
+                            ? `${dive.content?.duration || '45m'} • ${dive.content?.plays || dive.content?.play_count || '1.2k'} plays`
+                            : `${dive.duration} • ${dive.plays} plays`
+                          }
+                        </span>
+                        {hasDeepDives && (
+                          <FavoriteButton
+                            content={{
+                              id: dive.id,
+                              title: dive.name,
+                              type: 'deep_dive',
+                              image: dive.content?.featured_image?.filename,
+                              description: dive.content?.intro || dive.content?.description
+                            }}
+                            size="sm"
+                          />
+                        )}
+                      </div>
                       <Link href={hasDeepDives ? `/deep-dives/${dive.slug}` : '#'}>
                         <Button
                           size="sm"

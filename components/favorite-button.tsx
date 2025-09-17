@@ -7,21 +7,34 @@ import { useAuth } from '@/lib/auth/context'
 import { AuthModal } from './auth/auth-modal'
 
 interface FavoriteButtonProps {
-  track: {
+  track?: {
     title: string
     artist: string
     album?: string
     image?: string
   }
+  content?: {
+    id: string
+    title: string
+    type: 'blog_post' | 'deep_dive' | 'artist_profile' | 'show'
+    image?: string
+    description?: string
+  }
   size?: 'sm' | 'md' | 'lg'
   className?: string
 }
 
-export function FavoriteButton({ track, size = 'md', className = '' }: FavoriteButtonProps) {
+export function FavoriteButton({ track, content, size = 'md', className = '' }: FavoriteButtonProps) {
   const { user, loading: authLoading } = useAuth()
   const [isFavorited, setIsFavorited] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Ensure consistent hydration
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const sizeClasses = {
     sm: 'h-6 w-6',
@@ -35,10 +48,25 @@ export function FavoriteButton({ track, size = 'md', className = '' }: FavoriteB
     lg: 20
   }
 
-  // Check if track is already favorited
+  // Check if item is already favorited
   useEffect(() => {
     const checkFavoriteStatus = async () => {
-      if (!user || !track.title || !track.artist) {
+      if (!user) {
+        setIsFavorited(false)
+        return
+      }
+
+      // Determine item details based on track or content
+      let itemId: string
+      let itemType: string
+
+      if (track && track.title && track.artist) {
+        itemId = `${track.artist}||${track.title}`
+        itemType = 'live_track'
+      } else if (content && content.id && content.title) {
+        itemId = content.id
+        itemType = content.type
+      } else {
         setIsFavorited(false)
         return
       }
@@ -48,10 +76,8 @@ export function FavoriteButton({ track, size = 'md', className = '' }: FavoriteB
 
         if (response.ok) {
           const { favorites } = await response.json()
-          const itemId = `${track.artist}||${track.title}`
-
           const isFavorited = favorites.some(
-            (fav: any) => fav.item_type === 'live_track' && fav.item_id === itemId
+            (fav: any) => fav.item_type === itemType && fav.item_id === itemId
           )
 
           setIsFavorited(isFavorited)
@@ -63,7 +89,7 @@ export function FavoriteButton({ track, size = 'md', className = '' }: FavoriteB
     }
 
     checkFavoriteStatus()
-  }, [user, track.title, track.artist])
+  }, [user, track?.title, track?.artist, content?.id, content?.title])
 
   const handleFavorite = async () => {
     if (!user) {
@@ -71,27 +97,47 @@ export function FavoriteButton({ track, size = 'md', className = '' }: FavoriteB
       return
     }
 
-    if (!track.title || !track.artist) {
+    // Validate we have required data
+    if (track && (!track.title || !track.artist)) {
+      return
+    }
+    if (content && (!content.id || !content.title)) {
+      return
+    }
+    if (!track && !content) {
       return
     }
 
     setLoading(true)
 
     try {
+      const requestBody = track
+        ? {
+            track: {
+              title: track.title,
+              artist: track.artist,
+              album: track.album,
+              image: track.image,
+            },
+            action: isFavorited ? 'remove' : 'add',
+          }
+        : {
+            content: {
+              id: content!.id,
+              title: content!.title,
+              type: content!.type,
+              image: content!.image,
+              description: content!.description,
+            },
+            action: isFavorited ? 'remove' : 'add',
+          }
+
       const response = await fetch('/api/favorites', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          track: {
-            title: track.title,
-            artist: track.artist,
-            album: track.album,
-            image: track.image,
-          },
-          action: isFavorited ? 'remove' : 'add',
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       if (response.ok) {
@@ -114,7 +160,7 @@ export function FavoriteButton({ track, size = 'md', className = '' }: FavoriteB
         size="sm"
         className={`${sizeClasses[size]} p-0 hover:bg-red-50 hover:text-red-600 transition-colors ${className}`}
         onClick={handleFavorite}
-        disabled={loading || authLoading}
+        disabled={!mounted || loading || authLoading}
         title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
       >
         <Heart
