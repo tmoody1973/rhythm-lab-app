@@ -32,7 +32,7 @@ export function Header() {
             </div>
 
             <nav className="hidden md:flex items-center gap-6">
-              <Link href="/" passHref>
+              <Link href="/" >
                 <Button
                   variant="ghost"
                   className="nts-text-caps text-sm font-bold hover:bg-transparent hover:text-gray-700 px-0 text-black"
@@ -41,7 +41,7 @@ export function Header() {
                   HOME
                 </Button>
               </Link>
-              <Link href="/live" passHref>
+              <Link href="/live" >
                 <Button
                   variant="ghost"
                   className="nts-text-caps text-sm font-bold hover:bg-transparent hover:text-gray-700 px-0 text-black"
@@ -50,7 +50,7 @@ export function Header() {
                   LIVE
                 </Button>
               </Link>
-              <Link href="/blog" passHref>
+              <Link href="/blog" >
                 <Button
                   variant="ghost"
                   className="nts-text-caps text-sm font-bold hover:bg-transparent hover:text-gray-700 px-0 text-black"
@@ -59,7 +59,7 @@ export function Header() {
                   BLOG
                 </Button>
               </Link>
-              <Link href="/deep-dives" passHref>
+              <Link href="/deep-dives" >
                 <Button
                   variant="ghost"
                   className="nts-text-caps text-sm font-bold hover:bg-transparent hover:text-gray-700 px-0 text-black"
@@ -68,7 +68,7 @@ export function Header() {
                   DEEP DIVES
                 </Button>
               </Link>
-              <Link href="/profiles" passHref>
+              <Link href="/profiles" >
                 <Button
                   variant="ghost"
                   className="nts-text-caps text-sm font-bold hover:bg-transparent hover:text-gray-700 px-0 text-black"
@@ -77,7 +77,7 @@ export function Header() {
                   PROFILES
                 </Button>
               </Link>
-              <Link href="/archive" passHref>
+              <Link href="/archive" >
                 <Button
                   variant="ghost"
                   className="nts-text-caps text-sm font-bold hover:bg-transparent hover:text-gray-700 px-0 text-black"
@@ -111,7 +111,7 @@ export function Header() {
                 {loading ? (
                   <div className="text-sm text-muted-foreground">Loading...</div>
                 ) : user ? (
-                  <Link href="/profile" passHref>
+                  <Link href="/profile">
                     <Button
                       variant="outline"
                       size="sm"
@@ -122,7 +122,7 @@ export function Header() {
                   </Link>
                 ) : (
                   <>
-                    <Link href="/login" passHref>
+                    <Link href="/login">
                       <Button
                         variant="outline"
                         size="sm"
@@ -131,7 +131,7 @@ export function Header() {
                         Log In
                       </Button>
                     </Link>
-                    <Link href="/signup" passHref>
+                    <Link href="/signup">
                       <Button
                         size="sm"
                         className="bg-foreground text-background hover:bg-foreground/90 text-sm px-4 py-2"
@@ -152,7 +152,7 @@ export function Header() {
                   </SheetTrigger>
                   <SheetContent side="right" className="bg-white border-border">
                     <nav className="flex flex-col gap-6 mt-8">
-                      <Link href="/" passHref>
+                      <Link href="/" >
                         <Button
                           variant="ghost"
                           className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
@@ -161,7 +161,7 @@ export function Header() {
                           HOME
                         </Button>
                       </Link>
-                      <Link href="/live" passHref>
+                      <Link href="/live" >
                         <Button
                           variant="ghost"
                           className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
@@ -170,7 +170,7 @@ export function Header() {
                           LIVE
                         </Button>
                       </Link>
-                      <Link href="/blog" passHref>
+                      <Link href="/blog" >
                         <Button
                           variant="ghost"
                           className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
@@ -179,7 +179,7 @@ export function Header() {
                           BLOG
                         </Button>
                       </Link>
-                      <Link href="/deep-dives" passHref>
+                      <Link href="/deep-dives" >
                         <Button
                           variant="ghost"
                           className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
@@ -188,7 +188,7 @@ export function Header() {
                           DEEP DIVES
                         </Button>
                       </Link>
-                      <Link href="/profiles" passHref>
+                      <Link href="/profiles" >
                         <Button
                           variant="ghost"
                           className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
@@ -197,7 +197,7 @@ export function Header() {
                           PROFILES
                         </Button>
                       </Link>
-                      <Link href="/archive" passHref>
+                      <Link href="/archive" >
                         <Button
                           variant="ghost"
                           className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
@@ -221,7 +221,7 @@ export function Header() {
                           {loading ? (
                             <div className="text-sm text-muted-foreground text-center">Loading...</div>
                           ) : user ? (
-                            <Link href="/profile" passHref>
+                            <Link href="/profile" >
                               <Button
                                 variant="outline"
                                 className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background w-full"
@@ -231,7 +231,7 @@ export function Header() {
                             </Link>
                           ) : (
                             <>
-                              <Link href="/login" passHref>
+                              <Link href="/login" >
                                 <Button
                                   variant="outline"
                                   className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background w-full"
@@ -239,7 +239,7 @@ export function Header() {
                                   Log In
                                 </Button>
                               </Link>
-                              <Link href="/signup" passHref>
+                              <Link href="/signup" >
                                 <Button
                                   className="bg-foreground text-background hover:bg-foreground/90 w-full"
                                 >
@@ -259,7 +259,7 @@ export function Header() {
         </div>
       </header>
 
-      <NewsTicker />
+      {/* <NewsTicker /> */}
 
       <SearchModal open={searchModalOpen} onOpenChange={setSearchModalOpen} />
     </>
