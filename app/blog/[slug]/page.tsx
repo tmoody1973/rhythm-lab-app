@@ -8,9 +8,9 @@ import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 
 interface BlogPostPageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 // Helper function to generate consistent colors for posts
@@ -25,8 +25,9 @@ function getPostColor(id: number) {
 // Generate metadata for SEO
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   try {
+    const { slug } = await params;
     const storyblokApi = sb();
-    const response = await storyblokApi.get(`cdn/stories/blog/${params.slug}`, {
+    const response = await storyblokApi.get(`cdn/stories/blog/${slug}`, {
       version: 'published'
     });
 
@@ -51,19 +52,20 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   try {
+    const { slug } = await params;
     // Try to fetch the specific story
     const storyblokApi = sb();
     let response;
 
     try {
       // First try with blog/ prefix
-      response = await storyblokApi.get(`cdn/stories/blog/${params.slug}`, {
+      response = await storyblokApi.get(`cdn/stories/blog/${slug}`, {
         version: 'published'
       });
     } catch (prefixError) {
       try {
         // If that fails, try without prefix
-        response = await storyblokApi.get(`cdn/stories/${params.slug}`, {
+        response = await storyblokApi.get(`cdn/stories/${slug}`, {
           version: 'published'
         });
       } catch (error) {

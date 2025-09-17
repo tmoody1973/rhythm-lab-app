@@ -2,6 +2,7 @@ import { Header } from "@/components/header"
 import { LiveStreamSection } from "@/components/live-stream-section"
 import { AIContentFeed } from "@/components/ai-content-feed"
 import { ArchiveDiscoverySection } from "@/components/archive-discovery-section"
+import { ExploreSection } from "@/components/explore-section"
 
 export default function HomePage() {
   return (
@@ -15,13 +16,14 @@ export default function HomePage() {
             </div>
 
             <div className="lg:col-span-1 lg:border-l lg:border-border/30 lg:pl-6">
-              <AIContentFeed />
+              <ExploreSection />
             </div>
 
             <div className="lg:col-span-1 lg:border-l lg:border-border/30 lg:pl-6">
               <ArchiveDiscoverySection />
             </div>
           </div>
+
         </div>
       </main>
     </div>
