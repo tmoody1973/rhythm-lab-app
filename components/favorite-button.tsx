@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Heart } from 'lucide-react'
-import { useAuth } from '@/lib/auth/context'
+import { useAuth } from '@/contexts/auth-context'
 import { AuthModal } from './auth/auth-modal'
 
 interface FavoriteButtonProps {

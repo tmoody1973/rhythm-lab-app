@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { AuthModal } from './auth/auth-modal'
-import { useAuth } from '@/lib/auth/context'
+import { useAuth } from '@/contexts/auth-context'
 import Link from 'next/link'
 
 export function MinimalAuth() {

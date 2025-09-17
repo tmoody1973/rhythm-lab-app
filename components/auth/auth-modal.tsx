@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useAuth } from '@/lib/auth/context'
+import { useAuth } from '@/contexts/auth-context'
 
 interface AuthModalProps {
   isOpen: boolean

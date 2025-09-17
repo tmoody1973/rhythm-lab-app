@@ -32,6 +32,44 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
+  // Check if trying to access admin routes
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    // If no session, redirect to admin login
+    if (!session) {
+      const redirectUrl = new URL('/admin/login', request.url)
+      redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // Check user role from profile
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single()
+
+      if (error || !profile) {
+        console.error('Error fetching user profile:', error)
+        const redirectUrl = new URL('/admin/login', request.url)
+        redirectUrl.searchParams.set('error', 'unauthorized')
+        return NextResponse.redirect(redirectUrl)
+      }
+
+      // Check if user has admin or super_admin role
+      if (profile.role !== 'admin' && profile.role !== 'super_admin') {
+        const redirectUrl = new URL('/', request.url)
+        redirectUrl.searchParams.set('error', 'access_denied')
+        return NextResponse.redirect(redirectUrl)
+      }
+    } catch (error) {
+      console.error('Middleware error:', error)
+      const redirectUrl = new URL('/admin/login', request.url)
+      redirectUrl.searchParams.set('error', 'server_error')
+      return NextResponse.redirect(redirectUrl)
+    }
+  }
+
   return supabaseResponse
 }
 

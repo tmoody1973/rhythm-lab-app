@@ -4,7 +4,7 @@ import { Inter } from "next/font/google"
 import { Suspense } from "react"
 import "./globals.css"
 import { PersistentAudioPlayer } from "@/components/persistent-audio-player"
-import { AuthProvider } from "@/lib/auth/context"
+import { AuthProvider } from "@/contexts/auth-context"
 import { RadioProvider } from "@/lib/radio/context"
 
 const inter = Inter({

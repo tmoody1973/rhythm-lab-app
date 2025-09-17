@@ -7,7 +7,7 @@ import { SearchModal } from "@/components/search-modal"
 import { NewsTicker } from "@/components/news-ticker"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import Image from "next/image"
-import { useAuth } from "@/lib/auth/context"
+import { useAuth } from "@/contexts/auth-context"
 
 export function Header() {
   const [searchModalOpen, setSearchModalOpen] = useState(false)

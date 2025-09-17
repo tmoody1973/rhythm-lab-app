@@ -11,6 +11,7 @@ export interface Profile {
   location?: string
   favorite_genres?: string[]
   is_premium: boolean
+  role: 'user' | 'admin' | 'super_admin'
   created_at: string
   updated_at: string
 }
