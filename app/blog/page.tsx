@@ -1,4 +1,5 @@
 import { Header } from "@/components/header"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { sb } from "@/src/lib/storyblok"
@@ -65,10 +66,12 @@ export default async function BlogPage() {
     const response = await storyblokApi.get('cdn/stories', {
       version: 'published',
       per_page: 100,
-      sort_by: 'first_published_at:desc'
+      sort_by: 'first_published_at:desc',
+      starts_with: 'blog/'
     });
 
     blogPosts = response.data.stories || [];
+    console.log('Found blog posts:', blogPosts.length, blogPosts.map(d => ({ slug: d.slug, name: d.name, full_slug: d.full_slug })));
   } catch (err) {
     console.error('Error fetching blog posts:', err);
     error = 'Failed to load blog posts. Please try again later.';
@@ -112,15 +115,16 @@ export default async function BlogPage() {
         {!error && hasPosts && (
           <>
             {/* Featured Posts Section */}
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold nts-text-caps mb-6">Featured</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {blogPosts.slice(0, 2).map((post) => {
+            {blogPosts.filter(post => post.content?.featured === true).length > 0 && (
+              <section className="mb-12">
+                <h2 className="text-2xl font-bold nts-text-caps mb-6">Featured</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {blogPosts.filter(post => post.content?.featured === true).map((post) => {
                   const postColor = getPostColor(post.id);
                   return (
-                    <div
+                    <Card
                       key={post.id}
-                      className="bg-card hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
+                      className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
                     >
                       <Link href={`/blog/${post.slug}`}>
                         <div className="aspect-[16/10] relative overflow-hidden">
@@ -140,13 +144,13 @@ export default async function BlogPage() {
                           )}
                         </div>
                       </Link>
-                      <div className="p-6">
+                      <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
                           <Badge
                             className="text-white text-sm px-4 py-2 rounded-full font-medium"
                             style={{ backgroundColor: postColor }}
                           >
-                            {post.content?.categories || 'BLOG POST'}
+                            FEATURED
                           </Badge>
                           <span className="text-sm text-muted-foreground font-medium">
                             {new Date(post.published_at || post.created_at).toLocaleDateString()}
@@ -157,25 +161,40 @@ export default async function BlogPage() {
                             {post.name}
                           </h3>
                         </Link>
-                        {post.content?.intro && (
+                        {post.content?.intro ? (
                           <p className="text-muted-foreground text-base mb-4 leading-relaxed">
                             {post.content.intro}
                           </p>
+                        ) : (
+                          <p className="text-muted-foreground text-base mb-4 leading-relaxed">
+                            Discover the latest insights and stories from the world of music, culture, and sound exploration.
+                          </p>
                         )}
-                        {(post.content?.tags || post.tag_list) && (
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {(post.content.tags || post.tag_list || []).slice(0, 3).map((tag: string, index: number) => (
-                              <Badge
-                                key={index}
-                                variant="outline"
-                                className="text-xs px-3 py-1 rounded-full font-medium"
-                                style={{ borderColor: postColor, color: postColor }}
-                              >
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {post.content?.categories && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs px-3 py-1 rounded-full font-medium"
+                              style={{ borderColor: postColor, color: postColor }}
+                            >
+                              {String(post.content.categories).toUpperCase()}
+                            </Badge>
+                          )}
+                          {(post.content?.tags || post.tag_list) && (
+                            <>
+                              {(post.content.tags || post.tag_list || []).slice(0, 2).map((tag: string, index: number) => (
+                                <Badge
+                                  key={index}
+                                  variant="outline"
+                                  className="text-xs px-3 py-1 rounded-full font-medium"
+                                  style={{ borderColor: postColor, color: postColor }}
+                                >
+                                  {String(tag).toUpperCase()}
+                                </Badge>
+                              ))}
+                            </>
+                          )}
+                        </div>
                         <div className="flex items-center justify-between text-sm text-muted-foreground">
                           <span>{calculateReadTime(post.content?.content || post.content?.body)}</span>
                           <Link href={`/blog/${post.slug}`}>
@@ -188,24 +207,24 @@ export default async function BlogPage() {
                             </Button>
                           </Link>
                         </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   );
-                })}
-              </div>
-            </section>
+                  })}
+                </div>
+              </section>
+            )}
 
             {/* Regular Posts Grid */}
-            {blogPosts.length > 2 && (
-              <section>
-                <h2 className="text-xl font-bold nts-text-caps mb-6">Latest Posts</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {blogPosts.slice(2).map((post) => {
+            <section>
+              <h2 className="text-2xl font-bold nts-text-caps mb-6">Latest Posts</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {blogPosts.filter(post => post.content?.featured !== true).map((post) => {
                     const postColor = getPostColor(post.id);
                     return (
-                      <div
+                      <Card
                         key={post.id}
-                        className="bg-card hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
+                        className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
                       >
                         <Link href={`/blog/${post.slug}`}>
                           <div className="aspect-[16/9] relative overflow-hidden">
@@ -225,13 +244,13 @@ export default async function BlogPage() {
                             )}
                           </div>
                         </Link>
-                        <div className="p-4">
+                        <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-3">
                             <Badge
                               className="text-white text-xs px-3 py-1 rounded-full font-medium"
                               style={{ backgroundColor: postColor }}
                             >
-                              {post.content?.categories || 'BLOG POST'}
+                              BLOG POST
                             </Badge>
                             <span className="text-sm text-muted-foreground font-medium">
                               {new Date(post.published_at || post.created_at).toLocaleDateString()}
@@ -247,20 +266,31 @@ export default async function BlogPage() {
                               {post.content.intro}
                             </p>
                           )}
-                          {(post.content?.tags || post.tag_list) && (
-                            <div className="flex flex-wrap gap-1 mb-3">
-                              {(post.content.tags || post.tag_list || []).slice(0, 2).map((tag: string, index: number) => (
-                                <Badge
-                                  key={index}
-                                  variant="outline"
-                                  className="text-xs px-2 py-1 rounded-full font-medium"
-                                  style={{ borderColor: postColor, color: postColor }}
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {post.content?.categories && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs px-2 py-1 rounded-full font-medium"
+                                style={{ borderColor: postColor, color: postColor }}
+                              >
+                                {String(post.content.categories).toUpperCase()}
+                              </Badge>
+                            )}
+                            {(post.content?.tags || post.tag_list) && (
+                              <>
+                                {(post.content.tags || post.tag_list || []).slice(0, 1).map((tag: string, index: number) => (
+                                  <Badge
+                                    key={index}
+                                    variant="outline"
+                                    className="text-xs px-2 py-1 rounded-full font-medium"
+                                    style={{ borderColor: postColor, color: postColor }}
+                                  >
+                                    {String(tag).toUpperCase()}
+                                  </Badge>
+                                ))}
+                              </>
+                            )}
+                          </div>
                           <div className="flex items-center justify-between text-sm text-muted-foreground">
                             <span className="text-xs">{calculateReadTime(post.content?.content || post.content?.body)}</span>
                             <Link href={`/blog/${post.slug}`}>
@@ -273,13 +303,12 @@ export default async function BlogPage() {
                               </Button>
                             </Link>
                           </div>
-                        </div>
-                      </div>
+                        </CardContent>
+                      </Card>
                     );
                   })}
                 </div>
               </section>
-            )}
           </>
         )}
       </main>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SearchModal } from "@/components/search-modal"
@@ -11,7 +11,12 @@ import { useAuth } from "@/lib/auth/context"
 
 export function Header() {
   const [searchModalOpen, setSearchModalOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const { user, loading } = useAuth()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <>
@@ -108,7 +113,7 @@ export function Header() {
 
               {/* Auth buttons for desktop */}
               <div className="hidden md:flex items-center gap-3">
-                {loading ? (
+                {!mounted || loading ? (
                   <div className="text-sm text-muted-foreground">Loading...</div>
                 ) : user ? (
                   <Link href="/profile">
@@ -218,7 +223,7 @@ export function Header() {
                       {/* Auth buttons for mobile */}
                       <div className="border-t border-border/30 pt-6 mt-6">
                         <div className="flex flex-col gap-3">
-                          {loading ? (
+                          {!mounted || loading ? (
                             <div className="text-sm text-muted-foreground text-center">Loading...</div>
                           ) : user ? (
                             <Link href="/profile" >
