@@ -2,241 +2,341 @@ import { Header } from "@/components/header"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { FavoriteButton } from "@/components/favorite-button"
+import { sb } from "@/src/lib/storyblok"
+import Link from "next/link"
+import { Metadata } from 'next'
 
-export default function BlogPage() {
-  const posts = [
-    {
-      id: 1,
-      title: "FOR FOLKS: INTERNATIONAL ANTHEM IRL W/ CARLOS NIÑO & KING HIPPO",
-      description: "A journey through international jazz and hip-hop collaborations featuring exclusive tracks and deep conversations about cross-cultural musical fusion.",
-      image: "/images/dj-blue-purple-lighting.png",
-      date: "18.09.25",
-      duration: "1h 30m",
-      plays: "2.8k",
-      tags: ["JAZZ", "SOUL", "ELECTRONIC", "HIP HOP"],
-      color: "#8b5cf6",
-      type: "EPISODE"
-    },
-    {
-      id: 2,
-      title: "AMBIENT SOUNDSCAPES: THE ART OF ATMOSPHERIC MUSIC",
-      description: "Exploring the creation and impact of immersive ambient compositions with field recordings and live ambient performances.",
-      image: "/ambient-soundscape-visualization-with-ethereal-col.jpg",
-      date: "15.09.25",
-      duration: "2h 05m",
-      plays: "3.1k",
-      tags: ["AMBIENT", "ELECTRONIC", "EXPERIMENTAL"],
-      color: "#ec4899",
-      type: "EPISODE"
-    },
-    {
-      id: 3,
-      title: "DEEP HOUSE EXPLORATIONS: UNDERGROUND GEMS",
-      description: "Diving deep into the underground house scene with rare tracks, exclusive mixes, and interviews with emerging producers.",
-      image: "/deep-house-album-cover-kerri-chandler-rain.jpg",
-      date: "13.09.25",
-      duration: "1h 45m",
-      plays: "2.4k",
-      tags: ["DEEP HOUSE", "UNDERGROUND", "ELECTRONIC"],
-      color: "#00d4ff",
-      type: "EPISODE"
-    },
-    {
-      id: 4,
-      title: "JAZZ FUSION FRIDAY: ELECTRIC EXPLORATIONS",
-      description: "Weekly exploration of jazz fusion's evolution from the 70s to today, featuring rare live recordings and artist interviews.",
-      image: "/placeholder-yjpx3.png",
-      date: "11.09.25",
-      duration: "1h 55m",
-      plays: "2.0k",
-      tags: ["JAZZ", "FUSION", "ELECTRIC"],
-      color: "#f59e0b",
-      type: "EPISODE"
-    },
-    {
-      id: 5,
-      title: "TECHNO UNDERGROUND: BERLIN AFTER HOURS",
-      description: "Live from Berlin's underground scene - raw techno sets, club culture insights, and the sounds shaping the future.",
-      image: "/abstract-music-visualization-dark.jpg",
-      date: "09.09.25",
-      duration: "2h 15m",
-      plays: "3.5k",
-      tags: ["TECHNO", "UNDERGROUND", "BERLIN"],
-      color: "#10b981",
-      type: "EPISODE"
-    },
-    {
-      id: 6,
-      title: "WORLD MUSIC WEDNESDAYS: GLOBAL RHYTHMS",
-      description: "Celebrating global music traditions and contemporary world fusion, with guest artists sharing their cultural musical heritage.",
-      image: "/placeholder-eqe3b.png",
-      date: "07.09.25",
-      duration: "1h 40m",
-      plays: "1.8k",
-      tags: ["WORLD MUSIC", "GLOBAL", "TRADITIONAL"],
-      color: "#8b5cf6",
-      type: "EPISODE"
-    },
-    {
-      id: 7,
-      title: "EXPERIMENTAL ELECTRONIC: PUSHING BOUNDARIES",
-      description: "Showcasing the most innovative electronic music that challenges conventional sound design and composition techniques.",
-      image: "/electronic-music-producer-in-studio-ambient-lighti.jpg",
-      date: "05.09.25",
-      duration: "1h 25m",
-      plays: "1.9k",
-      tags: ["EXPERIMENTAL", "ELECTRONIC", "AVANT-GARDE"],
-      color: "#ec4899",
-      type: "EPISODE"
-    },
-    {
-      id: 8,
-      title: "SOUL SESSIONS: VINTAGE VIBES AND MODERN INTERPRETATIONS",
-      description: "Bridging classic soul with contemporary interpretations, featuring rare vinyl finds and modern soul artists.",
-      image: "/placeholder-ptd6l.png",
-      date: "03.09.25",
-      duration: "1h 50m",
-      plays: "2.2k",
-      tags: ["SOUL", "R&B", "VINTAGE"],
-      color: "#f59e0b",
-      type: "EPISODE"
-    }
-  ]
+// Generate metadata for the blog page
+export const metadata: Metadata = {
+  title: 'Blog | Rhythm Lab Radio',
+  description: 'Read the latest insights, reviews, and deep dives from Rhythm Lab Radio covering electronic music, culture, and sound exploration.',
+  openGraph: {
+    title: 'Blog | Rhythm Lab Radio',
+    description: 'Read the latest insights, reviews, and deep dives from Rhythm Lab Radio covering electronic music, culture, and sound exploration.',
+  },
+}
 
-  const featuredPosts = posts.slice(0, 2)
-  const regularPosts = posts.slice(2)
+// Helper function to generate consistent colors for posts
+function getPostColor(id: number) {
+  const colors = [
+    "#8b5cf6", "#ec4899", "#00d4ff", "#f59e0b",
+    "#10b981", "#ef4444", "#3b82f6", "#8b5a2b"
+  ];
+  return colors[id % colors.length];
+}
+
+// Helper function to extract all text from rich text content
+function extractAllText(content: any): string {
+  if (!content) return '';
+
+  let text = '';
+
+  if (Array.isArray(content)) {
+    content.forEach(node => {
+      text += extractAllText(node);
+    });
+  } else if (content.content) {
+    text += extractAllText(content.content);
+  } else if (content.text) {
+    text += content.text + ' ';
+  }
+
+  return text;
+}
+
+// Helper function to calculate read time based on content length
+function calculateReadTime(content: any): string {
+  if (!content || !content.content) return '1 min read';
+
+  const fullText = extractAllText(content.content);
+  const wordCount = fullText.trim().split(/\s+/).length;
+  const wordsPerMinute = 225; // Average reading speed
+  const readTimeMinutes = Math.ceil(wordCount / wordsPerMinute);
+
+  return `${readTimeMinutes} min read`;
+}
+
+export default async function BlogPage() {
+  let blogPosts: any[] = [];
+  let error: string | null = null;
+
+  try {
+    // Fetch blog posts from Storyblok
+    const storyblokApi = sb();
+    const response = await storyblokApi.get('cdn/stories', {
+      version: 'published',
+      per_page: 100,
+      sort_by: 'first_published_at:desc',
+      starts_with: 'blog/'
+    });
+
+    blogPosts = response.data.stories || [];
+    console.log('Found blog posts:', blogPosts.length, blogPosts.map(d => ({ slug: d.slug, name: d.name, full_slug: d.full_slug })));
+  } catch (err) {
+    console.error('Error fetching blog posts:', err);
+    error = 'Failed to load blog posts. Please try again later.';
+  }
+
+  // If we have blog posts, use them; otherwise show friendly message
+  const hasPosts = blogPosts.length > 0;
+  const featuredPost = hasPosts ? blogPosts[0] : null;
+  const regularPosts = hasPosts ? blogPosts.slice(1) : [];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="space-y-8 py-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold nts-text-caps mb-2">Blog</h1>
-            <p className="text-muted-foreground">Stories, insights, and deep dives into music culture</p>
-          </div>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
-          {/* Featured Posts Section */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold nts-text-caps mb-6">Featured</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {featuredPosts.map((post) => (
-                <Card
-                  key={post.id}
-                  className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
-                >
-                  <div className="aspect-[16/10] relative overflow-hidden">
-                    <img
-                      src={post.image}
-                      alt={post.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <Badge
-                        className="text-white text-sm px-4 py-2 rounded-full font-medium"
-                        style={{ backgroundColor: post.color }}
-                      >
-                        FEATURED
-                      </Badge>
-                      <span className="text-sm text-muted-foreground font-medium">{post.date}</span>
-                    </div>
-                    <h3 className="text-foreground font-bold text-xl mb-3 leading-tight">
-                      {post.title}
-                    </h3>
-                    <p className="text-muted-foreground text-base mb-4 leading-relaxed">
-                      {post.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {post.tags.slice(0, 3).map((tag, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="text-xs px-3 py-1 rounded-full font-medium"
-                          style={{ borderColor: post.color, color: post.color }}
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{post.duration} • {post.plays} reads</span>
-                      <Button
-                        size="sm"
-                        className="text-white text-sm px-6 py-2"
-                        style={{ backgroundColor: post.color }}
-                      >
-                        Read More
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* Regular Posts Grid */}
-          <div>
-            <h2 className="text-2xl font-bold nts-text-caps mb-6">All Posts</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {regularPosts.map((post) => (
-                <Card
-                  key={post.id}
-                  className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
-                >
-                  <div className="aspect-[16/9] relative overflow-hidden">
-                    <img
-                      src={post.image}
-                      alt={post.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <Badge
-                        className="text-white text-xs px-3 py-1 rounded-full font-medium"
-                        style={{ backgroundColor: post.color }}
-                      >
-                        BLOG POST
-                      </Badge>
-                      <span className="text-sm text-muted-foreground font-medium">{post.date}</span>
-                    </div>
-                    <h3 className="text-foreground font-bold text-base mb-2 leading-tight">
-                      {post.title}
-                    </h3>
-                    <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-3">
-                      {post.description}
-                    </p>
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {post.tags.slice(0, 2).map((tag, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="text-xs px-2 py-1 rounded-full font-medium"
-                          style={{ borderColor: post.color, color: post.color }}
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span className="text-xs">{post.duration} • {post.plays} reads</span>
-                      <Button
-                        size="sm"
-                        className="text-white text-xs px-3 py-1"
-                        style={{ backgroundColor: post.color }}
-                      >
-                        Read
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+        {/* Page Header */}
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
+            RHYTHM LAB BLOG
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Deep dives into electronic music culture, artist spotlights, genre explorations,
+            and the stories behind the sounds that move us.
+          </p>
         </div>
+
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-red-500 text-lg">{error}</p>
+          </div>
+        )}
+
+        {!error && !hasPosts && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground text-lg">
+              No blog posts available yet. Check back soon for fresh content!
+            </p>
+          </div>
+        )}
+
+        {!error && hasPosts && (
+          <>
+            {/* Featured Posts Section */}
+            {blogPosts.filter(post => post.content?.featured === true).length > 0 && (
+              <section className="mb-12">
+                <h2 className="text-2xl font-bold nts-text-caps mb-6">Featured</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {blogPosts.filter(post => post.content?.featured === true).map((post) => {
+                  const postColor = getPostColor(post.id);
+                  return (
+                    <Card
+                      key={post.id}
+                      className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
+                    >
+                      <Link href={`/blog/${post.slug}`}>
+                        <div className="aspect-[16/10] relative overflow-hidden">
+                          {post.content?.featured_image?.filename ? (
+                            <img
+                              src={post.content.featured_image.filename}
+                              alt={post.content.featured_image.alt || post.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div
+                              className="w-full h-full flex items-center justify-center text-white text-xl font-bold"
+                              style={{ backgroundColor: postColor }}
+                            >
+                              {post.name}
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <Badge
+                            className="text-white text-sm px-4 py-2 rounded-full font-medium"
+                            style={{ backgroundColor: postColor }}
+                          >
+                            FEATURED
+                          </Badge>
+                          <span className="text-sm text-muted-foreground font-medium">
+                            {new Date(post.published_at || post.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <Link href={`/blog/${post.slug}`}>
+                          <h3 className="text-foreground font-bold text-xl mb-3 leading-tight hover:text-primary transition-colors">
+                            {post.name}
+                          </h3>
+                        </Link>
+                        {post.content?.intro ? (
+                          <p className="text-muted-foreground text-base mb-4 leading-relaxed">
+                            {post.content.intro}
+                          </p>
+                        ) : (
+                          <p className="text-muted-foreground text-base mb-4 leading-relaxed">
+                            Discover the latest insights and stories from the world of music, culture, and sound exploration.
+                          </p>
+                        )}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {post.content?.categories && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs px-3 py-1 rounded-full font-medium"
+                              style={{ borderColor: postColor, color: postColor }}
+                            >
+                              {String(post.content.categories).toUpperCase()}
+                            </Badge>
+                          )}
+                          {(post.content?.tags || post.tag_list) && (
+                            <>
+                              {(post.content.tags || post.tag_list || []).slice(0, 2).map((tag: string, index: number) => (
+                                <Badge
+                                  key={index}
+                                  variant="outline"
+                                  className="text-xs px-3 py-1 rounded-full font-medium"
+                                  style={{ borderColor: postColor, color: postColor }}
+                                >
+                                  {String(tag).toUpperCase()}
+                                </Badge>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <div className="flex items-center gap-3">
+                            <span>{calculateReadTime(post.content?.content || post.content?.body)}</span>
+                            <FavoriteButton
+                              content={{
+                                id: post.id,
+                                title: post.name,
+                                type: 'blog_post',
+                                image: post.content?.featured_image?.filename,
+                                description: post.content?.intro
+                              }}
+                              size="sm"
+                            />
+                          </div>
+                          <Link href={`/blog/${post.slug}`}>
+                            <Button
+                              size="sm"
+                              className="text-white text-sm px-6 py-2"
+                              style={{ backgroundColor: postColor }}
+                            >
+                              Read More
+                            </Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* Regular Posts Grid */}
+            <section>
+              <h2 className="text-2xl font-bold nts-text-caps mb-6">Latest Posts</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {blogPosts.filter(post => post.content?.featured !== true).map((post) => {
+                    const postColor = getPostColor(post.id);
+                    return (
+                      <Card
+                        key={post.id}
+                        className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
+                      >
+                        <Link href={`/blog/${post.slug}`}>
+                          <div className="aspect-[16/9] relative overflow-hidden">
+                            {post.content?.featured_image?.filename ? (
+                              <img
+                                src={post.content.featured_image.filename}
+                                alt={post.content.featured_image.alt || post.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div
+                                className="w-full h-full flex items-center justify-center text-white text-lg font-bold p-4 text-center"
+                                style={{ backgroundColor: postColor }}
+                              >
+                                {post.name}
+                              </div>
+                            )}
+                          </div>
+                        </Link>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <Badge
+                              className="text-white text-xs px-3 py-1 rounded-full font-medium"
+                              style={{ backgroundColor: postColor }}
+                            >
+                              BLOG POST
+                            </Badge>
+                            <span className="text-sm text-muted-foreground font-medium">
+                              {new Date(post.published_at || post.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <Link href={`/blog/${post.slug}`}>
+                            <h3 className="text-foreground font-bold text-base mb-2 leading-tight hover:text-primary transition-colors">
+                              {post.name}
+                            </h3>
+                          </Link>
+                          {post.content?.intro && (
+                            <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-3">
+                              {post.content.intro}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {post.content?.categories && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs px-2 py-1 rounded-full font-medium"
+                                style={{ borderColor: postColor, color: postColor }}
+                              >
+                                {String(post.content.categories).toUpperCase()}
+                              </Badge>
+                            )}
+                            {(post.content?.tags || post.tag_list) && (
+                              <>
+                                {(post.content.tags || post.tag_list || []).slice(0, 1).map((tag: string, index: number) => (
+                                  <Badge
+                                    key={index}
+                                    variant="outline"
+                                    className="text-xs px-2 py-1 rounded-full font-medium"
+                                    style={{ borderColor: postColor, color: postColor }}
+                                  >
+                                    {String(tag).toUpperCase()}
+                                  </Badge>
+                                ))}
+                              </>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs">{calculateReadTime(post.content?.content || post.content?.body)}</span>
+                              <FavoriteButton
+                                content={{
+                                  id: post.id,
+                                  title: post.name,
+                                  type: 'blog_post',
+                                  image: post.content?.featured_image?.filename,
+                                  description: post.content?.intro
+                                }}
+                                size="sm"
+                              />
+                            </div>
+                            <Link href={`/blog/${post.slug}`}>
+                              <Button
+                                size="sm"
+                                className="text-white text-xs px-3 py-1"
+                                style={{ backgroundColor: postColor }}
+                              >
+                                Read
+                              </Button>
+                            </Link>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </section>
+          </>
+        )}
       </main>
     </div>
-  )
+  );
 }
