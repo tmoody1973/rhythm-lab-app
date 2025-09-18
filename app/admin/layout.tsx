@@ -62,7 +62,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <Link href="/admin" className="text-2xl font-bold text-gray-900">
-                Admin Dashboard
+                AI Assistant Producer
               </Link>
             </div>
 

@@ -10,10 +10,10 @@ export default function AdminDashboardPage() {
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Admin Dashboard
+          AI Assistant Producer
         </h1>
         <p className="text-gray-600">
-          Welcome to the admin dashboard!
+          Welcome to the AI Assistant Producer!
           Manage your Rhythm Lab content and imports from here.
         </p>
       </div>
