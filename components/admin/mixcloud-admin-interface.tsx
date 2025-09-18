@@ -11,8 +11,10 @@ import {
   Activity,
   Database,
   Music,
-  Settings
+  Settings,
+  TestTube
 } from 'lucide-react'
+import { PlaylistParserTest } from './playlist-parser-test'
 
 export function MixcloudAdminInterface() {
   const [activeTab, setActiveTab] = useState('archive')
@@ -21,7 +23,7 @@ export function MixcloudAdminInterface() {
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Navigation Tabs */}
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="archive" className="flex items-center gap-2">
             <Archive className="h-4 w-4" />
             Archive Import
@@ -37,6 +39,10 @@ export function MixcloudAdminInterface() {
           <TabsTrigger value="enrichment" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Track Enrichment
+          </TabsTrigger>
+          <TabsTrigger value="test" className="flex items-center gap-2">
+            <TestTube className="h-4 w-4" />
+            Parser Test
           </TabsTrigger>
         </TabsList>
 
@@ -175,6 +181,11 @@ export function MixcloudAdminInterface() {
             </CardContent>
           </Card>
         </TabsContent>
+        {/* Parser Test Tab */}
+        <TabsContent value="test" className="space-y-6">
+          <PlaylistParserTest />
+        </TabsContent>
+
       </Tabs>
 
       {/* Status Bar */}
