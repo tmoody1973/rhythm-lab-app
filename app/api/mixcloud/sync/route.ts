@@ -161,16 +161,20 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
           component: 'mixcloud_show',
           title: updatedShow?.title || existingShow.title,
           description: updatedShow?.description || existingShow.description,
-          date: updatedShow?.date || existingShow.date,
+          published_date: formatDateForStoryblok(updatedShow?.published_date || existingShow.published_date), // Format for Storyblok
           mixcloud_url: updatedShow?.mixcloud_url || existingShow.mixcloud_url,
-          embed_code: updatedShow?.embed_code || existingShow.embed_code,
-          cover_image: updatedShow?.cover_image || existingShow.cover_image,
+          mixcloud_embed: updatedShow?.mixcloud_embed || existingShow.mixcloud_embed,
+          mixcloud_picture: updatedShow?.mixcloud_picture || existingShow.mixcloud_picture,
           show_id: body.show_id
         }
 
         // Add updated playlist if available
         if (parseResult && parseResult.tracks.length > 0) {
-          storyblokContent.playlist = tracksToStoryblokFormat(parseResult.tracks)
+          const formattedTracks = tracksToStoryblokFormat(parseResult.tracks)
+          console.log('Formatted tracks for Storyblok:', JSON.stringify(formattedTracks.slice(0, 2), null, 2)) // Log first 2 tracks
+
+          // Storyblok expects JSON string for text fields, not object arrays
+          storyblokContent.tracklist = JSON.stringify(formattedTracks)
         }
 
         await updateStoryblokShow(existingShow.storyblok_id, {
@@ -212,6 +216,26 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
     }, { status: 500 })
   }
 })
+
+/**
+ * Format date for Storyblok Date/Time field
+ * Converts ISO string to YYYY-MM-DD HH:mm format
+ */
+function formatDateForStoryblok(isoDate: string): string {
+  try {
+    const date = new Date(isoDate)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+
+    return `${year}-${month}-${day} ${hours}:${minutes}`
+  } catch (error) {
+    console.warn('Invalid date format for Storyblok:', isoDate)
+    return isoDate // Fallback to original
+  }
+}
 
 /**
  * Update Storyblok story

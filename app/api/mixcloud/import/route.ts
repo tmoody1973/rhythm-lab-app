@@ -84,13 +84,29 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
     // Generate slug if not provided
     const slug = body.slug || generateSlug(body.title)
 
+    // Check if show already exists (by slug or mixcloud_url)
+    const { data: existingShow } = await supabase
+      .from('shows')
+      .select('id, title, storyblok_id')
+      .or(`slug.eq.${slug},mixcloud_url.eq.${body.mixcloud_url}`)
+      .single()
+
+    if (existingShow) {
+      return NextResponse.json({
+        success: false,
+        message: `Show already exists: "${existingShow.title}". Use the edit feature to update it.`,
+        show_id: existingShow.id,
+        storyblok_id: existingShow.storyblok_id
+      }, { status: 409 })
+    }
+
     // 1. Insert show into Supabase
     const { data: showData, error: showError } = await supabase
       .from('shows')
       .insert({
         title: body.title,
         description: body.description || '',
-        published_date: body.date,
+        published_date: body.date, // Use actual Supabase column name
         slug: slug,
         mixcloud_url: body.mixcloud_url,
         mixcloud_embed: body.embed_code || '',
@@ -143,12 +159,12 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       const storyblokResponse = await createStoryblokShow({
         title: body.title,
         description: body.description || '',
-        published_date: body.date,
+        published_date: body.date, // Use actual Supabase column name
         slug: slug,
         mixcloud_url: body.mixcloud_url,
         mixcloud_embed: body.embed_code || '',
         mixcloud_picture: body.cover_image || '',
-        tracks: hasPlaylist ? tracksToStoryblokFormat(parseResult.tracks) : [],
+        tracklist: hasPlaylist ? JSON.stringify(tracksToStoryblokFormat(parseResult.tracks)) : '[]',
         show_id: showId
       })
 
@@ -188,6 +204,73 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
 })
 
 /**
+ * Format date for Storyblok Date/Time field
+ * Converts ISO string to YYYY-MM-DD HH:mm format
+ */
+function formatDateForStoryblok(isoDate: string): string {
+  try {
+    const date = new Date(isoDate)
+
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date format for Storyblok:', isoDate)
+      return isoDate // Fallback to original
+    }
+
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+
+    const formatted = `${year}-${month}-${day} ${hours}:${minutes}`
+    console.log(`Date formatting: ${isoDate} -> ${formatted}`)
+
+    return formatted
+  } catch (error) {
+    console.warn('Error formatting date for Storyblok:', isoDate, error)
+    return isoDate // Fallback to original
+  }
+}
+
+/**
+ * Get or create the "shows" folder ID in Storyblok
+ */
+async function getShowsFolderId(): Promise<number | null> {
+  const storyblokToken = process.env.STORYBLOK_MANAGEMENT_TOKEN
+
+  if (!storyblokToken) {
+    console.warn('STORYBLOK_MANAGEMENT_TOKEN not configured - shows will be created at root level')
+    return null
+  }
+
+  try {
+    // Search for existing "shows" folder
+    const response = await fetch(`https://mapi.storyblok.com/v1/spaces/${process.env.STORYBLOK_SPACE_ID}/stories?search=shows&is_folder=true`, {
+      headers: {
+        'Authorization': storyblokToken,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      const showsFolder = data.stories?.find((story: any) =>
+        story.name.toLowerCase() === 'shows' && story.is_folder
+      )
+
+      if (showsFolder) {
+        return showsFolder.id
+      }
+    }
+  } catch (error) {
+    console.warn('Could not find shows folder:', error)
+  }
+
+  return null // Falls back to root level
+}
+
+/**
  * Create Storyblok story for the show
  */
 async function createStoryblokShow(showData: any) {
@@ -196,6 +279,19 @@ async function createStoryblokShow(showData: any) {
   if (!storyblokToken) {
     throw new Error('STORYBLOK_MANAGEMENT_TOKEN not configured')
   }
+
+  // Debug: Log the data being sent to Storyblok
+  const formattedDate = formatDateForStoryblok(showData.published_date)
+  const parentId = await getShowsFolderId()
+
+  console.log('Storyblok payload data:', JSON.stringify({
+    original_published_date: showData.published_date,
+    formatted_published_date: formattedDate,
+    parent_id: parentId,
+    mixcloud_embed: showData.mixcloud_embed,
+    mixcloud_picture: showData.mixcloud_picture,
+    tracks: showData.tracks?.length || 0
+  }, null, 2))
 
   const response = await fetch(`https://mapi.storyblok.com/v1/spaces/${process.env.STORYBLOK_SPACE_ID}/stories`, {
     method: 'POST',
@@ -207,15 +303,16 @@ async function createStoryblokShow(showData: any) {
       story: {
         name: showData.title,
         slug: showData.slug,
+        parent_id: parentId, // Use pre-calculated value
         content: {
           component: 'mixcloud_show',
           title: showData.title,
           description: showData.description,
-          date: showData.date,
+          published_date: formattedDate, // Use pre-calculated value
           mixcloud_url: showData.mixcloud_url,
-          embed_code: showData.embed_code,
-          cover_image: showData.cover_image,
-          playlist: showData.tracks,
+          mixcloud_embed: showData.mixcloud_embed,
+          mixcloud_picture: showData.mixcloud_picture,
+          tracklist: showData.tracklist,
           show_id: showData.show_id
         },
         published: true
@@ -225,6 +322,11 @@ async function createStoryblokShow(showData: any) {
 
   if (!response.ok) {
     const error = await response.text()
+    console.error('Storyblok API Error Details:', {
+      status: response.status,
+      statusText: response.statusText,
+      error: error
+    })
     throw new Error(`Storyblok API error: ${response.status} - ${error}`)
   }
 

@@ -193,9 +193,19 @@ export function ArchiveImport() {
 
       const result = await response.json()
 
-      // Track imported show if successful
-      if (result.success && result.show_id) {
+      // Track imported show if successful OR if it already exists (409)
+      if (result.show_id) {
         setImportedShows(prev => new Map(prev).set(show.key, result.show_id))
+      }
+
+      // Handle duplicate show case (409 conflict) as a warning, not error
+      if (response.status === 409) {
+        return {
+          success: true, // Treat as success since show exists
+          error: `Already imported: ${result.message}`,
+          show_id: result.show_id,
+          warning: true
+        }
       }
 
       return { success: result.success, error: result.message, show_id: result.show_id }
