@@ -146,7 +146,7 @@ export function ArchiveImport() {
     setSelectedShows(newSelected)
   }, [selectedShows])
 
-  const importShow = async (show: MixcloudShow): Promise<{ success: boolean; error?: string }> => {
+  const importShow = async (show: MixcloudShow): Promise<{ success: boolean; error?: string; show_id?: string; warning?: boolean }> => {
     try {
       // If description is empty from bulk API, fetch full details from single show API
       let fullShow = show
@@ -176,7 +176,7 @@ export function ArchiveImport() {
         description: fullShow.description || '',
         date: fullShow.created_time,
         mixcloud_url: fullShow.url,
-        embed_code: fullShow.embed_code || `<iframe width="100%" height="60" src="https://www.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&feed=%2F${fullShow.key.replace('/', '%2F')}%2F" frameborder="0"></iframe>`,
+        embed_code: `<iframe width="100%" height="60" src="https://www.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&feed=%2F${fullShow.key.replace('/', '%2F')}%2F" frameborder="0"></iframe>`,
         cover_image: fullShow.picture.large || fullShow.picture.medium,
         playlist_text: '', // Archive imports typically won't have playlist data
         slug: `${fullShow.user.username}-${fullShow.slug}`,

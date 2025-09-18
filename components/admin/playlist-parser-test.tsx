@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { parsePlaylistText, generateParseSummary } from '@/lib/playlist-parser'
+import { parsePlaylistText, generateParseSummary, PlaylistParseResult } from '@/lib/playlist-parser'
 
 export function PlaylistParserTest() {
   const [playlistText, setPlaylistText] = useState(`HOUR 1
@@ -18,7 +18,7 @@ RJD2 - Ghostwriter
 Blockhead - The Music Scene
 Prefuse 73 - One Word Extinguisher`)
 
-  const [result, setResult] = useState(null)
+  const [result, setResult] = useState<PlaylistParseResult | null>(null)
 
   const handleParse = () => {
     const parseResult = parsePlaylistText(playlistText)

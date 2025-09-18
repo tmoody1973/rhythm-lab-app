@@ -87,8 +87,8 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
     const metadataFields = ['title', 'description', 'date', 'mixcloud_url', 'embed_code', 'cover_image', 'duration', 'status']
 
     metadataFields.forEach(field => {
-      if (body[field] !== undefined) {
-        showUpdates[field] = body[field]
+      if (body[field as keyof SyncShowRequest] !== undefined) {
+        showUpdates[field] = body[field as keyof SyncShowRequest]
         updatedFields.push(field)
       }
     })

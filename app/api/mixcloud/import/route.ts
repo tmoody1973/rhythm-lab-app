@@ -39,7 +39,7 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
   try {
     const body: ImportShowRequest = await request.json()
 
-    // Validate required fields
+    // Validate required fields - TypeScript fix applied
     const required = ['title', 'date', 'mixcloud_url'] as const
     const missing = required.filter(field => !body[field as keyof ImportShowRequest])
 
@@ -51,7 +51,7 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
     }
 
     // Parse playlist text (optional for archive imports)
-    let parseResult = { tracks: [], errors: [], warnings: [] }
+    let parseResult: { tracks: any[], errors: string[], warnings: string[] } = { tracks: [], errors: [], warnings: [] }
     let hasPlaylist = false
 
     if (body.playlist_text && body.playlist_text.trim()) {

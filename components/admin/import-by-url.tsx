@@ -385,7 +385,7 @@ More Artist - More Track"
             {/* Import Button */}
             <Button
               onClick={handleImportShow}
-              disabled={isImporting || !fetchedShow || !playlistText.trim() || (parseResult && parseResult.errors.length > 0)}
+              disabled={isImporting || !fetchedShow || !playlistText.trim() || (parseResult?.errors.length ?? 0) > 0}
               className="w-full"
               size="lg"
             >

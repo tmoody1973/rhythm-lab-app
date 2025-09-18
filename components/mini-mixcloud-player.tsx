@@ -51,7 +51,7 @@ export function MiniMixcloudPlayer({
     if (!isActive) return
 
     const loadMixcloudAPI = () => {
-      if (window.Mixcloud && window.Mixcloud.PlayerWidget) {
+      if (typeof window !== 'undefined' && window.Mixcloud && typeof window.Mixcloud.PlayerWidget === 'function') {
         initializeWidget()
         return
       }

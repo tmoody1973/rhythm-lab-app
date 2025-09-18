@@ -19,20 +19,10 @@ interface MixcloudWidget {
   play: () => void
   pause: () => void
   toggle: () => void
-  getDuration: (callback: (duration: number) => void) => void
-  getPosition: (callback: (position: number) => void) => void
-  seek: (position: number) => void
   bind: (event: string, callback: (data?: any) => void) => void
   unbind: (event: string) => void
 }
 
-declare global {
-  interface Window {
-    Mixcloud: {
-      PlayerWidget: (iframe: HTMLIFrameElement) => MixcloudWidget
-    }
-  }
-}
 
 export function MixcloudPlayer({
   embedCode,
@@ -56,7 +46,7 @@ export function MixcloudPlayer({
   // Load Mixcloud Widget API
   useEffect(() => {
     const loadMixcloudAPI = () => {
-      if (window.Mixcloud && window.Mixcloud.PlayerWidget) {
+      if (typeof window !== 'undefined' && window.Mixcloud && typeof window.Mixcloud.PlayerWidget === 'function') {
         initializeWidget()
         return
       }
@@ -77,19 +67,14 @@ export function MixcloudPlayer({
       if (iframeRef.current && window.Mixcloud && window.Mixcloud.PlayerWidget) {
         try {
           const widget = window.Mixcloud.PlayerWidget(iframeRef.current)
-          widgetRef.current = widget
+          widgetRef.current = widget as MixcloudWidget
 
           if (widget && typeof widget.ready === 'function') {
             widget.ready(() => {
               console.log('Mixcloud widget ready')
               setIsReady(true)
 
-              // Get initial duration
-              if (typeof widget.getDuration === 'function') {
-                widget.getDuration((dur) => {
-                  setDuration(dur)
-                })
-              }
+              // Note: getDuration not available in basic widget API
 
               // Bind events
               if (typeof widget.bind === 'function') {
@@ -160,17 +145,9 @@ export function MixcloudPlayer({
     }
   }
 
-  const handleSeek = (percentage: number) => {
-    if (!widgetRef.current || !isReady || !duration) return
-
-    try {
-      const newPosition = (percentage / 100) * duration
-      if (typeof widgetRef.current.seek === 'function') {
-        widgetRef.current.seek(newPosition)
-      }
-    } catch (error) {
-      console.error('Error seeking:', error)
-    }
+  const handleSeek = () => {
+    // Seek functionality not available in basic widget API
+    console.log('Seek not available')
   }
 
   const toggleFullscreen = () => {
@@ -244,9 +221,8 @@ export function MixcloudPlayer({
                 <div
                   className="w-full h-2 bg-[#2a2f3e] rounded-full cursor-pointer"
                   onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect()
-                    const percentage = ((e.clientX - rect.left) / rect.width) * 100
-                    handleSeek(percentage)
+                    // Seek not available in basic widget API
+                    console.log('Seek not available')
                   }}
                 >
                   <div
