@@ -49,15 +49,14 @@ export function MixcloudOEmbedPlayer({
       setLoading(true)
       setError('')
 
-      // Use Mixcloud's oEmbed endpoint with light mode
-      const oEmbedUrl = new URL('https://app.mixcloud.com/oembed')
+      // Use our proxy API to avoid CORS issues
+      const oEmbedUrl = new URL('/api/mixcloud/oembed', window.location.origin)
       oEmbedUrl.searchParams.set('url', mixcloudUrl)
-      oEmbedUrl.searchParams.set('format', 'json')
       oEmbedUrl.searchParams.set('maxwidth', maxWidth.toString())
       oEmbedUrl.searchParams.set('maxheight', maxHeight.toString())
       oEmbedUrl.searchParams.set('light', '1')
 
-      console.log('Fetching oEmbed data:', oEmbedUrl.toString())
+      console.log('Fetching oEmbed data via proxy:', oEmbedUrl.toString())
 
       const response = await fetch(oEmbedUrl.toString())
 
