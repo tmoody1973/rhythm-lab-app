@@ -200,6 +200,12 @@ async function handleUpload(request: NextRequest, user: any): Promise<NextRespon
       { status: 500 }
     )
   }
+
+  // This should never be reached, but TypeScript requires it
+  return NextResponse.json(
+    { success: false, message: 'Unexpected error' },
+    { status: 500 }
+  )
 }
 
 /**
