@@ -84,14 +84,11 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       .insert({
         title: body.title,
         description: body.description || '',
-        date: body.date,
+        published_date: body.date,
         slug: slug,
         mixcloud_url: body.mixcloud_url,
-        embed_code: body.embed_code || '',
-        cover_image: body.cover_image || '',
-        duration: body.duration || null,
-        status: body.status || 'published',
-        imported_by: user.id
+        mixcloud_embed: body.embed_code || '',
+        mixcloud_picture: body.cover_image || '',
       })
       .select()
       .single()
@@ -135,11 +132,11 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       const storyblokResponse = await createStoryblokShow({
         title: body.title,
         description: body.description || '',
-        date: body.date,
+        published_date: body.date,
         slug: slug,
         mixcloud_url: body.mixcloud_url,
-        embed_code: body.embed_code || '',
-        cover_image: body.cover_image || '',
+        mixcloud_embed: body.embed_code || '',
+        mixcloud_picture: body.cover_image || '',
         tracks: tracksToStoryblokFormat(parseResult.tracks),
         show_id: showId
       })

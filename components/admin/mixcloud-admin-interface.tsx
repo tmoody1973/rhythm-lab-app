@@ -15,6 +15,7 @@ import {
   TestTube
 } from 'lucide-react'
 import { PlaylistParserTest } from './playlist-parser-test'
+import { ImportByUrl } from './import-by-url'
 
 export function MixcloudAdminInterface() {
   const [activeTab, setActiveTab] = useState('archive')
@@ -82,36 +83,7 @@ export function MixcloudAdminInterface() {
 
         {/* Import by URL Tab */}
         <TabsContent value="url" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Link className="h-5 w-5" />
-                Import by URL
-              </CardTitle>
-              <CardDescription>
-                Import a specific Mixcloud show by pasting its URL. Perfect for importing individual episodes.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-muted/50 rounded-lg p-6 text-center">
-                <Link className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">URL Import Feature</h3>
-                <p className="text-muted-foreground mb-4">
-                  This section will allow you to:
-                </p>
-                <ul className="text-sm text-muted-foreground space-y-1 text-left max-w-md mx-auto">
-                  <li>• Paste Mixcloud show URL</li>
-                  <li>• Fetch show metadata automatically</li>
-                  <li>• Preview show details</li>
-                  <li>• Add playlist manually</li>
-                  <li>• Import single show</li>
-                </ul>
-                <Badge variant="outline" className="mt-4">
-                  Coming Soon - Implement fetch endpoint first
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+          <ImportByUrl />
         </TabsContent>
 
         {/* Upload New Show Tab */}
@@ -202,8 +174,8 @@ export function MixcloudAdminInterface() {
             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
               Storyblok: Connected
             </Badge>
-            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-              Mixcloud API: Pending Setup
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              Mixcloud API: Ready
             </Badge>
           </div>
         </div>

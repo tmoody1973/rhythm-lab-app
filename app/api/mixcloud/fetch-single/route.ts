@@ -185,23 +185,5 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
   }
 })
 
-/**
- * GET /api/mixcloud/fetch-single?url={mixcloud_url}
- * Fetch show metadata by URL parameter
- */
-const getHandler = withAdminAuth(async (request: NextRequest, user): Promise<NextResponse> => {
-  request.method = 'GET'
-  return handler(request, user)
-})
-
-/**
- * POST /api/mixcloud/fetch-single
- * Fetch show metadata by URL in request body
- */
-const postHandler = withAdminAuth(async (request: NextRequest, user): Promise<NextResponse> => {
-  request.method = 'POST'
-  return handler(request, user)
-})
-
-export const GET = getHandler
-export const POST = postHandler
+export const GET = handler
+export const POST = handler
