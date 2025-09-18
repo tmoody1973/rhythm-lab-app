@@ -2,16 +2,17 @@ import { Header } from "@/components/header"
 import { RealShowDetail } from "@/components/real-show-detail"
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function ShowDetailPage({ params }: PageProps) {
+export default async function ShowDetailPage({ params }: PageProps) {
+  const { id } = await params
   return (
     <div>
       <Header />
-      <RealShowDetail showId={params.id} />
+      <RealShowDetail showId={id} />
     </div>
   )
 }
