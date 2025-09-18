@@ -237,7 +237,7 @@ async function uploadToMixcloud(userId: string, audioFile: File, metadata: any) 
     })
 
     // Add start times (assume 3 minutes per track as default)
-    metadata.tracks.forEach((track, index) => {
+    metadata.tracks.forEach((_track: any, index: number) => {
       formData.append(`sections-${index}-start_time`, (index * 180).toString())
     })
   }
