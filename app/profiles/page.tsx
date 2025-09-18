@@ -302,7 +302,7 @@ export default async function ProfilesPage() {
                           </Badge>
                         ))
                       ) : (
-                        profile.tags.map((tag, index) => (
+                        profile.tags.map((tag: string, index: number) => (
                           <Badge
                             key={index}
                             variant="outline"
@@ -436,7 +436,7 @@ export default async function ProfilesPage() {
                           </Badge>
                         ))
                       ) : (
-                        profile.tags.slice(0, 2).map((tag, index) => (
+                        profile.tags.slice(0, 2).map((tag: string, index: number) => (
                           <Badge
                             key={index}
                             variant="outline"

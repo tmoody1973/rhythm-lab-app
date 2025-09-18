@@ -20,7 +20,7 @@ function RichTextRenderer({ content }: { content: any }) {
       case 'heading':
         const level = node.attrs?.level || 2;
         const HeadingTag = `h${level}` as keyof JSX.IntrinsicElements;
-        const headingClasses = {
+        const headingClasses: Record<number, string> = {
           1: 'text-3xl font-bold mb-6 text-gray-900',
           2: 'text-2xl font-semibold mb-4 text-gray-900',
           3: 'text-xl font-semibold mb-3 text-gray-900',
