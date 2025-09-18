@@ -40,8 +40,8 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
     const body: ImportShowRequest = await request.json()
 
     // Validate required fields
-    const required = ['title', 'date', 'mixcloud_url']
-    const missing = required.filter(field => !body[field])
+    const required = ['title', 'date', 'mixcloud_url'] as const
+    const missing = required.filter(field => !body[field as keyof ImportShowRequest])
 
     if (missing.length > 0) {
       return NextResponse.json({
