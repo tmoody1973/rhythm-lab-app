@@ -40,7 +40,7 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
     const body: ImportShowRequest = await request.json()
 
     // Validate required fields
-    const required = ['title', 'date', 'mixcloud_url', 'playlist_text']
+    const required = ['title', 'date', 'mixcloud_url']
     const missing = required.filter(field => !body[field])
 
     if (missing.length > 0) {
@@ -50,13 +50,18 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       }, { status: 400 })
     }
 
-    // Parse playlist text
-    const parseResult = parsePlaylistText(body.playlist_text)
+    // Parse playlist text (optional for archive imports)
+    let parseResult = { tracks: [], errors: [], warnings: [] }
+    let hasPlaylist = false
 
-    if (parseResult.tracks.length === 0) {
-      return NextResponse.json({
-        success: false,
-        message: 'No tracks found in playlist text',
+    if (body.playlist_text && body.playlist_text.trim()) {
+      parseResult = parsePlaylistText(body.playlist_text)
+      hasPlaylist = true
+
+      if (parseResult.tracks.length === 0) {
+        return NextResponse.json({
+          success: false,
+          message: 'No tracks found in playlist text',
         errors: parseResult.errors
       }, { status: 400 })
     }
@@ -104,26 +109,31 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
 
     const showId = showData.id
 
-    // 2. Insert tracks into Supabase
-    const dbTracks = tracksToDbFormat(parseResult.tracks).map(track => ({
-      ...track,
-      show_id: showId
-    }))
+    // 2. Insert tracks into Supabase (only if playlist provided)
+    let tracksImported = 0
+    if (hasPlaylist && parseResult.tracks.length > 0) {
+      const dbTracks = tracksToDbFormat(parseResult.tracks).map(track => ({
+        ...track,
+        show_id: showId
+      }))
 
-    const { error: tracksError } = await supabase
-      .from('mixcloud_tracks')
-      .insert(dbTracks)
+      const { error: tracksError } = await supabase
+        .from('mixcloud_tracks')
+        .insert(dbTracks)
 
-    if (tracksError) {
-      console.error('Error inserting tracks:', tracksError)
-      // Try to clean up the show record
-      await supabase.from('shows').delete().eq('id', showId)
+      if (tracksError) {
+        console.error('Error inserting tracks:', tracksError)
+        // Try to clean up the show record
+        await supabase.from('shows').delete().eq('id', showId)
 
-      return NextResponse.json({
-        success: false,
-        message: 'Failed to import tracks',
-        errors: [tracksError.message]
-      }, { status: 500 })
+        return NextResponse.json({
+          success: false,
+          message: 'Failed to import tracks',
+          errors: [tracksError.message]
+        }, { status: 500 })
+      }
+
+      tracksImported = dbTracks.length
     }
 
     // 3. Create Storyblok entry
@@ -137,7 +147,7 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
         mixcloud_url: body.mixcloud_url,
         mixcloud_embed: body.embed_code || '',
         mixcloud_picture: body.cover_image || '',
-        tracks: tracksToStoryblokFormat(parseResult.tracks),
+        tracks: hasPlaylist ? tracksToStoryblokFormat(parseResult.tracks) : [],
         show_id: showId
       })
 
@@ -158,10 +168,12 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       success: true,
       show_id: showId,
       storyblok_id: storyblokId,
-      tracks_imported: parseResult.tracks.length,
+      tracks_imported: tracksImported,
       errors: parseResult.errors,
       warnings: parseResult.warnings,
-      message: `Successfully imported show "${body.title}" with ${parseResult.tracks.length} tracks`
+      message: hasPlaylist
+        ? `Successfully imported show "${body.title}" with ${tracksImported} tracks`
+        : `Successfully imported show "${body.title}" (no playlist data)`
     })
 
   } catch (error) {

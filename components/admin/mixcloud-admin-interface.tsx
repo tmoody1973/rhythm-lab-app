@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { PlaylistParserTest } from './playlist-parser-test'
 import { ImportByUrl } from './import-by-url'
+import { ArchiveImport } from './archive-import'
 
 export function MixcloudAdminInterface() {
   const [activeTab, setActiveTab] = useState('archive')
@@ -49,36 +50,7 @@ export function MixcloudAdminInterface() {
 
         {/* Archive Import Tab */}
         <TabsContent value="archive" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Archive className="h-5 w-5" />
-                Archive Import
-              </CardTitle>
-              <CardDescription>
-                Import all shows from a Mixcloud user's archive. Enter a username to fetch their complete show history.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-muted/50 rounded-lg p-6 text-center">
-                <Database className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Archive Import Feature</h3>
-                <p className="text-muted-foreground mb-4">
-                  This section will allow you to:
-                </p>
-                <ul className="text-sm text-muted-foreground space-y-1 text-left max-w-md mx-auto">
-                  <li>• Enter Mixcloud username</li>
-                  <li>• Fetch all shows from user's archive</li>
-                  <li>• Preview shows in a table format</li>
-                  <li>• Select shows for bulk import</li>
-                  <li>• Import to Supabase and Storyblok</li>
-                </ul>
-                <Badge variant="outline" className="mt-4">
-                  Coming Soon - Implement API endpoint first
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+          <ArchiveImport />
         </TabsContent>
 
         {/* Import by URL Tab */}
