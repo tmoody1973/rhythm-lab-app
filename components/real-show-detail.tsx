@@ -111,7 +111,7 @@ export function RealShowDetail({ showId }: RealShowDetailProps) {
 
   return (
     <div className="min-h-screen bg-[#f5f1eb] text-[#3d2914]">
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 sm:px-6 py-6">
         {/* Back Button */}
         <Link href="/archive">
           <Button variant="ghost" className="text-[#8b6914] hover:text-[#3d2914] hover:bg-[#e8ddd1] mb-6">
@@ -126,9 +126,9 @@ export function RealShowDetail({ showId }: RealShowDetailProps) {
             {/* Show Header */}
             <Card className="bg-[#ede3d3] border-[#d4c4a8] shadow-lg">
               <CardContent className="p-6">
-                <div className="flex gap-6">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                   {/* Show Artwork */}
-                  <div className="w-48 h-48 flex-shrink-0 rounded-lg overflow-hidden shadow-md">
+                  <div className="w-32 h-32 sm:w-48 sm:h-48 flex-shrink-0 rounded-lg overflow-hidden shadow-md mx-auto sm:mx-0">
                     {show.mixcloud_picture ? (
                       <img
                         src={show.mixcloud_picture}
@@ -141,12 +141,12 @@ export function RealShowDetail({ showId }: RealShowDetailProps) {
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-[#8b6914] to-[#a0522d] flex items-center justify-center">
-                        <Music className="h-24 w-24 text-[#f5f1eb]" />
+                        <Music className="h-16 w-16 sm:h-24 sm:w-24 text-[#f5f1eb]" />
                       </div>
                     )}
                   </div>
 
-                  <div className="flex-1 space-y-4">
+                  <div className="flex-1 space-y-4 min-w-0">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <Badge className="bg-[#2f5233] text-[#f5f1eb] shadow-sm">Mixcloud Show</Badge>
@@ -156,13 +156,13 @@ export function RealShowDetail({ showId }: RealShowDetailProps) {
                           </Badge>
                         )}
                       </div>
-                      <h1 className="text-3xl font-bold text-[#2d1810] mb-2">{show.title}</h1>
-                      <p className="text-[#6b4226] text-lg leading-relaxed">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-[#2d1810] mb-2 break-words hyphens-auto">{show.title}</h1>
+                      <p className="text-[#6b4226] text-base sm:text-lg leading-relaxed break-words">
                         {show.description || 'No description available'}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-6 text-sm text-[#8b6914]">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-[#8b6914]">
                       <span className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
                         {show.duration_formatted}
@@ -184,32 +184,35 @@ export function RealShowDetail({ showId }: RealShowDetailProps) {
                       </div>
                     )}
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                       <a
                         href={show.mixcloud_url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        className="flex-1 sm:flex-none"
                       >
-                        <Button className="bg-[#2f5233] hover:bg-[#1e3521] text-[#f5f1eb] shadow-md">
+                        <Button className="bg-[#2f5233] hover:bg-[#1e3521] text-[#f5f1eb] shadow-md w-full sm:w-auto">
                           <Play className="h-4 w-4 mr-2" />
                           Play on Mixcloud
                         </Button>
                       </a>
-                      <Button
-                        variant="outline"
-                        className="border-[#8b6914] text-[#8b6914] hover:bg-[#8b6914] hover:text-[#f5f1eb] bg-transparent"
-                        onClick={() => copyToClipboard(show.mixcloud_url)}
-                      >
-                        <Share className="h-4 w-4 mr-2" />
-                        Share
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="border-[#a0522d] text-[#a0522d] hover:bg-[#a0522d] hover:text-[#f5f1eb] bg-transparent"
-                      >
-                        <Bookmark className="h-4 w-4 mr-2" />
-                        Save
-                      </Button>
+                      <div className="flex gap-3">
+                        <Button
+                          variant="outline"
+                          className="border-[#8b6914] text-[#8b6914] hover:bg-[#8b6914] hover:text-[#f5f1eb] bg-transparent flex-1 sm:flex-none"
+                          onClick={() => copyToClipboard(show.mixcloud_url)}
+                        >
+                          <Share className="h-4 w-4 mr-2" />
+                          Share
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="border-[#a0522d] text-[#a0522d] hover:bg-[#a0522d] hover:text-[#f5f1eb] bg-transparent flex-1 sm:flex-none"
+                        >
+                          <Bookmark className="h-4 w-4 mr-2" />
+                          Save
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

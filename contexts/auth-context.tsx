@@ -53,6 +53,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const createProfile = async (user: User, username?: string) => {
     try {
+      // First check if profile already exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+
+      if (existingProfile) {
+        console.log('Profile already exists, fetching it...')
+        await fetchProfile(user.id)
+        return
+      }
+
+      // Only create if it doesn't exist
       const { error } = await supabase
         .from('profiles')
         .insert({
@@ -66,6 +80,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Error creating profile:', error)
+        // If it's a duplicate key error, try to fetch the existing profile
+        if (error.code === '23505') {
+          console.log('Profile already exists (duplicate key), fetching it...')
+          await fetchProfile(user.id)
+        }
         return
       }
 
@@ -93,6 +112,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: undefined, // Disable email confirmation
+      }
     })
 
     if (!error && data.user) {

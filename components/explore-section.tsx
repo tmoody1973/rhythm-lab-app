@@ -151,7 +151,7 @@ export function ExploreSection() {
     return (
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-foreground">Explore</h2>
+          <h2 className="text-xl font-bold text-foreground uppercase tracking-wide">EXPLORE</h2>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500"></div>
             <span className="text-sm text-muted-foreground">Real-time</span>
@@ -177,7 +177,7 @@ export function ExploreSection() {
     return (
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-foreground">Explore</h2>
+          <h2 className="text-xl font-bold text-foreground uppercase tracking-wide">EXPLORE</h2>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-red-500"></div>
             <span className="text-sm text-muted-foreground">Error</span>
@@ -198,7 +198,7 @@ export function ExploreSection() {
     <section className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">Explore</h2>
+        <h2 className="text-xl font-bold text-foreground uppercase tracking-wide">EXPLORE</h2>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-green-500"></div>
           <span className="text-sm text-muted-foreground">Real-time</span>

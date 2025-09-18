@@ -237,6 +237,22 @@ export function tracksToStoryblokFormat(tracks: ParsedTrack[]) {
 }
 
 /**
+ * Convert parsed tracks to Mixcloud API format
+ * Mixcloud expects sections-X-artist and sections-X-song fields
+ */
+export function tracksToMixcloudFormat(tracks: ParsedTrack[]): Record<string, string> {
+  const mixcloudData: Record<string, string> = {};
+
+  tracks.forEach((track, index) => {
+    // Mixcloud uses 0-based indexing for sections
+    mixcloudData[`sections-${index}-artist`] = track.artist;
+    mixcloudData[`sections-${index}-song`] = track.track;
+  });
+
+  return mixcloudData;
+}
+
+/**
  * Generate a summary of the parsing results
  */
 export function generateParseSummary(result: PlaylistParseResult): string {

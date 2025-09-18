@@ -17,6 +17,7 @@ import {
 import { PlaylistParserTest } from './playlist-parser-test'
 import { ImportByUrl } from './import-by-url'
 import { ArchiveImport } from './archive-import'
+import { UploadNewShow } from './upload-new-show'
 
 export function MixcloudAdminInterface() {
   const [activeTab, setActiveTab] = useState('archive')
@@ -60,36 +61,7 @@ export function MixcloudAdminInterface() {
 
         {/* Upload New Show Tab */}
         <TabsContent value="upload" className="space-y-6 mt-6">
-          <Card className="border border-amber-200/50 shadow-md bg-white/70 backdrop-blur-sm">
-            <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-t-lg border-b border-amber-100">
-              <CardTitle className="flex items-center gap-2 text-amber-900">
-                <Upload className="h-5 w-5 text-orange-600" />
-                Upload New Show
-              </CardTitle>
-              <CardDescription className="text-amber-700">
-                Upload a new radio show directly to Mixcloud, then import it with playlist data.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-gradient-to-br from-amber-50 to-orange-100 rounded-lg p-6 text-center border border-amber-200/30">
-                <Upload className="h-12 w-12 text-orange-500 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2 text-amber-900">Upload New Show Feature</h3>
-                <p className="text-amber-700 mb-4">
-                  This section will allow you to:
-                </p>
-                <ul className="text-sm text-amber-700 space-y-1 text-left max-w-md mx-auto">
-                  <li>• Upload audio file (MP3/WAV)</li>
-                  <li>• Add show metadata (title, description, cover)</li>
-                  <li>• Upload directly to Mixcloud</li>
-                  <li>• Add playlist data</li>
-                  <li>• Generate AI description from playlist</li>
-                </ul>
-                <Badge variant="outline" className="mt-4 border-orange-300 text-orange-700 bg-orange-50">
-                  Coming Soon - Requires Mixcloud upload API
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+          <UploadNewShow />
         </TabsContent>
 
         {/* Track Enrichment Tab */}
