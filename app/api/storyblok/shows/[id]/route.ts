@@ -33,10 +33,10 @@ interface ShowDetailResponse {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    const showId = params.id
+    const { id: showId } = await params
 
     if (!showId) {
       return NextResponse.json({
