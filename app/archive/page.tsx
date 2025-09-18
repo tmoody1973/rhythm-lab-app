@@ -1,5 +1,5 @@
 import { Header } from "@/components/header"
-import { ArchiveDiscoverySection } from "@/components/archive-discovery-section"
+import { RealArchiveDiscoverySection } from "@/components/real-archive-discovery-section"
 
 export default function ArchivePage() {
   return (
@@ -13,7 +13,7 @@ export default function ArchivePage() {
           </div>
 
           <div className="max-w-4xl mx-auto">
-            <ArchiveDiscoverySection />
+            <RealArchiveDiscoverySection />
           </div>
         </div>
       </main>
