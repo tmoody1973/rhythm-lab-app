@@ -245,10 +245,10 @@ export function ExploreSection() {
                 <Link href={`${routePrefix}/${item.slug}`}>
                   {/* Image/Artwork Section */}
                   <div className="aspect-[4/3] relative overflow-hidden bg-muted/20">
-                    {item.content?.featured_image?.filename ? (
+                    {(item.content?.featured_image?.filename || (item.type === 'profile' && item.content?.artist_photo?.filename)) ? (
                       <img
-                        src={item.content.featured_image.filename}
-                        alt={item.content.featured_image.alt || item.name}
+                        src={item.content?.featured_image?.filename || item.content?.artist_photo?.filename}
+                        alt={item.content?.featured_image?.alt || item.content?.artist_photo?.alt || item.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
@@ -334,7 +334,7 @@ export function ExploreSection() {
                           id: item.id.toString(),
                           title: item.name,
                           type: item.type === 'blog' ? 'blog_post' : item.type === 'deep-dive' ? 'deep_dive' : 'artist_profile',
-                          image: item.content?.featured_image?.filename,
+                          image: item.content?.featured_image?.filename || (item.type === 'profile' ? item.content?.artist_photo?.filename : undefined),
                           description: item.content?.intro || item.content?.description
                         }}
                         size="sm"
