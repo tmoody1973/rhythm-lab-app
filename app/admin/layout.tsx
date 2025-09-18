@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -14,20 +14,19 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user, profile, loading, signOut } = useAuth()
   const router = useRouter()
-
-  useEffect(() => {
-    if (!loading && (!user || !profile)) {
-      router.replace('/admin/login')
-    } else if (!loading && profile && profile.role !== 'admin' && profile.role !== 'super_admin') {
-      router.replace('/?error=access_denied')
-    }
-  }, [user, profile, loading, router])
+  const pathname = usePathname()
 
   const handleSignOut = async () => {
     await signOut()
     router.replace('/admin/login')
   }
 
+  // Allow login page to render without auth check
+  if (pathname === '/admin/login') {
+    return <>{children}</>
+  }
+
+  // Show loading state while checking auth
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -41,16 +40,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     )
   }
 
-  // Debug info
-  console.log('Admin Layout Debug:', {
-    loading,
-    user: !!user,
-    profile: !!profile,
-    role: profile?.role
-  })
-
-  if (!user || !profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
-    return null
+  // If middleware let us through, we're authorized - just show loading if we don't have profile yet
+  if (!user || !profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg">Loading profile...</div>
+          <div className="text-sm text-gray-500 mt-2">
+            Please wait...
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -67,7 +68,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-700">
-                Welcome, {profile.username || profile.email}
+                Welcome, {profile.username || user?.email}
               </span>
               <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
                 {profile.role}

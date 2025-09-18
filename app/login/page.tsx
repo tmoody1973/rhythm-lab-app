@@ -1,6 +1,26 @@
+"use client"
+
+import dynamic from 'next/dynamic'
 import { Header } from "@/components/header"
 import { Card, CardContent } from "@/components/ui/card"
-import { LoginForm } from "@/components/auth/login-form"
+
+// Dynamically import login form to avoid SSR hydration issues with password managers
+const LoginForm = dynamic(
+  () => import('@/components/auth/login-form').then(mod => ({ default: mod.LoginForm })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="mx-auto max-w-sm space-y-6">
+        <div className="space-y-2 text-center">
+          <h1 className="text-3xl font-bold">Welcome Back</h1>
+          <p className="text-gray-500 dark:text-gray-400">
+            Loading login form...
+          </p>
+        </div>
+      </div>
+    )
+  }
+)
 
 export default function LoginPage() {
   return (

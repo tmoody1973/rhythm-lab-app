@@ -12,24 +12,22 @@ export async function GET(request: NextRequest) {
             return request.cookies.getAll()
           },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              request.cookies.set(name, value)
-            )
+            // For GET requests, we don't need to set cookies
           },
         },
       }
     )
 
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!session?.user) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { data: favorites, error } = await supabase
       .from('user_favorites')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -81,17 +79,15 @@ export async function POST(request: NextRequest) {
             return request.cookies.getAll()
           },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              request.cookies.set(name, value)
-            )
+            // For POST requests, we don't need to set cookies
           },
         },
       }
     )
 
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!session?.user) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -120,7 +116,7 @@ export async function POST(request: NextRequest) {
       const { error } = await supabase
         .from('user_favorites')
         .delete()
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .eq('item_type', itemType)
         .eq('item_id', itemId)
 
@@ -138,7 +134,7 @@ export async function POST(request: NextRequest) {
       const { error } = await supabase
         .from('user_favorites')
         .insert({
-          user_id: session.user.id,
+          user_id: user.id,
           item_type: itemType,
           item_id: itemId,
         })

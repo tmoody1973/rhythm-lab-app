@@ -27,20 +27,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for userId:', userId)
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching profile:', error)
-        return
+        if (error.code !== 'PGRST116') {
+          setProfile(null)
+          return
+        }
       }
 
-      setProfile(data)
+      console.log('Profile fetched successfully:', data)
+      setProfile(data || null)
     } catch (error) {
       console.error('Error fetching profile:', error)
+      setProfile(null)
     }
   }
 
@@ -96,10 +103,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    setProfile(null)
-    setSession(null)
+    try {
+      console.log('Signing out...')
+
+      // Add timeout to prevent hanging
+      const signOutPromise = supabase.auth.signOut()
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Sign out timeout')), 3000)
+      )
+
+      const { error } = await Promise.race([signOutPromise, timeoutPromise]) as any
+
+      if (error) {
+        console.error('Error signing out:', error)
+      } else {
+        console.log('Successfully signed out')
+      }
+    } catch (error) {
+      console.error('Error during sign out (continuing anyway):', error)
+    } finally {
+      // Always clear the local state regardless of Supabase response
+      console.log('Clearing local auth state...')
+      setUser(null)
+      setProfile(null)
+      setSession(null)
+    }
   }
 
   useEffect(() => {
@@ -111,31 +139,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn('Auth loading timeout - setting loading to false')
         setLoading(false)
       }
-    }, 5000) // 5 second timeout
+    }, 3000) // 3 second timeout
 
     // Get initial session
     const getInitialSession = async () => {
       try {
-        console.log('Getting initial session...')
-        const { data: { session }, error } = await supabase.auth.getSession()
+        console.log('Getting initial user...')
+        const { data: { user }, error } = await supabase.auth.getUser()
 
         if (error) {
-          console.error('Error getting session:', error)
-          setLoading(false)
+          console.warn('Auth error (likely invalid session):', error.message)
+          // Clear auth state and continue
+          if (mounted) {
+            setUser(null)
+            setProfile(null)
+            setSession(null)
+            setLoading(false)
+          }
           return
         }
 
-        console.log('Initial session:', !!session)
+        console.log('Initial user:', !!user)
 
         if (mounted) {
-          setSession(session)
-          setUser(session?.user ?? null)
+          setUser(user)
 
-          if (session?.user) {
-            console.log('Fetching profile for user:', session.user.id)
-            await fetchProfile(session.user.id)
+          if (user) {
+            console.log('Fetching profile for user:', user.id)
+            await fetchProfile(user.id)
           } else {
-            console.log('No session user, setting profile to null')
+            console.log('No user, setting profile to null')
             setProfile(null)
           }
 
@@ -143,8 +176,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('Auth initialization complete')
         }
       } catch (error) {
-        console.error('Error in getInitialSession:', error)
+        console.warn('Auth initialization error (continuing without auth):', error)
         if (mounted) {
+          setUser(null)
+          setProfile(null)
+          setSession(null)
           setLoading(false)
         }
       }

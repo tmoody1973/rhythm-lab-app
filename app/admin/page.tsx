@@ -4,11 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Link from 'next/link'
-import { useAuth } from '@/contexts/auth-context'
-
 export default function AdminDashboardPage() {
-  const { profile } = useAuth()
-
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -17,7 +13,7 @@ export default function AdminDashboardPage() {
           Admin Dashboard
         </h1>
         <p className="text-gray-600">
-          Welcome back, {profile?.username || profile?.email}!
+          Welcome to the admin dashboard!
           Manage your Rhythm Lab content and imports from here.
         </p>
       </div>

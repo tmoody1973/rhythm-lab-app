@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Heart } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
-import { AuthModal } from './auth/auth-modal'
 
 interface FavoriteButtonProps {
   track?: {
@@ -28,7 +27,6 @@ export function FavoriteButton({ track, content, size = 'md', className = '' }: 
   const { user, loading: authLoading } = useAuth()
   const [isFavorited, setIsFavorited] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [showAuthModal, setShowAuthModal] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   // Ensure consistent hydration
@@ -93,7 +91,8 @@ export function FavoriteButton({ track, content, size = 'md', className = '' }: 
 
   const handleFavorite = async () => {
     if (!user) {
-      setShowAuthModal(true)
+      // Redirect to login page
+      window.location.href = '/login'
       return
     }
 
@@ -154,30 +153,22 @@ export function FavoriteButton({ track, content, size = 'md', className = '' }: 
   }
 
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="sm"
-        className={`${sizeClasses[size]} p-0 hover:bg-red-50 hover:text-red-600 transition-colors ${className}`}
-        onClick={handleFavorite}
-        disabled={!mounted || loading || authLoading}
-        title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
-      >
-        <Heart
-          size={iconSizes[size]}
-          className={`transition-colors ${
-            isFavorited
-              ? 'fill-red-500 text-red-500'
-              : 'text-gray-400 hover:text-red-500'
-          }`}
-        />
-      </Button>
-
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        defaultMode="signin"
+    <Button
+      variant="ghost"
+      size="sm"
+      className={`${sizeClasses[size]} p-0 hover:bg-red-50 hover:text-red-600 transition-colors ${className}`}
+      onClick={handleFavorite}
+      disabled={!mounted || loading || authLoading}
+      title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+    >
+      <Heart
+        size={iconSizes[size]}
+        className={`transition-colors ${
+          isFavorited
+            ? 'fill-red-500 text-red-500'
+            : 'text-gray-400 hover:text-red-500'
+        }`}
       />
-    </>
+    </Button>
   )
 }

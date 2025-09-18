@@ -15,7 +15,9 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          )
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -27,45 +29,49 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session if expired
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  // Check if trying to access admin routes
+  // Check if the route is an admin route
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    // If no session, redirect to admin login
-    if (!session) {
-      const redirectUrl = new URL('/admin/login', request.url)
+    // Allow access to login page
+    if (request.nextUrl.pathname === '/admin/login') {
+      return supabaseResponse
+    }
+
+    // Check authentication for other admin routes
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      // Redirect to login if not authenticated
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/admin/login'
       redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
       return NextResponse.redirect(redirectUrl)
     }
 
-    // Check user role from profile
+    // Check if user has admin role
     try {
-      const { data: profile, error } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .single()
 
-      if (error || !profile) {
-        console.error('Error fetching user profile:', error)
-        const redirectUrl = new URL('/admin/login', request.url)
-        redirectUrl.searchParams.set('error', 'unauthorized')
-        return NextResponse.redirect(redirectUrl)
-      }
+      const isAdmin = profile?.role === 'admin' ||
+                     profile?.role === 'super_admin' ||
+                     user.email?.endsWith('@rhythmlabradio.com')
 
-      // Check if user has admin or super_admin role
-      if (profile.role !== 'admin' && profile.role !== 'super_admin') {
-        const redirectUrl = new URL('/', request.url)
+      if (!isAdmin) {
+        // Redirect to main site with error
+        const redirectUrl = request.nextUrl.clone()
+        redirectUrl.pathname = '/'
         redirectUrl.searchParams.set('error', 'access_denied')
         return NextResponse.redirect(redirectUrl)
       }
     } catch (error) {
-      console.error('Middleware error:', error)
-      const redirectUrl = new URL('/admin/login', request.url)
-      redirectUrl.searchParams.set('error', 'server_error')
+      console.error('Error checking admin role:', error)
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/admin/login'
       return NextResponse.redirect(redirectUrl)
     }
   }
@@ -75,6 +81,9 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
   ],
 }
