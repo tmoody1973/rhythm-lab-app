@@ -35,10 +35,10 @@ export async function generateMetadata({ params }: ArtistProfilePageProps): Prom
 
     return {
       title: story.name + ' | Rhythm Lab Radio',
-      description: story.content?.bio || story.content?.description || 'Discover this artist on Rhythm Lab Radio',
+      description: story.content?.short_bio || story.content?.bio || story.content?.description || 'Discover this artist on Rhythm Lab Radio',
       openGraph: {
         title: story.name,
-        description: story.content?.bio || story.content?.description,
+        description: story.content?.short_bio || story.content?.bio || story.content?.description,
         images: story.content?.artist_photo?.filename ? [story.content.artist_photo.filename] : [],
       },
     };
@@ -126,24 +126,24 @@ export default async function ArtistProfilePage({ params }: ArtistProfilePagePro
                 {story.name}
               </h1>
 
-              {/* Bio/Intro */}
-              {(content?.bio || content?.intro) && (
+              {/* Short Bio/Intro */}
+              {(content?.short_bio || content?.bio || content?.intro) && (
                 <div className="text-xl text-muted-foreground mb-8 leading-relaxed font-medium">
-                  {content.bio || content.intro}
+                  {content.short_bio || content.bio || content.intro}
                 </div>
               )}
 
               {/* Genres/Tags */}
-              {(content?.genres || content?.tags || story.tag_list) && (
+              {(content?.genre || content?.genres || content?.tags || story.tag_list) && (
                 <div className="flex flex-wrap gap-2 mb-8">
-                  {(content.genres || content.tags || story.tag_list || []).map((tag: string, index: number) => (
+                  {(content.genre || content.genres || content.tags || story.tag_list || []).map((tag: string, index: number) => (
                     <Badge
                       key={index}
                       variant="outline"
                       className="text-sm px-3 py-1 rounded-full"
                       style={{ borderColor: profileColor, color: profileColor }}
                     >
-                      {tag}
+                      {tag.toUpperCase()}
                     </Badge>
                   ))}
                 </div>
@@ -152,53 +152,115 @@ export default async function ArtistProfilePage({ params }: ArtistProfilePagePro
 
             {/* Profile Content */}
             <div className="prose prose-lg max-w-none mb-12">
-              {content?.content && (
+              {/* Full Biography Rich Text */}
+              {content?.full_biography && (
+                <RichTextRenderer content={content.full_biography} />
+              )}
+
+              {/* Fallback to other content fields */}
+              {!content?.full_biography && content?.content && (
                 <RichTextRenderer content={content.content} />
               )}
 
-              {content?.body && (
+              {!content?.full_biography && !content?.content && content?.body && (
                 <RichTextRenderer content={content.body} />
               )}
+            </div>
 
-              {/* Artist Details */}
-              {(content?.origin || content?.website || content?.social_links) && (
-                <div className="not-prose bg-muted/30 rounded-xl p-6 my-8">
-                  <h3 className="text-lg font-semibold mb-4 text-foreground">Artist Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    {content.origin && (
-                      <div>
-                        <span className="font-medium text-foreground">Origin:</span>
-                        <span className="ml-2 text-muted-foreground">{content.origin}</span>
-                      </div>
-                    )}
-                    {content.website && (
-                      <div>
-                        <span className="font-medium text-foreground">Website:</span>
-                        <a
-                          href={content.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-2 text-blue-600 hover:text-blue-800 underline"
-                        >
-                          {content.website}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Fallback for simple text content */}
-              {content && !content.content && !content.body && (
-                <div className="text-foreground leading-relaxed">
-                  {typeof content === 'string' ? content : (
-                    <pre className="whitespace-pre-wrap font-sans">
-                      {JSON.stringify(content, null, 2)}
-                    </pre>
+            {/* Artist Details */}
+            {(content?.origin_city || content?.origin_country || content?.website_url || content?.spotify_url || content?.youtube_url || content?.bandcamp_url || content?.discogs_url || content?.soundcloud_url) && (
+              <div className="bg-muted/30 rounded-xl p-6 mb-8">
+                <h3 className="text-lg font-semibold mb-4 text-foreground">Artist Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  {(content.origin_city || content.origin_country) && (
+                    <div>
+                      <span className="font-medium text-foreground">Origin:</span>
+                      <span className="ml-2 text-muted-foreground">
+                        {[content.origin_city, content.origin_country].filter(Boolean).join(', ')}
+                      </span>
+                    </div>
+                  )}
+                  {content.website_url && (
+                    <div>
+                      <span className="font-medium text-foreground">Website:</span>
+                      <a
+                        href={content.website_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Visit Website
+                      </a>
+                    </div>
+                  )}
+                  {content.spotify_url && (
+                    <div>
+                      <span className="font-medium text-foreground">Spotify:</span>
+                      <a
+                        href={content.spotify_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Listen on Spotify
+                      </a>
+                    </div>
+                  )}
+                  {content.youtube_url && (
+                    <div>
+                      <span className="font-medium text-foreground">YouTube:</span>
+                      <a
+                        href={content.youtube_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Watch on YouTube
+                      </a>
+                    </div>
+                  )}
+                  {content.bandcamp_url && (
+                    <div>
+                      <span className="font-medium text-foreground">Bandcamp:</span>
+                      <a
+                        href={content.bandcamp_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Listen on Bandcamp
+                      </a>
+                    </div>
+                  )}
+                  {content.discogs_url && (
+                    <div>
+                      <span className="font-medium text-foreground">Discogs:</span>
+                      <a
+                        href={content.discogs_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                      >
+                        View Discography
+                      </a>
+                    </div>
+                  )}
+                  {content.soundcloud_url && (
+                    <div>
+                      <span className="font-medium text-foreground">SoundCloud:</span>
+                      <a
+                        href={content.soundcloud_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Listen on SoundCloud
+                      </a>
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Profile Footer */}
             <footer className="border-t border-border pt-8">
