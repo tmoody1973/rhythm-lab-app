@@ -39,16 +39,14 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
   try {
     const body: ImportShowRequest = await request.json()
 
-    // Validate required fields using explicit property access - TypeScript safe approach
-    const missingFields: string[] = []
-    if (!body.title) missingFields.push('title')
-    if (!body.date) missingFields.push('date')
-    if (!body.mixcloud_url) missingFields.push('mixcloud_url')
+    // Validate required fields - TypeScript fix applied with explicit type assertion
+    const required = ['title', 'date', 'mixcloud_url'] as const
+    const missing = required.filter((field: string) => !body[field as keyof ImportShowRequest])
 
-    if (missingFields.length > 0) {
+    if (missing.length > 0) {
       return NextResponse.json({
         success: false,
-        message: `Missing required fields: ${missingFields.join(', ')}`
+        message: `Missing required fields: ${missing.join(', ')}`
       }, { status: 400 })
     }
 
