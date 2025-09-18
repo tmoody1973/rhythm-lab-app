@@ -61,7 +61,7 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       mixcloudUrl = searchParams.get('url')
     } else if (request.method === 'POST') {
       const body: FetchSingleRequest = await request.json()
-      mixcloudUrl = body.url || body.key
+      mixcloudUrl = body.url || body.key || null
     }
 
     if (!mixcloudUrl) {
