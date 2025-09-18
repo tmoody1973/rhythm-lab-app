@@ -1,7 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
-export function createClient() {
+export function createClient(): SupabaseClient {
   const cookieStore = cookies()
 
   return createServerClient(
@@ -26,4 +27,29 @@ export function createClient() {
       },
     }
   )
+}
+
+// Server-side auth helper with timeout
+export async function getServerSession(timeoutMs: number = 5000) {
+  try {
+    const client = createClient()
+
+    const sessionPromise = client.auth.getSession()
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Session fetch timeout')), timeoutMs)
+    )
+
+    const result = await Promise.race([sessionPromise, timeoutPromise])
+    const { data, error } = result as any
+
+    if (error) {
+      console.error('Server session error:', error)
+      return { session: null, error }
+    }
+
+    return { session: data.session, error: null }
+  } catch (error) {
+    console.error('Server session timeout:', error)
+    return { session: null, error }
+  }
 }

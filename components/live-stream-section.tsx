@@ -25,6 +25,11 @@ export function LiveStreamSection() {
   const [loading, setLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
   const [songChangeAnimation, setSongChangeAnimation] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const fetchRecentTracks = async (isRefresh = false) => {
@@ -109,7 +114,7 @@ export function LiveStreamSection() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">RHYTHM LAB 24/7</h2>
-          {isLive && (
+          {mounted && isLive && (
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
               <span className="text-sm text-red-500">Live</span>
