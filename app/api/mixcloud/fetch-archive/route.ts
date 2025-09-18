@@ -103,6 +103,7 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
     const data = await response.json()
 
     // Transform data to include relevant fields for import
+    // Note: Mixcloud's bulk API returns minimal data - descriptions are often empty
     const shows: MixcloudShow[] = data.data?.map((show: any) => ({
       key: show.key,
       name: show.name,
@@ -110,7 +111,7 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       url: show.url,
       created_time: show.created_time,
       updated_time: show.updated_time,
-      description: show.description || '',
+      description: show.description || '', // Often empty from bulk API
       picture: {
         medium: show.pictures?.medium || '',
         large: show.pictures?.large || '',

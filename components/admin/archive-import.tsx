@@ -148,15 +148,38 @@ export function ArchiveImport() {
 
   const importShow = async (show: MixcloudShow): Promise<{ success: boolean; error?: string }> => {
     try {
+      // If description is empty from bulk API, fetch full details from single show API
+      let fullShow = show
+      if (!show.description || show.description.trim() === '') {
+        console.log(`Fetching full details for "${show.name}" to get description...`)
+
+        try {
+          const detailResponse = await fetch(`/api/mixcloud/fetch-single`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: show.url })
+          })
+
+          const detailResult = await detailResponse.json()
+          if (detailResult.success && detailResult.show) {
+            fullShow = detailResult.show
+            console.log(`Fetched full details: description length = ${fullShow.description?.length || 0}`)
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch details for ${show.name}:`, error)
+          // Continue with original show data if fetch fails
+        }
+      }
+
       const importData = {
-        title: show.name,
-        description: show.description,
-        date: show.created_time,
-        mixcloud_url: show.url,
-        embed_code: `<iframe width="100%" height="60" src="https://www.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&feed=%2F${show.key.replace('/', '%2F')}%2F" frameborder="0"></iframe>`,
-        cover_image: show.picture.large || show.picture.medium,
+        title: fullShow.name,
+        description: fullShow.description || '',
+        date: fullShow.created_time,
+        mixcloud_url: fullShow.url,
+        embed_code: fullShow.embed_code || `<iframe width="100%" height="60" src="https://www.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&feed=%2F${fullShow.key.replace('/', '%2F')}%2F" frameborder="0"></iframe>`,
+        cover_image: fullShow.picture.large || fullShow.picture.medium,
         playlist_text: '', // Archive imports typically won't have playlist data
-        slug: `${show.user.username}-${show.slug}`,
+        slug: `${fullShow.user.username}-${fullShow.slug}`,
         status: 'published'
       }
 
