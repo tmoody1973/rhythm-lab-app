@@ -62,8 +62,9 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
         return NextResponse.json({
           success: false,
           message: 'No tracks found in playlist text',
-        errors: parseResult.errors
-      }, { status: 400 })
+          errors: parseResult.errors
+        }, { status: 400 })
+      }
     }
 
     // Create Supabase client

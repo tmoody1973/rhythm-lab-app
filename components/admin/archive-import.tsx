@@ -77,6 +77,7 @@ export function ArchiveImport() {
   const [editingPlaylist, setEditingPlaylist] = useState<string | null>(null)
   const [playlistText, setPlaylistText] = useState('')
   const [isSavingPlaylist, setIsSavingPlaylist] = useState(false)
+  const [importedShows, setImportedShows] = useState<Map<string, string>>(new Map()) // mixcloud key -> database UUID
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -168,7 +169,13 @@ export function ArchiveImport() {
       })
 
       const result = await response.json()
-      return { success: result.success, error: result.message }
+
+      // Track imported show if successful
+      if (result.success && result.show_id) {
+        setImportedShows(prev => new Map(prev).set(show.key, result.show_id))
+      }
+
+      return { success: result.success, error: result.message, show_id: result.show_id }
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
@@ -239,15 +246,23 @@ export function ArchiveImport() {
       return
     }
 
+    // Get the database UUID for this show
+    const showId = importedShows.get(show.key)
+    if (!showId) {
+      console.error('Show not imported yet - cannot update playlist')
+      return
+    }
+
     setIsSavingPlaylist(true)
 
     try {
       // Use the sync endpoint to update the show with playlist data
       const updateData = {
+        show_id: showId,
         playlist_text: playlistText
       }
 
-      const response = await fetch(`/api/mixcloud/sync?show_id=${show.key}`, {
+      const response = await fetch('/api/mixcloud/sync', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -454,15 +469,21 @@ export function ArchiveImport() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditPlaylist(show.key)}
-                          disabled={isImporting || editingPlaylist === show.key}
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Edit Playlist
-                        </Button>
+                        {importedShows.has(show.key) ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditPlaylist(show.key)}
+                            disabled={isImporting || editingPlaylist === show.key}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit Playlist
+                          </Button>
+                        ) : (
+                          <Badge variant="outline" className="text-xs px-2 py-1">
+                            {selectedShows.has(show.key) ? 'Selected for Import' : 'Not Imported'}
+                          </Badge>
+                        )}
 
                         <a
                           href={show.url}
