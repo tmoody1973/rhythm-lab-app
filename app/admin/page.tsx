@@ -30,7 +30,7 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <Badge variant="outline">Ready to Use</Badge>
+                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">In Development</Badge>
                 <Button variant="ghost" size="sm">
                   Go to Import →
                 </Button>
