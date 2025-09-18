@@ -1,6 +1,6 @@
 // Database query functions for Supabase
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/client'
 import type {
   Show,
   Track,
@@ -16,7 +16,7 @@ import type {
   Song
 } from './types'
 
-export const supabase = createClientComponentClient()
+export const supabase = createClient()
 
 // Shows queries
 export async function getFeaturedShows(): Promise<Show[]> {

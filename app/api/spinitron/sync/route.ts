@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { spinitronSync } from '@/lib/spinitron/sync'
+import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,8 +69,8 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Just check if we can get current song without syncing
-    const { data: currentSong } = await require('@supabase/auth-helpers-nextjs')
-      .createRouteHandlerClient({ cookies: require('next/headers').cookies })
+    const supabase = createClient()
+    const { data: currentSong } = await supabase
       .from('songs')
       .select('*')
       .eq('station_id', 'rlr-main')
