@@ -15,7 +15,7 @@ export function ArchiveDiscoverySection() {
             <Card className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl">
               <div className="aspect-[16/9] relative overflow-hidden">
                 <img
-                  src="/ambient-ethereal-soundscape-with-floating-particle.jpg"
+                  src="/images/ALBUM-DEFAULT.png"
                   alt="Archive show artwork"
                   className="w-full h-full object-cover"
                 />
@@ -59,7 +59,7 @@ export function ArchiveDiscoverySection() {
                         id: "archive-ambient-vol-12",
                         title: "AMBIENT SOUNDSCAPES VOL. 12",
                         type: 'show',
-                        image: "/ambient-ethereal-soundscape-with-floating-particle.jpg",
+                        image: "/images/ALBUM-DEFAULT.png",
                         description: "A journey through ethereal soundscapes and atmospheric textures"
                       }}
                       size="sm"
@@ -76,7 +76,7 @@ export function ArchiveDiscoverySection() {
             <Card className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl">
               <div className="aspect-[16/9] relative overflow-hidden">
                 <img
-                  src="/placeholder-eqe3b.png"
+                  src="/images/ALBUM-DEFAULT.png"
                   alt="Deep house archive artwork"
                   className="w-full h-full object-cover"
                 />
@@ -120,7 +120,7 @@ export function ArchiveDiscoverySection() {
                         id: "archive-deep-house-sessions-47",
                         title: "DEEP HOUSE SESSIONS #47",
                         type: 'show',
-                        image: "/placeholder-eqe3b.png",
+                        image: "/images/ALBUM-DEFAULT.png",
                         description: "Underground deep house selections from Detroit and Chicago"
                       }}
                       size="sm"
@@ -137,7 +137,7 @@ export function ArchiveDiscoverySection() {
             <Card className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl">
               <div className="aspect-[16/9] relative overflow-hidden">
                 <img
-                  src="/placeholder-yjpx3.png"
+                  src="/images/ALBUM-DEFAULT.png"
                   alt="Jazz fusion archive artwork"
                   className="w-full h-full object-cover"
                 />
@@ -181,7 +181,7 @@ export function ArchiveDiscoverySection() {
                         id: "archive-jazz-fusion-explorations",
                         title: "JAZZ FUSION EXPLORATIONS",
                         type: 'show',
-                        image: "/placeholder-yjpx3.png",
+                        image: "/images/ALBUM-DEFAULT.png",
                         description: "Electric jazz journeys from the 70s to contemporary fusion"
                       }}
                       size="sm"
@@ -198,7 +198,7 @@ export function ArchiveDiscoverySection() {
             <Card className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl">
               <div className="aspect-[16/9] relative overflow-hidden">
                 <img
-                  src="/placeholder-ptd6l.png"
+                  src="/images/ALBUM-DEFAULT.png"
                   alt="Techno underground archive artwork"
                   className="w-full h-full object-cover"
                 />
@@ -242,7 +242,7 @@ export function ArchiveDiscoverySection() {
                         id: "archive-techno-underground",
                         title: "TECHNO UNDERGROUND",
                         type: 'show',
-                        image: "/placeholder-ptd6l.png",
+                        image: "/images/ALBUM-DEFAULT.png",
                         description: "Raw techno from Berlin's underground scene and beyond"
                       }}
                       size="sm"

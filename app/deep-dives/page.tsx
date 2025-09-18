@@ -94,7 +94,7 @@ export default async function DeepDivesPage() {
       id: 1,
       title: "MILES DAVIS: FROM BEBOP TO FUSION - A RHYTHM LAB PERSPECTIVE",
       description: "Exploring Miles Davis's revolutionary journey through jazz evolution",
-      image: "/miles-davis-trumpet-silhouette-jazz-atmosphere.jpg",
+      image: "/images/ALBUM-DEFAULT.png",
       date: "17.09.25",
       duration: "45m",
       plays: "1.9k",
@@ -105,7 +105,7 @@ export default async function DeepDivesPage() {
       id: 2,
       title: "THE EVOLUTION OF ELECTRONIC MUSIC: FROM KRAFTWERK TO AI",
       description: "A comprehensive look at how electronic music has shaped modern sound",
-      image: "/electronic-music-producer-in-studio-ambient-lighti.jpg",
+      image: "/images/ALBUM-DEFAULT.png",
       date: "14.09.25",
       duration: "52m",
       plays: "2.3k",
@@ -116,7 +116,7 @@ export default async function DeepDivesPage() {
       id: 3,
       title: "AMBIENT SOUNDSCAPES: THE ART OF ATMOSPHERIC MUSIC",
       description: "Exploring the creation and impact of immersive ambient compositions",
-      image: "/ambient-soundscape-visualization-with-ethereal-col.jpg",
+      image: "/images/ALBUM-DEFAULT.png",
       date: "12.09.25",
       duration: "38m",
       plays: "1.7k",
@@ -127,7 +127,7 @@ export default async function DeepDivesPage() {
       id: 4,
       title: "DETROIT TECHNO: THE BIRTH OF A MOVEMENT",
       description: "How Detroit's underground scene revolutionized electronic dance music",
-      image: "/abstract-music-visualization-dark.jpg",
+      image: "/images/ALBUM-DEFAULT.png",
       date: "10.09.25",
       duration: "41m",
       plays: "2.1k",
@@ -138,7 +138,7 @@ export default async function DeepDivesPage() {
       id: 5,
       title: "JAZZ FUSION: WHERE GENRES COLLIDE",
       description: "The experimental blend of jazz with rock, funk, and electronic elements",
-      image: "/placeholder-eqe3b.png",
+      image: "/images/ALBUM-DEFAULT.png",
       date: "08.09.25",
       duration: "47m",
       plays: "1.8k",
@@ -149,7 +149,7 @@ export default async function DeepDivesPage() {
       id: 6,
       title: "THE PSYCHOLOGY OF MUSIC: HOW SOUND AFFECTS THE MIND",
       description: "Scientific exploration of music's impact on cognition and emotion",
-      image: "/placeholder-yjpx3.png",
+      image: "/images/ALBUM-DEFAULT.png",
       date: "06.09.25",
       duration: "55m",
       plays: "2.7k",
@@ -306,7 +306,7 @@ export default async function DeepDivesPage() {
                           className="text-white text-sm px-6 py-2"
                           style={{ backgroundColor: diveColor }}
                         >
-                          ▶ Play
+                          Read More
                         </Button>
                       </Link>
                     </div>
@@ -421,7 +421,7 @@ export default async function DeepDivesPage() {
                           className="text-white text-xs px-3 py-1"
                           style={{ backgroundColor: diveColor }}
                         >
-                          ▶ Play
+                          Read More
                         </Button>
                       </Link>
                     </div>

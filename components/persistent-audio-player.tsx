@@ -96,7 +96,7 @@ export function PersistentAudioPlayer() {
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-12 h-12 bg-muted border border-border/50 overflow-hidden rounded flex-shrink-0">
               <img
-                src={currentSong?.image || "/abstract-music-visualization-dark.jpg"}
+                src={currentSong?.image || "/images/ALBUM-DEFAULT.png"}
                 alt="Album artwork"
                 className="w-full h-full object-cover"
               />

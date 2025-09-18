@@ -132,7 +132,7 @@ export function LiveStreamSection() {
           {/* Main album artwork with crossfade effect */}
           <div className="relative w-full h-full">
             <img
-              src={currentSong?.image || "/abstract-music-visualization-dark.jpg"}
+              src={currentSong?.image || "/images/ALBUM-DEFAULT.png"}
               alt="Current show"
               className={`absolute inset-0 w-full h-full object-cover transition-all duration-1500 ease-in-out transform ${songChangeAnimation ? 'scale-105 opacity-90' : 'scale-100 opacity-100'}`}
               key={currentSong?.id}
@@ -189,7 +189,7 @@ export function LiveStreamSection() {
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-muted border-2 border-border/50 overflow-hidden flex-shrink-0 rounded">
                 <img
-                  src={currentSong?.image || "/deep-house-album-cover-kerri-chandler-rain.jpg"}
+                  src={currentSong?.image || "/images/ALBUM-DEFAULT.png"}
                   alt="Album artwork"
                   className="w-full h-full object-cover"
                 />
@@ -240,7 +240,7 @@ export function LiveStreamSection() {
               {/* Album Artwork */}
               <div className="w-12 h-12 bg-muted border border-border/50 overflow-hidden rounded flex-shrink-0">
                 <img
-                  src={track.image || "/abstract-music-visualization-dark.jpg"}
+                  src={track.image || "/images/ALBUM-DEFAULT.png"}
                   alt="Album artwork"
                   className="w-full h-full object-cover"
                 />
