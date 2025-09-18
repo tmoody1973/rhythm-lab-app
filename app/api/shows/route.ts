@@ -19,7 +19,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const limit = parseInt(searchParams.get('limit') || '20', 10)
     const offset = parseInt(searchParams.get('offset') || '0', 10)
     const search = searchParams.get('search') || ''
-    const status = searchParams.get('status') || 'published'
 
     // Create Supabase client
     const supabase = createServerClient(
@@ -45,10 +44,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       .order('published_date', { ascending: false })
 
     // Add filters
-    if (status !== 'all') {
-      query = query.eq('status', status)
-    }
-
     if (search) {
       query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
     }
