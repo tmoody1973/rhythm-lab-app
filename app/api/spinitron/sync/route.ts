@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Just check if we can get current song without syncing
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data: currentSong } = await supabase
       .from('songs')
       .select('*')

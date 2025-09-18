@@ -47,14 +47,14 @@ export async function fetchProfileWithRetry(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const profileQuery = client
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
       const result = await withTimeout(
-        profileQuery,
+        Promise.resolve(
+          client
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single()
+        ),
         clientTimeouts.profile,
         `Profile fetch timeout (attempt ${attempt})`
       )

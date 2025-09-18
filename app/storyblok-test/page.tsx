@@ -20,14 +20,15 @@ function RichTextRenderer({ content }: { content: any }) {
       case 'heading':
         const level = node.attrs?.level || 2;
         const HeadingTag = `h${level}` as keyof JSX.IntrinsicElements;
-        const headingClasses: Record<number, string> = {
+        const headingClassesMap: Record<number, string> = {
           1: 'text-3xl font-bold mb-6 text-gray-900',
           2: 'text-2xl font-semibold mb-4 text-gray-900',
           3: 'text-xl font-semibold mb-3 text-gray-900',
           4: 'text-lg font-semibold mb-2 text-gray-900',
           5: 'text-base font-semibold mb-2 text-gray-900',
           6: 'text-sm font-semibold mb-2 text-gray-900'
-        }[level] || 'text-lg font-semibold mb-2 text-gray-900';
+        };
+        const headingClasses = headingClassesMap[level] || 'text-lg font-semibold mb-2 text-gray-900';
 
         return (
           <HeadingTag key={index} className={headingClasses}>

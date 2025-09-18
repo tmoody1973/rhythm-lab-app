@@ -43,7 +43,11 @@ export function RadioProvider({ children }: { children: ReactNode }) {
               start_time: track.start,
               duration: track.duration,
               episode_title: track.episode?.title,
-              station_id: 'rlr-main'
+              station_id: 'rlr-main',
+              spinitron_id: track.id,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              is_manual: false
             }
 
             setCurrentSong(songData)

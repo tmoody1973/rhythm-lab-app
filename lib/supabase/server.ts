@@ -2,8 +2,8 @@ import { createServerClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
-export function createClient(): SupabaseClient {
-  const cookieStore = cookies()
+export async function createClient(): Promise<SupabaseClient> {
+  const cookieStore = await cookies()
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,7 +32,7 @@ export function createClient(): SupabaseClient {
 // Server-side auth helper with timeout
 export async function getServerSession(timeoutMs: number = 5000) {
   try {
-    const client = createClient()
+    const client = await createClient()
 
     const sessionPromise = client.auth.getSession()
     const timeoutPromise = new Promise((_, reject) =>

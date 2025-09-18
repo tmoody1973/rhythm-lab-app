@@ -7,10 +7,10 @@ import { useAuthActions } from './use-auth-actions'
 export function useAuth() {
   const { session, user, loading: sessionLoading, error: sessionError } = useAuthSession()
   const { profile, loading: profileLoading, error: profileError, refreshProfile } = useUserProfile(user)
-  const authActions = useAuthActions()
+  const { loading: actionsLoading, ...authActions } = useAuthActions()
 
-  // Combined loading state - true if either session or profile is loading
-  const loading = sessionLoading || (user && profileLoading)
+  // Combined loading state - true if either session, profile, or actions are loading
+  const loading = sessionLoading || (user && profileLoading) || actionsLoading
 
   // Combined error state
   const error = sessionError || (profileError ? new Error(profileError) : null)

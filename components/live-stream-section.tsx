@@ -55,7 +55,7 @@ export function LiveStreamSection() {
 
           if (songs.length > 0) {
             // Set recent songs (skip current song, get rest of the list)
-            const recentTracks = songs.slice(1).map(track => ({
+            const recentTracks = songs.slice(1).map((track: any) => ({
               id: track.id,
               song: track.song,
               artist: track.artist,
@@ -70,8 +70,8 @@ export function LiveStreamSection() {
 
             // Only update recent songs if the list has actually changed
             setRecentSongs(prev => {
-              const prevIds = prev.map(s => s.id).join(',')
-              const newIds = recentTracks.map(s => s.id).join(',')
+              const prevIds = prev.map((s: any) => s.id).join(',')
+              const newIds = recentTracks.map((s: any) => s.id).join(',')
               return prevIds !== newIds ? recentTracks : prev
             })
 
