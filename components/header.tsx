@@ -7,12 +7,12 @@ import { SearchModal } from "@/components/search-modal"
 import { NewsTicker } from "@/components/news-ticker"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import Image from "next/image"
-import { useAuth } from "@/contexts/auth-context"
+import { useUser, SignOutButton } from "@clerk/nextjs"
 
 export function Header() {
   const [searchModalOpen, setSearchModalOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const { user, loading } = useAuth()
+  const { user, isLoaded } = useUser()
 
   useEffect(() => {
     setMounted(true)
@@ -114,21 +114,32 @@ export function Header() {
 
               {/* Auth buttons for desktop */}
               <div className="hidden md:flex items-center gap-3">
-                {!mounted || loading ? (
+                {!mounted || !isLoaded ? (
                   <div className="text-sm text-muted-foreground">Loading...</div>
                 ) : user ? (
-                  <Link href="/profile">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background text-sm px-4 py-2"
-                    >
-                      Profile
-                    </Button>
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <Link href="/profile">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background text-sm px-4 py-2"
+                      >
+                        Profile
+                      </Button>
+                    </Link>
+                    <SignOutButton>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-foreground hover:bg-foreground/10 text-sm px-4 py-2"
+                      >
+                        Sign Out
+                      </Button>
+                    </SignOutButton>
+                  </div>
                 ) : (
                   <>
-                    <Link href="/login">
+                    <Link href="/sign-in">
                       <Button
                         variant="outline"
                         size="sm"
@@ -224,20 +235,30 @@ export function Header() {
                       {/* Auth buttons for mobile */}
                       <div className="border-t border-border/30 pt-6 mt-6">
                         <div className="flex flex-col gap-3">
-                          {!mounted || loading ? (
+                          {!mounted || !isLoaded ? (
                             <div className="text-sm text-muted-foreground text-center">Loading...</div>
                           ) : user ? (
-                            <Link href="/profile" >
-                              <Button
-                                variant="outline"
-                                className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background w-full"
-                              >
-                                Profile
-                              </Button>
-                            </Link>
+                            <>
+                              <Link href="/profile">
+                                <Button
+                                  variant="outline"
+                                  className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background w-full"
+                                >
+                                  Profile
+                                </Button>
+                              </Link>
+                              <SignOutButton>
+                                <Button
+                                  variant="ghost"
+                                  className="text-foreground hover:bg-foreground/10 w-full"
+                                >
+                                  Sign Out
+                                </Button>
+                              </SignOutButton>
+                            </>
                           ) : (
                             <>
-                              <Link href="/login" >
+                              <Link href="/sign-in">
                                 <Button
                                   variant="outline"
                                   className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background w-full"
@@ -245,7 +266,7 @@ export function Header() {
                                   Log In
                                 </Button>
                               </Link>
-                              <Link href="/signup" >
+                              <Link href="/signup">
                                 <Button
                                   className="bg-foreground text-background hover:bg-foreground/90 w-full"
                                 >

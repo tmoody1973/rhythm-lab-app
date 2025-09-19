@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Heart } from 'lucide-react'
-import { useAuth } from '@/contexts/auth-context'
+import { useUser } from '@clerk/nextjs'
 
 interface FavoriteButtonProps {
   track?: {
@@ -24,7 +24,7 @@ interface FavoriteButtonProps {
 }
 
 export function FavoriteButton({ track, content, size = 'md', className = '' }: FavoriteButtonProps) {
-  const { user, loading: authLoading } = useAuth()
+  const { user, isLoaded } = useUser()
   const [isFavorited, setIsFavorited] = useState(false)
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -70,7 +70,12 @@ export function FavoriteButton({ track, content, size = 'md', className = '' }: 
       }
 
       try {
-        const response = await fetch('/api/favorites')
+        const headers: HeadersInit = {}
+        if (user?.id) {
+          headers['x-clerk-user-id'] = user.id
+        }
+
+        const response = await fetch('/api/favorites', { headers })
 
         if (response.ok) {
           const { favorites } = await response.json()
@@ -91,8 +96,8 @@ export function FavoriteButton({ track, content, size = 'md', className = '' }: 
 
   const handleFavorite = async () => {
     if (!user) {
-      // Redirect to login page
-      window.location.href = '/login'
+      // Redirect to Clerk sign in page
+      window.location.href = '/sign-in'
       return
     }
 
@@ -131,11 +136,16 @@ export function FavoriteButton({ track, content, size = 'md', className = '' }: 
             action: isFavorited ? 'remove' : 'add',
           }
 
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      }
+      if (user?.id) {
+        headers['x-clerk-user-id'] = user.id
+      }
+
       const response = await fetch('/api/favorites', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(requestBody),
       })
 
@@ -158,7 +168,7 @@ export function FavoriteButton({ track, content, size = 'md', className = '' }: 
       size="sm"
       className={`${sizeClasses[size]} p-0 hover:bg-red-50 hover:text-red-600 transition-colors ${className}`}
       onClick={handleFavorite}
-      disabled={!mounted || loading || authLoading}
+      disabled={!mounted || loading || !isLoaded}
       title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
     >
       <Heart

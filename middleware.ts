@@ -1,7 +1,17 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-export async function middleware(request: NextRequest) {
+// Define user routes that should be protected by Clerk
+const isClerkProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)',
+  '/profile(.*)',
+  '/favorites(.*)',
+  // Add other user-specific routes here as needed
+])
+
+// Dual auth middleware: Clerk for users, Supabase for admin
+async function supabaseAdminMiddleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -78,6 +88,29 @@ export async function middleware(request: NextRequest) {
 
   return supabaseResponse
 }
+
+// Main middleware that combines Clerk (for users) and Supabase (for admin)
+export default clerkMiddleware(async (auth, req: NextRequest) => {
+  const { pathname } = req.nextUrl
+
+  // Admin routes: Use existing Supabase auth logic, skip Clerk completely
+  if (pathname.startsWith('/admin')) {
+    return await supabaseAdminMiddleware(req)
+  }
+
+  // Clerk auth pages: Let Clerk handle completely, no interference
+  if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up') || pathname.startsWith('/signup')) {
+    return NextResponse.next()
+  }
+
+  // Clerk-protected user routes: Require Clerk authentication
+  if (isClerkProtectedRoute(req)) {
+    auth.protect()
+  }
+
+  // All other routes: Public, no auth required
+  return NextResponse.next()
+})
 
 export const config = {
   matcher: [

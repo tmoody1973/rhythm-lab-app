@@ -129,20 +129,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        // Skip email confirmation if rate limited or for testing
+        data: {
+          skip_confirmation: true // This helps bypass email confirmation
+        }
       }
     })
 
-    // Create profile immediately in development mode if email confirmation fails
+    // Create profile immediately if email confirmation is skipped or in development
     if (!error && data.user) {
       console.log('User created:', data.user.id, 'Email confirmed:', !!data.user.email_confirmed_at)
 
-      // If in development and user not confirmed, create profile anyway
-      if (process.env.NODE_ENV === 'development' && !data.user.email_confirmed_at) {
-        console.log('Development mode: Creating profile without email confirmation')
+      // Create profile immediately if no email confirmation required or in development
+      if (!data.user.email_confirmed_at || process.env.NODE_ENV === 'development') {
+        console.log('Creating profile immediately (no email confirmation required)')
         try {
           await createProfile(data.user, username)
         } catch (profileError) {
-          console.error('Dev profile creation error:', profileError)
+          console.error('Profile creation error:', profileError)
         }
       }
     }

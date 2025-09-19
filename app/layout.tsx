@@ -6,6 +6,7 @@ import "./globals.css"
 import { PersistentAudioPlayer } from "@/components/persistent-audio-player"
 import { RadioProvider } from "@/lib/radio/context"
 import { AuthProvider } from "@/contexts/auth-context"
+import { ClerkAuthProvider } from "@/contexts/clerk-auth-context"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,12 +28,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans ${inter.variable} antialiased`}>
-        <AuthProvider>
-          <RadioProvider>
-            <Suspense fallback={null}>{children}</Suspense>
-            <PersistentAudioPlayer />
-          </RadioProvider>
-        </AuthProvider>
+        <ClerkAuthProvider>
+          <AuthProvider>
+            <RadioProvider>
+              <Suspense fallback={null}>{children}</Suspense>
+              <PersistentAudioPlayer />
+            </RadioProvider>
+          </AuthProvider>
+        </ClerkAuthProvider>
       </body>
     </html>
   )

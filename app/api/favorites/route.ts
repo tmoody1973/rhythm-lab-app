@@ -1,12 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { auth } from '@clerk/nextjs/server'
+
+// Helper function to get user profile ID for both Clerk and Supabase users
+async function getUserProfileId(supabase: any, request: NextRequest): Promise<string | null> {
+  // First try to get Clerk user ID from the Authorization header
+  const clerkUserId = request.headers.get('x-clerk-user-id')
+  console.log('Clerk userId from header:', clerkUserId)
+
+  if (clerkUserId) {
+    // Find the profile by clerk_user_id
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('clerk_user_id', clerkUserId)
+      .single()
+
+    console.log('Profile lookup for Clerk user:', { profile, error })
+    return profile?.id || null
+  }
+
+  // Try server-side Clerk auth as fallback
+  try {
+    const authResult = await auth()
+    const userId = authResult.userId
+    console.log('Server-side Clerk userId:', userId)
+
+    if (userId) {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('clerk_user_id', userId)
+        .single()
+
+      console.log('Server-side profile lookup:', { profile, error })
+      return profile?.id || null
+    }
+  } catch (error) {
+    console.log('Server-side auth error:', error)
+  }
+
+  // Fallback to Supabase auth (for admin users)
+  const { data: { user }, error } = await supabase.auth.getUser()
+  console.log('Supabase fallback user:', { user: user?.id, error })
+  return user?.id || null
+}
 
 export async function GET(request: NextRequest) {
   try {
+    // Use service role to bypass RLS for dual auth system
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        },
         cookies: {
           getAll() {
             return request.cookies.getAll()
@@ -18,16 +68,16 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const userProfileId = await getUserProfileId(supabase, request)
 
-    if (authError || !user) {
+    if (!userProfileId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { data: favorites, error } = await supabase
       .from('user_favorites')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userProfileId)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -70,10 +120,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Use service role to bypass RLS for dual auth system
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        },
         cookies: {
           getAll() {
             return request.cookies.getAll()
@@ -85,9 +140,9 @@ export async function POST(request: NextRequest) {
       }
     )
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const userProfileId = await getUserProfileId(supabase, request)
 
-    if (authError || !user) {
+    if (!userProfileId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -116,7 +171,7 @@ export async function POST(request: NextRequest) {
       const { error } = await supabase
         .from('user_favorites')
         .delete()
-        .eq('user_id', user.id)
+        .eq('user_id', userProfileId)
         .eq('item_type', itemType)
         .eq('item_id', itemId)
 
@@ -134,7 +189,7 @@ export async function POST(request: NextRequest) {
       const { error } = await supabase
         .from('user_favorites')
         .insert({
-          user_id: user.id,
+          user_id: userProfileId,
           item_type: itemType,
           item_id: itemId,
         })

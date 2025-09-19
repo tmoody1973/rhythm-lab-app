@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FavoriteButton } from "@/components/favorite-button"
-import { useAuth } from "@/contexts/auth-context"
+import { useUser, SignOutButton } from "@clerk/nextjs"
 import { Heart, Music } from "lucide-react"
 
 interface Favorite {
@@ -23,21 +23,21 @@ interface Favorite {
 }
 
 export default function ProfilePage() {
-  const { user, loading, signOut } = useAuth()
+  const { user, isLoaded } = useUser()
   const router = useRouter()
   const [favorites, setFavorites] = useState<Favorite[]>([])
   const [favoritesLoading, setFavoritesLoading] = useState(true)
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login")
+    if (isLoaded && !user) {
+      router.push("/sign-in")
     }
-  }, [user, loading, router])
+  }, [user, isLoaded, router])
 
   // Fetch user favorites
   useEffect(() => {
     const fetchFavorites = async () => {
-      if (!user || loading) {
+      if (!user || !isLoaded) {
         setFavoritesLoading(false)
         return
       }
@@ -61,14 +61,9 @@ export default function ProfilePage() {
     }
 
     fetchFavorites()
-  }, [user, loading])
+  }, [user, isLoaded])
 
-  const handleSignOut = async () => {
-    await signOut()
-    router.push("/")
-  }
-
-  if (loading) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen bg-background text-foreground">
         <Header />
@@ -101,12 +96,12 @@ export default function ProfilePage() {
               <CardContent className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Email</label>
-                  <p className="text-foreground">{user.email}</p>
+                  <p className="text-foreground">{user.primaryEmailAddress?.emailAddress}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Member Since</label>
                   <p className="text-foreground">
-                    {new Date(user.created_at).toLocaleDateString()}
+                    {new Date(user.createdAt).toLocaleDateString()}
                   </p>
                 </div>
                 <div>
@@ -183,13 +178,14 @@ export default function ProfilePage() {
                 >
                   Manage Preferences
                 </Button>
-                <Button
-                  variant="destructive"
-                  className="w-full"
-                  onClick={handleSignOut}
-                >
-                  Sign Out
-                </Button>
+                <SignOutButton>
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                  >
+                    Sign Out
+                  </Button>
+                </SignOutButton>
               </CardContent>
             </Card>
           </div>
