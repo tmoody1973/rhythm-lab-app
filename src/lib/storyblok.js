@@ -45,9 +45,10 @@ export function sb() {
 
 // Helper to get proper API options for development vs production
 export function getStoryblokOptions(additionalOptions = {}) {
+  const isDev = process.env.NODE_ENV === 'development';
   return {
-    version: process.env.NODE_ENV === 'development' ? 'draft' : 'published',
-    cv: process.env.NODE_ENV === 'development' ? Date.now() : undefined, // Cache busting in dev only
+    version: isDev ? 'draft' : 'published',
+    ...(isDev && { cv: Date.now() }), // Cache busting in dev only
     ...additionalOptions
   };
 }
