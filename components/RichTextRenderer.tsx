@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { processShortcodes } from '@/lib/shortcodes';
 
 // Component to render rich text content from Storyblok
 export function RichTextRenderer({ content }: { content: any }) {
@@ -13,6 +14,16 @@ export function RichTextRenderer({ content }: { content: any }) {
 
     switch (node.type) {
       case 'paragraph':
+        // Check if this paragraph contains only a shortcode
+        const paragraphText = node.content?.map((child: any) => child.text || '').join('');
+        const isOnlyShortcode = /^\[youtube=([^\]]+)\]$/.test(paragraphText?.trim() || '');
+
+        if (isOnlyShortcode) {
+          // Render shortcode without paragraph wrapper
+          const processedContent = processShortcodes(paragraphText);
+          return <div key={`paragraph-shortcode-${index}`}>{processedContent}</div>;
+        }
+
         return (
           <p key={index} className="mb-4 text-gray-700 leading-relaxed">
             {node.content?.map((child: any, childIndex: number) => renderNode(child, childIndex))}
@@ -38,6 +49,16 @@ export function RichTextRenderer({ content }: { content: any }) {
         );
 
       case 'text':
+        // Check if text contains shortcodes
+        const hasShortcodes = /\[youtube=([^\]]+)\]/.test(node.text);
+
+        if (hasShortcodes) {
+          // Process shortcodes and return the processed content
+          const processedContent = processShortcodes(node.text);
+          return <div key={`shortcode-${index}`}>{processedContent}</div>;
+        }
+
+        // Regular text processing (no shortcodes)
         let textElement: React.ReactNode = node.text;
 
         if (node.marks) {
