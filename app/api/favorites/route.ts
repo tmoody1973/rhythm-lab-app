@@ -39,7 +39,7 @@ async function ensureProfileExists(supabase: any, userId: string) {
     if (!existingProfile) {
       // Since Supabase's Clerk integration isn't working, get user data from Clerk directly
       const { clerkClient } = await import('@clerk/nextjs/server')
-      const client = clerkClient()
+      const client = await clerkClient()
 
       try {
         const clerkUser = await client.users.getUser(userId)
