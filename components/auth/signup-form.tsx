@@ -64,11 +64,16 @@ export function SignupForm() {
             We've sent you a confirmation link at <strong>{email}</strong>
           </p>
           <p className="text-sm text-gray-500">
-            Click the link in your email to complete your registration.
+            Click the link in your email to verify your account and complete your registration.
           </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mt-4">
+            <p className="text-sm text-blue-600">
+              <strong>Note:</strong> You must confirm your email before you can sign in.
+            </p>
+          </div>
         </div>
         <div className="text-center">
-          <Link href="/login" className="text-blue-600 hover:underline">
+          <Link href="/login" className="text-[#b12e2e] hover:underline">
             Back to Sign In
           </Link>
         </div>
@@ -142,7 +147,7 @@ export function SignupForm() {
 
       <div className="text-center text-sm">
         <span className="text-gray-500">Already have an account? </span>
-        <Link href="/login" className="text-blue-600 hover:underline">
+        <Link href="/login" className="text-[#b12e2e] hover:underline">
           Sign in
         </Link>
       </div>

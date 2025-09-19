@@ -35,25 +35,19 @@ export function useAuthActions(): AuthActions {
     setLoading(true)
     try {
       const { data, error } = await withTimeout(
-        supabase.auth.signUp({ email, password }),
+        supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          }
+        }),
         clientTimeouts.auth,
         'Sign up timeout'
       )
 
-      if (!error && data.user && username) {
-        // Create profile with username
-        try {
-          await supabase.from('profiles').insert({
-            id: data.user.id,
-            email: data.user.email!,
-            username,
-            role: 'user',
-          })
-        } catch (profileError) {
-          console.error('Profile creation error:', profileError)
-          // Don't fail signup if profile creation fails
-        }
-      }
+      // Note: Profile creation will happen after email confirmation in the callback route
+      // The user object exists but is not confirmed until they click the email link
 
       return { error }
     } catch (error) {
@@ -74,7 +68,7 @@ export function useAuthActions(): AuthActions {
 
       await Promise.race([signOutPromise, timeoutPromise])
     } catch (error) {
-      console.warn('Sign out warning (continuing):', error)
+      console.log('Sign out timeout (continuing):', error)
       // Continue anyway - local state will be cleared by auth state change
     } finally {
       setLoading(false)

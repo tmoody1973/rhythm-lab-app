@@ -113,13 +113,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
       options: {
-        emailRedirectTo: undefined, // Disable email confirmation
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       }
     })
 
-    if (!error && data.user) {
-      await createProfile(data.user, username)
-    }
+    // Note: Profile creation will happen after email confirmation
+    // The user object exists but is not confirmed until they click the email link
 
     return { error }
   }
@@ -128,27 +127,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Signing out...')
 
-      // Add timeout to prevent hanging
-      const signOutPromise = supabase.auth.signOut()
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Sign out timeout')), 3000)
-      )
-
-      const { error } = await Promise.race([signOutPromise, timeoutPromise]) as any
-
-      if (error) {
-        console.error('Error signing out:', error)
-      } else {
-        console.log('Successfully signed out')
-      }
-    } catch (error) {
-      console.error('Error during sign out (continuing anyway):', error)
-    } finally {
-      // Always clear the local state regardless of Supabase response
-      console.log('Clearing local auth state...')
+      // Clear local state first to provide immediate feedback
       setUser(null)
       setProfile(null)
       setSession(null)
+
+      // Add timeout to prevent hanging, but don't await it
+      const signOutPromise = supabase.auth.signOut()
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Sign out timeout')), 2000)
+      )
+
+      try {
+        await Promise.race([signOutPromise, timeoutPromise])
+        console.log('Successfully signed out')
+      } catch (timeoutError) {
+        console.warn('Sign out timeout (local state cleared):', timeoutError)
+        // Continue - local state is already cleared
+      }
+    } catch (error) {
+      console.warn('Sign out error (local state cleared):', error)
+      // Local state is already cleared, so user appears signed out
     }
   }
 
