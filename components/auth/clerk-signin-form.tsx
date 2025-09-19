@@ -1,6 +1,7 @@
 "use client"
 
 import { SignIn } from "@clerk/nextjs"
+import Link from "next/link"
 
 export function ClerkSignInForm() {
   return (
@@ -37,9 +38,9 @@ export function ClerkSignInForm() {
 
       <div className="text-center text-sm">
         <span className="text-gray-500">Don't have an account? </span>
-        <a href="/signup" className="text-[#b12e2e] hover:underline">
+        <Link href="/signup" className="text-[#b12e2e] hover:underline">
           Sign up
-        </a>
+        </Link>
       </div>
     </div>
   )
