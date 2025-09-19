@@ -12,6 +12,8 @@ async function getUserId(supabase: any, request: NextRequest): Promise<string | 
 
     if (userId) {
       // With Supabase's built-in Clerk integration, users should be in auth.users
+      // Also ensure profile exists for this Clerk user
+      await ensureProfileExists(supabase, userId)
       return userId
     }
   } catch (error) {
@@ -22,6 +24,45 @@ async function getUserId(supabase: any, request: NextRequest): Promise<string | 
   const { data: { user }, error } = await supabase.auth.getUser()
   console.log('Supabase fallback user:', { user: user?.id, error })
   return user?.id || null
+}
+
+// Helper function to ensure profile exists for Clerk users
+async function ensureProfileExists(supabase: any, userId: string) {
+  try {
+    // Check if profile already exists
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('clerk_user_id', userId)
+      .single()
+
+    if (!existingProfile) {
+      // Get user info from Clerk via auth.users table (Supabase's built-in integration)
+      const { data: authUser } = await supabase.auth.admin.getUserById(userId)
+
+      if (authUser?.user) {
+        // Create profile for this Clerk user
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId, // Use Clerk ID as profile ID
+            clerk_user_id: userId,
+            email: authUser.user.email,
+            full_name: authUser.user.user_metadata?.full_name || authUser.user.user_metadata?.name || authUser.user.email,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+
+        if (insertError) {
+          console.log('Profile creation error:', insertError)
+        } else {
+          console.log('Profile created for Clerk user:', userId)
+        }
+      }
+    }
+  } catch (error) {
+    console.log('Error ensuring profile exists:', error)
+  }
 }
 
 export async function GET(request: NextRequest) {
