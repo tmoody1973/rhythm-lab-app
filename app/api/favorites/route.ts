@@ -37,27 +37,34 @@ async function ensureProfileExists(supabase: any, userId: string) {
       .single()
 
     if (!existingProfile) {
-      // Get user info from Clerk via auth.users table (Supabase's built-in integration)
-      const { data: authUser } = await supabase.auth.admin.getUserById(userId)
+      // Since Supabase's Clerk integration isn't working, get user data from Clerk directly
+      const { clerkClient } = await import('@clerk/nextjs/server')
+      const client = clerkClient()
 
-      if (authUser?.user) {
-        // Create profile for this Clerk user
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: userId, // Use Clerk ID as profile ID
-            clerk_user_id: userId,
-            email: authUser.user.email,
-            full_name: authUser.user.user_metadata?.full_name || authUser.user.user_metadata?.name || authUser.user.email,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+      try {
+        const clerkUser = await client.users.getUser(userId)
 
-        if (insertError) {
-          console.log('Profile creation error:', insertError)
-        } else {
-          console.log('Profile created for Clerk user:', userId)
+        if (clerkUser) {
+          // Create profile for this Clerk user
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId, // Use Clerk ID as profile ID
+              clerk_user_id: userId,
+              email: clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses[0]?.emailAddress,
+              full_name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.primaryEmailAddress?.emailAddress,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+
+          if (insertError) {
+            console.log('Profile creation error:', insertError)
+          } else {
+            console.log('Profile created for Clerk user:', userId)
+          }
         }
+      } catch (clerkError) {
+        console.log('Error fetching user from Clerk:', clerkError)
       }
     }
   } catch (error) {
