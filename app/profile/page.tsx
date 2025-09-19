@@ -101,7 +101,14 @@ export default function ProfilePage() {
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Member Since</label>
                   <p className="text-foreground">
-                    {user.createdAt ? new Date(user.createdAt as string | number | Date).toLocaleDateString() : 'Unknown'}
+                    {(() => {
+                      if (!user.createdAt) return 'Unknown'
+                      try {
+                        return new Date(user.createdAt).toLocaleDateString()
+                      } catch {
+                        return 'Unknown'
+                      }
+                    })()}
                   </p>
                 </div>
                 <div>
