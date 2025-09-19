@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         return { path, success: true }
       } catch (error) {
         console.error(`[Revalidate] Failed to revalidate ${path}:`, error)
-        return { path, success: false, error: error.message }
+        return { path, success: false, error: error instanceof Error ? error.message : 'Unknown error' }
       }
     })
 
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error: 'Failed to process webhook',
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )
