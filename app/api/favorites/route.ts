@@ -2,42 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { auth } from '@clerk/nextjs/server'
 
-// Helper function to get user profile ID for both Clerk and Supabase users
-async function getUserProfileId(supabase: any, request: NextRequest): Promise<string | null> {
-  // First try to get Clerk user ID from the Authorization header
-  const clerkUserId = request.headers.get('x-clerk-user-id')
-  console.log('Clerk userId from header:', clerkUserId)
-
-  if (clerkUserId) {
-    // Find the profile by clerk_user_id
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('clerk_user_id', clerkUserId)
-      .single()
-
-    console.log('Profile lookup for Clerk user:', { profile, error })
-    return profile?.id || null
-  }
-
-  // Try server-side Clerk auth as fallback
+// Helper function to get user ID for both Clerk and Supabase users
+async function getUserId(supabase: any, request: NextRequest): Promise<string | null> {
+  // Try server-side Clerk auth first
   try {
     const authResult = await auth()
     const userId = authResult.userId
-    console.log('Server-side Clerk userId:', userId)
+    console.log('Clerk userId:', userId)
 
     if (userId) {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('clerk_user_id', userId)
-        .single()
-
-      console.log('Server-side profile lookup:', { profile, error })
-      return profile?.id || null
+      // With Supabase's built-in Clerk integration, users should be in auth.users
+      return userId
     }
   } catch (error) {
-    console.log('Server-side auth error:', error)
+    console.log('Clerk auth error:', error)
   }
 
   // Fallback to Supabase auth (for admin users)
@@ -68,16 +46,16 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const userProfileId = await getUserProfileId(supabase, request)
+    const userId = await getUserId(supabase, request)
 
-    if (!userProfileId) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { data: favorites, error } = await supabase
       .from('user_favorites')
       .select('*')
-      .eq('user_id', userProfileId)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -140,9 +118,9 @@ export async function POST(request: NextRequest) {
       }
     )
 
-    const userProfileId = await getUserProfileId(supabase, request)
+    const userId = await getUserId(supabase, request)
 
-    if (!userProfileId) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -171,7 +149,7 @@ export async function POST(request: NextRequest) {
       const { error } = await supabase
         .from('user_favorites')
         .delete()
-        .eq('user_id', userProfileId)
+        .eq('user_id', userId)
         .eq('item_type', itemType)
         .eq('item_id', itemId)
 
@@ -189,7 +167,7 @@ export async function POST(request: NextRequest) {
       const { error } = await supabase
         .from('user_favorites')
         .insert({
-          user_id: userProfileId,
+          user_id: userId,
           item_type: itemType,
           item_id: itemId,
         })

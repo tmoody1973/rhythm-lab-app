@@ -70,12 +70,7 @@ export function FavoriteButton({ track, content, size = 'md', className = '' }: 
       }
 
       try {
-        const headers: HeadersInit = {}
-        if (user?.id) {
-          headers['x-clerk-user-id'] = user.id
-        }
-
-        const response = await fetch('/api/favorites', { headers })
+        const response = await fetch('/api/favorites')
 
         if (response.ok) {
           const { favorites } = await response.json()
@@ -136,16 +131,11 @@ export function FavoriteButton({ track, content, size = 'md', className = '' }: 
             action: isFavorited ? 'remove' : 'add',
           }
 
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      }
-      if (user?.id) {
-        headers['x-clerk-user-id'] = user.id
-      }
-
       const response = await fetch('/api/favorites', {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(requestBody),
       })
 
