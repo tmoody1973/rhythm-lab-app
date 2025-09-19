@@ -38,7 +38,7 @@ export function RealArchiveDiscoverySection() {
   // Color schemes for different show types
   const colorSchemes = [
     { bg: 'bg-[#8b5cf6]', border: 'border-[#8b5cf6]', text: 'text-[#8b5cf6]', hover: 'hover:bg-[#7c3aed]' },
-    { bg: 'bg-[#00d4ff]', border: 'border-[#00d4ff]', text: 'text-[#00d4ff]', hover: 'hover:bg-[#00b8e6]' },
+    { bg: 'bg-[#b12e2e]', border: 'border-[#b12e2e]', text: 'text-[#b12e2e]', hover: 'hover:bg-[#8e2424]' },
     { bg: 'bg-[#f59e0b]', border: 'border-[#f59e0b]', text: 'text-[#f59e0b]', hover: 'hover:bg-[#d97706]' },
     { bg: 'bg-[#10b981]', border: 'border-[#10b981]', text: 'text-[#10b981]', hover: 'hover:bg-[#059669]' },
     { bg: 'bg-[#ef4444]', border: 'border-[#ef4444]', text: 'text-[#ef4444]', hover: 'hover:bg-[#dc2626]' },
@@ -276,7 +276,7 @@ export function RealArchiveDiscoverySection() {
           <h3 className="text-lg font-semibold text-foreground mb-4">Quick Stats</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-3 bg-muted rounded-lg">
-              <div className="text-2xl font-bold text-[#00d4ff] mb-1">
+              <div className="text-2xl font-bold text-[#b12e2e] mb-1">
                 {shows.reduce((total, show) => total + show.track_count, 0)}
               </div>
               <div className="text-xs text-muted-foreground">Total Tracks</div>

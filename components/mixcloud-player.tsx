@@ -226,7 +226,7 @@ export function MixcloudPlayer({
                   }}
                 >
                   <div
-                    className="h-full bg-[#00d4ff] rounded-full transition-all duration-300"
+                    className="h-full bg-[#b12e2e] rounded-full transition-all duration-300"
                     style={{ width: `${progressPercentage}%` }}
                   />
                 </div>
@@ -246,7 +246,7 @@ export function MixcloudPlayer({
                 size="lg"
                 className={`${
                   isReady
-                    ? 'bg-[#00d4ff] hover:bg-[#00b8e6] text-black'
+                    ? 'bg-[#b12e2e] hover:bg-[#8e2424] text-white'
                     : 'bg-[#2a2f3e] text-[#a1a1aa] cursor-not-allowed'
                 } w-14 h-14 rounded-full`}
               >
@@ -284,7 +284,7 @@ export function MixcloudPlayer({
                   href={mixcloudUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#a1a1aa] hover:text-[#00d4ff] transition-colors"
+                  className="text-[#a1a1aa] hover:text-[#b12e2e] transition-colors"
                 >
                   <Button variant="ghost" size="sm" className="text-xs">
                     Open in Mixcloud

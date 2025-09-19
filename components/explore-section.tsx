@@ -24,8 +24,8 @@ interface ContentItem {
 // Helper function to generate consistent colors
 function getContentColor(id: number) {
   const colors = [
-    "#8b5cf6", "#ec4899", "#00d4ff", "#f59e0b",
-    "#10b981", "#ef4444", "#3b82f6", "#8b5a2b"
+    "#8b5cf6", "#ec4899", "#b12e2e", "#f59e0b",
+    "#10b981", "#ef4444", "#b12e2e", "#8b5a2b"
   ];
   return colors[id % colors.length];
 }

@@ -129,7 +129,7 @@ export function MiniMixcloudOEmbedPlayer({
         size="sm"
         className={`${
           isActive
-            ? 'bg-[#00d4ff] hover:bg-[#00b8e6] text-black'
+            ? 'bg-[#b12e2e] hover:bg-[#8e2424] text-white'
             : 'bg-[#2a2f3e] hover:bg-[#3a3f4e] text-[#a1a1aa]'
         } w-10 h-10 rounded-full p-0 flex-shrink-0`}
       >
@@ -154,7 +154,7 @@ export function MiniMixcloudOEmbedPlayer({
       {/* Show basic player info when active */}
       {isActive && !error && !loading && (
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="flex items-center gap-1 text-xs text-[#00d4ff]">
+          <div className="flex items-center gap-1 text-xs text-[#b12e2e]">
             <span>●</span>
             <span className="truncate">Mixcloud Player Active</span>
           </div>
@@ -174,7 +174,7 @@ export function MiniMixcloudOEmbedPlayer({
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
-        className="text-[#a1a1aa] hover:text-[#00d4ff] transition-colors flex-shrink-0"
+        className="text-[#a1a1aa] hover:text-[#b12e2e] transition-colors flex-shrink-0"
       >
         <ExternalLink className="h-3 w-3" />
       </a>

@@ -79,7 +79,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
       <DialogContent className="max-w-[95vw] md:max-w-4xl max-h-[90vh] md:max-h-[80vh] bg-[#1a1f2e] border-[#2a2f3e] text-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5 text-[#00d4ff]" />
+            <Search className="h-5 w-5 text-[#b12e2e]" />
             Advanced Search
           </DialogTitle>
         </DialogHeader>
@@ -100,25 +100,25 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                   <TabsList className="grid w-full grid-cols-1 bg-[#0a0e1a] h-auto">
                     <TabsTrigger
                       value="all"
-                      className="text-[#a1a1aa] data-[state=active]:text-[#00d4ff] data-[state=active]:bg-[#1e2332] justify-start"
+                      className="text-[#a1a1aa] data-[state=active]:text-[#b12e2e] data-[state=active]:bg-[#1e2332] justify-start"
                     >
                       All Content
                     </TabsTrigger>
                     <TabsTrigger
                       value="tracks"
-                      className="text-[#a1a1aa] data-[state=active]:text-[#00d4ff] data-[state=active]:bg-[#1e2332] justify-start"
+                      className="text-[#a1a1aa] data-[state=active]:text-[#b12e2e] data-[state=active]:bg-[#1e2332] justify-start"
                     >
                       Live Tracks
                     </TabsTrigger>
                     <TabsTrigger
                       value="shows"
-                      className="text-[#a1a1aa] data-[state=active]:text-[#00d4ff] data-[state=active]:bg-[#1e2332] justify-start"
+                      className="text-[#a1a1aa] data-[state=active]:text-[#b12e2e] data-[state=active]:bg-[#1e2332] justify-start"
                     >
                       Archive Shows
                     </TabsTrigger>
                     <TabsTrigger
                       value="ai"
-                      className="text-[#a1a1aa] data-[state=active]:text-[#00d4ff] data-[state=active]:bg-[#1e2332] justify-start"
+                      className="text-[#a1a1aa] data-[state=active]:text-[#b12e2e] data-[state=active]:bg-[#1e2332] justify-start"
                     >
                       AI Content
                     </TabsTrigger>
@@ -135,7 +135,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                       key={genre.name}
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-between text-[#a1a1aa] hover:text-[#00d4ff] hover:bg-[#1e2332]"
+                      className="w-full justify-between text-[#a1a1aa] hover:text-[#b12e2e] hover:bg-[#1e2332]"
                     >
                       <span>{genre.name}</span>
                       <span className="text-xs opacity-60">{genre.count}</span>
@@ -153,7 +153,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                       key={filter}
                       variant="ghost"
                       size="sm"
-                      className="justify-start text-[#a1a1aa] hover:text-[#00d4ff] hover:bg-[#1e2332]"
+                      className="justify-start text-[#a1a1aa] hover:text-[#b12e2e] hover:bg-[#1e2332]"
                     >
                       {filter}
                     </Button>
@@ -170,7 +170,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                       key={mood}
                       variant="outline"
                       size="sm"
-                      className="border-[#2a2f3e] text-[#a1a1aa] hover:border-[#00d4ff] hover:text-[#00d4ff] bg-transparent text-xs"
+                      className="border-[#2a2f3e] text-[#a1a1aa] hover:border-[#b12e2e] hover:text-[#b12e2e] bg-transparent text-xs"
                     >
                       {mood}
                     </Button>
@@ -189,7 +189,7 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
                 placeholder="Search artists, tracks, shows, or AI content..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-[#0a0e1a] border-[#2a2f3e] text-white placeholder:text-[#a1a1aa] focus:border-[#00d4ff]"
+                className="pl-10 bg-[#0a0e1a] border-[#2a2f3e] text-white placeholder:text-[#a1a1aa] focus:border-[#b12e2e]"
               />
             </div>
 
@@ -198,9 +198,9 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
               {searchResults.map((result, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-[#0a0e1a] border border-[#2a2f3e] rounded-lg hover:border-[#00d4ff] cursor-pointer transition-colors"
+                  className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-[#0a0e1a] border border-[#2a2f3e] rounded-lg hover:border-[#b12e2e] cursor-pointer transition-colors"
                 >
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#00d4ff] to-[#8b5cf6] rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#b12e2e] to-[#8b5cf6] rounded-lg flex items-center justify-center flex-shrink-0">
                     <result.icon className="h-5 w-5 md:h-6 md:w-6 text-white" />
                   </div>
 
@@ -220,14 +220,14 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
 
                   <div className="flex items-center gap-2">
                     {result.type === "track" || result.type === "show" ? (
-                      <Button size="sm" variant="ghost" className="text-[#00d4ff] hover:text-white hover:bg-[#00d4ff]">
+                      <Button size="sm" variant="ghost" className="text-[#b12e2e] hover:text-white hover:bg-[#b12e2e]">
                         <Play className="h-3 w-3 md:h-4 md:w-4" />
                       </Button>
                     ) : (
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-[#00d4ff] hover:text-white hover:bg-[#00d4ff] text-xs md:text-sm"
+                        className="text-[#b12e2e] hover:text-white hover:bg-[#b12e2e] text-xs md:text-sm"
                       >
                         View
                       </Button>

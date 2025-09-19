@@ -198,8 +198,8 @@ export function MiniMixcloudPlayer({
         className={`${
           isActive && isReady
             ? isPlaying
-              ? 'bg-[#00d4ff] hover:bg-[#00b8e6] text-black'
-              : 'bg-[#00d4ff] hover:bg-[#00b8e6] text-black'
+              ? 'bg-[#b12e2e] hover:bg-[#8e2424] text-white'
+              : 'bg-[#b12e2e] hover:bg-[#8e2424] text-white'
             : 'bg-[#2a2f3e] hover:bg-[#3a3f4e] text-[#a1a1aa]'
         } w-10 h-10 rounded-full p-0`}
       >
@@ -212,7 +212,7 @@ export function MiniMixcloudPlayer({
 
       {/* Now Playing Indicator */}
       {isActive && isPlaying && (
-        <div className="flex items-center gap-1 text-xs text-[#00d4ff]">
+        <div className="flex items-center gap-1 text-xs text-[#b12e2e]">
           <Volume2 className="h-3 w-3" />
           <span>Now Playing</span>
         </div>
@@ -224,7 +224,7 @@ export function MiniMixcloudPlayer({
         target="_blank"
         rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
-        className="text-[#a1a1aa] hover:text-[#00d4ff] transition-colors"
+        className="text-[#a1a1aa] hover:text-[#b12e2e] transition-colors"
       >
         <ExternalLink className="h-3 w-3" />
       </a>

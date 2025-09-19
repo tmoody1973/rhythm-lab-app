@@ -51,7 +51,7 @@ export default function AIContentDetailPage() {
                       1.2k views
                     </span>
                     <span className="flex items-center gap-1">
-                      <Sparkles className="h-4 w-4 text-[#00d4ff]" />
+                      <Sparkles className="h-4 w-4 text-[#b12e2e]" />
                       Generated 2 hours ago
                     </span>
                   </div>
@@ -116,7 +116,7 @@ export default function AIContentDetailPage() {
 
                 <div className="bg-[#0a0e1a] border border-[#2a2f3e] rounded-lg p-6 my-8">
                   <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                    <Music className="h-5 w-5 text-[#00d4ff]" />
+                    <Music className="h-5 w-5 text-[#b12e2e]" />
                     Featured Tracks from Our Archive
                   </h3>
                   <div className="space-y-2">
@@ -128,7 +128,7 @@ export default function AIContentDetailPage() {
                       "Carl Craig - Bug in the Bassbin",
                     ].map((track, index) => (
                       <div key={index} className="flex items-center gap-3 text-sm">
-                        <div className="w-2 h-2 bg-[#00d4ff] rounded-full"></div>
+                        <div className="w-2 h-2 bg-[#b12e2e] rounded-full"></div>
                         <span className="text-[#a1a1aa]">{track}</span>
                       </div>
                     ))}
@@ -172,7 +172,7 @@ export default function AIContentDetailPage() {
           <Card className="bg-[#1e2332] border-[#2a2f3e]">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-[#00d4ff]" />
+                <BookOpen className="h-5 w-5 text-[#b12e2e]" />
                 Related AI Content
               </CardTitle>
             </CardHeader>
@@ -206,7 +206,7 @@ export default function AIContentDetailPage() {
                 ].map((content, index) => (
                   <Card
                     key={index}
-                    className="bg-[#0a0e1a] border-[#2a2f3e] hover:border-[#00d4ff] cursor-pointer transition-colors"
+                    className="bg-[#0a0e1a] border-[#2a2f3e] hover:border-[#b12e2e] cursor-pointer transition-colors"
                   >
                     <CardContent className="p-4">
                       <div className="space-y-2">

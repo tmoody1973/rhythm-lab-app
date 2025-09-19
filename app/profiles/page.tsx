@@ -20,8 +20,8 @@ export const metadata: Metadata = {
 // Helper function to generate consistent colors for profiles
 function getProfileColor(id: number) {
   const colors = [
-    "#10b981", "#00d4ff", "#8b5cf6", "#ec4899",
-    "#f59e0b", "#ef4444", "#3b82f6", "#8b5a2b"
+    "#10b981", "#b12e2e", "#8b5cf6", "#ec4899",
+    "#f59e0b", "#ef4444", "#b12e2e", "#8b5a2b"
   ];
   return colors[id % colors.length];
 }
@@ -111,7 +111,7 @@ export default async function ProfilesPage() {
       duration: "42m",
       plays: "2.1k",
       tags: ["HOUSE", "DEEP HOUSE", "SOUL"],
-      color: "#00d4ff",
+      color: "#b12e2e",
       artist: "Kerri Chandler"
     },
     {

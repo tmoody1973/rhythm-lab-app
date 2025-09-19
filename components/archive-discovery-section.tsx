@@ -48,7 +48,7 @@ function WeeklyShowCard({ latestShow, showIndex = 0 }: WeeklyShowProps) {
   // Color schemes for different shows
   const colorSchemes = [
     { bg: 'bg-[#8b5cf6]', border: 'border-[#8b5cf6]', text: 'text-[#8b5cf6]', hover: 'hover:bg-[#7c3aed]' },
-    { bg: 'bg-[#00d4ff]', border: 'border-[#00d4ff]', text: 'text-[#00d4ff]', hover: 'hover:bg-[#00b8e6]' },
+    { bg: 'bg-[#b12e2e]', border: 'border-[#b12e2e]', text: 'text-[#b12e2e]', hover: 'hover:bg-[#8e2424]' },
     { bg: 'bg-[#f59e0b]', border: 'border-[#f59e0b]', text: 'text-[#f59e0b]', hover: 'hover:bg-[#d97706]' },
     { bg: 'bg-[#10b981]', border: 'border-[#10b981]', text: 'text-[#10b981]', hover: 'hover:bg-[#059669]' },
     { bg: 'bg-[#ef4444]', border: 'border-[#ef4444]', text: 'text-[#ef4444]', hover: 'hover:bg-[#dc2626]' }
@@ -177,7 +177,7 @@ export function ArchiveDiscoverySection() {
               key={index}
               variant="outline"
               size="sm"
-              className="border-border text-muted-foreground hover:border-[#00d4ff] hover:text-[#00d4ff] bg-transparent"
+              className="border-border text-muted-foreground hover:border-[#b12e2e] hover:text-[#b12e2e] bg-transparent"
             >
               #{item.tag}
               <span className="ml-2 text-xs opacity-60">{item.count}</span>
@@ -191,7 +191,7 @@ export function ArchiveDiscoverySection() {
         <h3 className="text-lg font-semibold text-foreground mb-4">Quick Stats</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-[#00d4ff] mb-1">247</div>
+            <div className="text-2xl font-bold text-[#b12e2e] mb-1">247</div>
             <div className="text-xs text-muted-foreground">Tracks Today</div>
           </div>
           <div className="text-center p-3 bg-muted rounded-lg">
