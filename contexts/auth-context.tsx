@@ -78,18 +78,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      // Use the safe profile creation function
+      // Create profile with direct insert and conflict handling
       const { error } = await supabase
-        .rpc('create_profile_if_not_exists', {
-          user_id: user.id,
-          user_email: user.email!,
-          user_username: username,
-          user_full_name: user.user_metadata?.full_name,
-          user_avatar_url: user.user_metadata?.avatar_url,
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email!,
+          username: username,
+          full_name: user.user_metadata?.full_name,
+          avatar_url: user.user_metadata?.avatar_url,
+          role: 'user',
+          is_premium: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
 
       if (error) {
         console.error('Error creating profile:', error)
+        // If it's a duplicate key error, try to fetch the existing profile
+        if (error.code === '23505') {
+          console.log('Profile already exists (duplicate key), fetching it...')
+          await fetchProfile(user.id)
+        }
         return
       }
 
@@ -122,8 +132,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })
 
-    // Note: Profile creation will happen after email confirmation
-    // The user object exists but is not confirmed until they click the email link
+    // Create profile immediately in development mode if email confirmation fails
+    if (!error && data.user) {
+      console.log('User created:', data.user.id, 'Email confirmed:', !!data.user.email_confirmed_at)
+
+      // If in development and user not confirmed, create profile anyway
+      if (process.env.NODE_ENV === 'development' && !data.user.email_confirmed_at) {
+        console.log('Development mode: Creating profile without email confirmation')
+        try {
+          await createProfile(data.user, username)
+        } catch (profileError) {
+          console.error('Dev profile creation error:', profileError)
+        }
+      }
+    }
 
     return { error }
   }
