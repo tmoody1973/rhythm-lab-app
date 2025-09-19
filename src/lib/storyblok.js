@@ -42,3 +42,12 @@ export function sb() {
     };
   }
 }
+
+// Helper to get proper API options for development vs production
+export function getStoryblokOptions(additionalOptions = {}) {
+  return {
+    version: process.env.NODE_ENV === 'development' ? 'draft' : 'published',
+    cv: process.env.NODE_ENV === 'development' ? Date.now() : undefined, // Cache busting in dev only
+    ...additionalOptions
+  };
+}

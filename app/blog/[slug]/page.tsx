@@ -2,7 +2,7 @@ import { Header } from "@/components/header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { RichTextRenderer } from "@/components/RichTextRenderer"
-import { sb } from "@/src/lib/storyblok"
+import { sb, getStoryblokOptions } from "@/src/lib/storyblok"
 import Link from "next/link"
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
@@ -27,9 +27,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   try {
     const { slug } = await params;
     const storyblokApi = sb();
-    const response = await storyblokApi.get(`cdn/stories/blog/${slug}`, {
-      version: 'published'
-    });
+    const response = await storyblokApi.get(`cdn/stories/blog/${slug}`, getStoryblokOptions());
 
     const story = response.data.story;
 
@@ -59,15 +57,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
     try {
       // First try with blog/ prefix
-      response = await storyblokApi.get(`cdn/stories/blog/${slug}`, {
-        version: 'published'
-      });
+      response = await storyblokApi.get(`cdn/stories/blog/${slug}`, getStoryblokOptions());
     } catch (prefixError) {
       try {
         // If that fails, try without prefix
-        response = await storyblokApi.get(`cdn/stories/${slug}`, {
-          version: 'published'
-        });
+        response = await storyblokApi.get(`cdn/stories/${slug}`, getStoryblokOptions());
       } catch (error) {
         // If both fail, return 404
         notFound();

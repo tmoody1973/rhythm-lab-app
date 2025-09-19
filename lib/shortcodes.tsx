@@ -52,10 +52,13 @@ export function processShortcodes(content: string): React.ReactNode[] {
   const elements: React.ReactNode[] = []
 
   // Split content by YouTube shortcodes while preserving the matches
-  const parts = content.split(/(\[youtube=([^\]]+)\])/g)
+  const parts = content.split(/(\[youtube=[^\]]+\])/g)
 
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i]
+
+    // Skip empty parts
+    if (!part) continue
 
     // Check if this part is a YouTube shortcode
     const youtubeMatch = part.match(/^\[youtube=([^\]]+)\]$/)

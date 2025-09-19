@@ -14,12 +14,12 @@ export function RichTextRenderer({ content }: { content: any }) {
 
     switch (node.type) {
       case 'paragraph':
-        // Check if this paragraph contains only a shortcode
+        // Check if this paragraph contains shortcodes
         const paragraphText = node.content?.map((child: any) => child.text || '').join('');
-        const isOnlyShortcode = /^\[youtube=([^\]]+)\]$/.test(paragraphText?.trim() || '');
+        const hasShortcodes = /\[youtube=([^\]]+)\]/.test(paragraphText);
 
-        if (isOnlyShortcode) {
-          // Render shortcode without paragraph wrapper
+        if (hasShortcodes) {
+          // Process the entire paragraph content as shortcodes
           const processedContent = processShortcodes(paragraphText);
           return <div key={`paragraph-shortcode-${index}`}>{processedContent}</div>;
         }
@@ -49,16 +49,11 @@ export function RichTextRenderer({ content }: { content: any }) {
         );
 
       case 'text':
-        // Check if text contains shortcodes
-        const hasShortcodes = /\[youtube=([^\]]+)\]/.test(node.text);
+        // Note: Shortcode processing is handled at the paragraph level
+        // This text processing is for individual text nodes within paragraphs
+        // that don't contain shortcodes
 
-        if (hasShortcodes) {
-          // Process shortcodes and return the processed content
-          const processedContent = processShortcodes(node.text);
-          return <div key={`shortcode-${index}`}>{processedContent}</div>;
-        }
-
-        // Regular text processing (no shortcodes)
+        // Regular text processing
         let textElement: React.ReactNode = node.text;
 
         if (node.marks) {
