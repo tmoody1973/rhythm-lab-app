@@ -29,24 +29,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Fetching profile for userId:', userId)
 
-      const { data, error } = await supabase
+      // Add timeout to profile fetch
+      const fetchPromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
 
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+      )
+
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any
+
       if (error) {
         console.error('Error fetching profile:', error)
-        if (error.code !== 'PGRST116') {
+        if (error.code === 'PGRST116') {
+          // No profile found - this is expected for new users
+          console.log('No profile found for user, will be created after email confirmation')
           setProfile(null)
           return
         }
+        // Other errors
+        setProfile(null)
+        return
       }
 
       console.log('Profile fetched successfully:', data)
       setProfile(data || null)
     } catch (error) {
-      console.error('Error fetching profile:', error)
+      console.error('Profile fetch timeout or error:', error)
       setProfile(null)
     }
   }
@@ -66,25 +78,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      // Only create if it doesn't exist
+      // Use the safe profile creation function
       const { error } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: user.email!,
-          username: username,
-          full_name: user.user_metadata?.full_name,
-          avatar_url: user.user_metadata?.avatar_url,
-          role: 'user', // Default role for new users
+        .rpc('create_profile_if_not_exists', {
+          user_id: user.id,
+          user_email: user.email!,
+          user_username: username,
+          user_full_name: user.user_metadata?.full_name,
+          user_avatar_url: user.user_metadata?.avatar_url,
         })
 
       if (error) {
         console.error('Error creating profile:', error)
-        // If it's a duplicate key error, try to fetch the existing profile
-        if (error.code === '23505') {
-          console.log('Profile already exists (duplicate key), fetching it...')
-          await fetchProfile(user.id)
-        }
         return
       }
 
@@ -166,7 +171,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const getInitialSession = async () => {
       try {
         console.log('Getting initial user...')
-        const { data: { user }, error } = await supabase.auth.getUser()
+
+        // Add timeout to auth check
+        const authPromise = supabase.auth.getUser()
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Auth check timeout')), 5000)
+        )
+
+        const { data: { user }, error } = await Promise.race([authPromise, timeoutPromise]) as any
 
         if (error) {
           console.warn('Auth error (likely invalid session):', error.message)
@@ -197,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('Auth initialization complete')
         }
       } catch (error) {
-        console.warn('Auth initialization error (continuing without auth):', error)
+        console.warn('Auth initialization timeout (continuing without auth):', error)
         if (mounted) {
           setUser(null)
           setProfile(null)
