@@ -340,12 +340,16 @@ export async function getStoriesByType(
 
 // Helper functions
 function generateSlug(title: string): string {
-  return title
+  const baseSlug = title
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
+
+  // Add timestamp to make slug unique
+  const timestamp = Date.now()
+  return `${baseSlug}-${timestamp}`
 }
 
 function extractMetaDescription(richTextContent: any): string {

@@ -177,39 +177,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true
 
-    // Set loading to false immediately to show login form
-    setLoading(false)
+    // Set loading timeout as fallback
+    const loadingTimeout = setTimeout(() => {
+      if (mounted) {
+        console.warn('Auth loading timeout - setting loading to false')
+        setLoading(false)
+      }
+    }, 3000) // 3 second timeout
 
-    // Get initial session with simpler approach
+    // Get initial session
     const getInitialSession = async () => {
       try {
         console.log('Getting initial user...')
 
-        const { data: { user }, error } = await supabase.auth.getUser()
+        // Add timeout to auth check
+        const authPromise = supabase.auth.getUser()
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Auth check timeout')), 5000)
+        )
+
+        const { data: { user }, error } = await Promise.race([authPromise, timeoutPromise]) as any
+
+        if (error) {
+          console.warn('Auth error (likely invalid session):', error.message)
+          // Clear auth state and continue
+          if (mounted) {
+            setUser(null)
+            setProfile(null)
+            setSession(null)
+            setLoading(false)
+          }
+          return
+        }
+
+        console.log('Initial user:', !!user)
 
         if (mounted) {
-          if (error) {
-            console.warn('Auth error:', error.message)
-            setUser(null)
-            setProfile(null)
-            setSession(null)
-          } else if (user) {
-            console.log('User found:', user.id)
-            setUser(user)
+          setUser(user)
+
+          if (user) {
+            console.log('Fetching profile for user:', user.id)
             await fetchProfile(user.id)
           } else {
-            console.log('No user found')
-            setUser(null)
+            console.log('No user, setting profile to null')
             setProfile(null)
-            setSession(null)
           }
+
+          setLoading(false)
+          console.log('Auth initialization complete')
         }
       } catch (error) {
-        console.warn('Auth initialization error:', error)
+        console.warn('Auth initialization timeout (continuing without auth):', error)
         if (mounted) {
           setUser(null)
           setProfile(null)
           setSession(null)
+          setLoading(false)
         }
       }
     }
@@ -228,6 +251,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             setProfile(null)
           }
+
+          setLoading(false)
         }
       }
     )
@@ -237,6 +262,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false
+      clearTimeout(loadingTimeout)
       subscription.unsubscribe()
     }
   }, [])

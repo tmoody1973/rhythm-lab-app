@@ -3,9 +3,10 @@ import { z } from 'zod'
 import { promises as fs } from 'fs'
 import path from 'path'
 
-// OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
+// Perplexity client only
+const perplexity = new OpenAI({
+  apiKey: process.env.PERPLEXITY_API_KEY!,
+  baseURL: 'https://api.perplexity.ai',
 })
 
 // Content types
@@ -60,7 +61,14 @@ Structure the content as:
 4. Cultural impact and significance
 5. Current projects and future outlook
 
-Use web search to gather current information and ensure accuracy. Write in an engaging, journalistic style suitable for music enthusiasts.`
+REQUIREMENTS:
+- Use web search to gather the most current information about the artist
+- Include recent releases, tours, collaborations, and news (2024-2025)
+- Verify biographical details and career milestones
+- Add citations at the end in format: "Sources: [1] Website Name - Article Title, [2] Website Name - Article Title"
+- Focus on factual accuracy and current relevance
+
+Write in an engaging, journalistic style suitable for music enthusiasts.`
   },
 
   'deep-dive': {
@@ -87,7 +95,14 @@ Structure as:
 5. Current relevance and future implications
 6. Conclusion with broader insights
 
-Research thoroughly using web search. Include specific examples, dates, and cultural references. Write for both music enthusiasts and general audiences.`
+REQUIREMENTS:
+- Research thoroughly using web search for current information and recent developments
+- Include specific examples, dates, and cultural references
+- Verify historical facts and recent developments (2024-2025)
+- Add citations at the end in format: "Sources: [1] Website Name - Article Title, [2] Website Name - Article Title"
+- Balance scholarly depth with accessibility
+
+Write for both music enthusiasts and general audiences.`
   },
 
   'blog-post': {
@@ -114,7 +129,14 @@ Structure as:
 5. Personal perspective or opinion
 6. Call to action or discussion prompt
 
-Use web search to include current trends and recent developments. Write in a conversational yet informed tone suitable for music blog readers.`
+REQUIREMENTS:
+- Use web search to find the latest trends, news, and developments (2024-2025)
+- Include current social media buzz, streaming numbers, or recent events
+- Reference recent releases, chart positions, or industry news
+- Add citations at the end in format: "Sources: [1] Website Name - Article Title, [2] Website Name - Article Title"
+- Keep tone conversational but well-informed
+
+Write in a conversational yet informed tone suitable for music blog readers.`
   }
 }
 
@@ -129,71 +151,19 @@ async function loadCustomPrompts() {
   }
 }
 
-// Generate SEO-optimized title and meta description
-async function generateSEOData(content: string, originalTitle: string, contentType: ContentType, topic: string) {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: `You are an SEO expert who creates search-optimized titles and meta descriptions for music content.
+// Generate simple SEO-optimized title and meta description
+async function generateSimpleSEOData(content: string, originalTitle: string) {
+  // Simple SEO optimization without OpenAI
+  const seoTitle = originalTitle.length > 60 ? originalTitle.substring(0, 57) + '...' : originalTitle
+  const metaDescription = content.length > 160 ? content.substring(0, 157) + '...' : content
 
-SEO REQUIREMENTS:
-- SEO Title: 50-60 characters, includes primary keyword, compelling and clickable
-- Meta Description: 150-160 characters, includes primary keyword, action-oriented, enticing
-
-CONTENT TYPE GUIDELINES:
-- Artist Profile: Focus on artist name, genre, key achievements
-- Deep Dive: Emphasize analytical/educational angle, musical significance
-- Blog Post: Highlight trending topics, current relevance, engagement
-
-Create titles and descriptions that will rank well and get clicks in music-related searches.`
-        },
-        {
-          role: "user",
-          content: `Based on this ${contentType} content about "${topic}", create SEO-optimized title and meta description:
-
-Original Title: ${originalTitle}
-
-Content Summary: ${content.substring(0, 500)}...
-
-Generate:
-1. SEO Title (50-60 chars): Optimized for search visibility and clicks
-2. Meta Description (150-160 chars): Compelling summary that encourages clicks
-
-Format as:
-SEO_TITLE: [title here]
-META_DESCRIPTION: [description here]`
-        }
-      ],
-      temperature: 0.3,
-      max_tokens: 200
-    })
-
-    const text = completion.choices[0]?.message?.content || ""
-
-    // Parse the response
-    const lines = text.split('\n')
-    const seoTitle = lines.find(line => line.startsWith('SEO_TITLE:'))?.replace('SEO_TITLE:', '').trim() || originalTitle
-    const metaDescription = lines.find(line => line.startsWith('META_DESCRIPTION:'))?.replace('META_DESCRIPTION:', '').trim() ||
-      content.substring(0, 155).trim() + '...'
-
-    return {
-      seoTitle: seoTitle.length > 60 ? seoTitle.substring(0, 57) + '...' : seoTitle,
-      metaDescription: metaDescription.length > 160 ? metaDescription.substring(0, 157) + '...' : metaDescription
-    }
-  } catch (error) {
-    console.error('SEO generation error:', error)
-    // Fallback to simple SEO data
-    return {
-      seoTitle: originalTitle.length > 60 ? originalTitle.substring(0, 57) + '...' : originalTitle,
-      metaDescription: content.substring(0, 155).trim() + '...'
-    }
+  return {
+    seoTitle,
+    metaDescription
   }
 }
 
-// Generate content using GPT-5 with web search
+// Generate content using Perplexity only
 export async function generateContent(request: ContentRequest): Promise<GeneratedContent> {
   // Try to load custom prompts, fall back to defaults
   const customPrompts = await loadCustomPrompts()
@@ -214,8 +184,9 @@ export async function generateContent(request: ContentRequest): Promise<Generate
     userPrompt = template.user(request.topic, request.additionalContext)
   }
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o", // Using GPT-4o for now, can switch to GPT-5 when available
+  // Use Perplexity for real-time web search
+  const completion = await perplexity.chat.completions.create({
+    model: "sonar-pro", // Perplexity's pro model with enhanced web search
     messages: [
       {
         role: "system",
@@ -227,7 +198,7 @@ export async function generateContent(request: ContentRequest): Promise<Generate
       }
     ],
     temperature: 0.7,
-    max_tokens: 4000
+    max_tokens: 4000,
   })
 
   const text = completion.choices[0]?.message?.content || ""
@@ -241,8 +212,8 @@ export async function generateContent(request: ContentRequest): Promise<Generate
   // Generate tags based on content
   const tags = generateTags(text, request.type)
 
-  // Generate SEO-optimized title and meta description
-  const seoData = await generateSEOData(text, title, request.type, request.topic)
+  // Generate SEO-optimized title and meta description using simple approach
+  const seoData = await generateSimpleSEOData(text, title)
 
   return {
     title,
@@ -352,8 +323,8 @@ function getCategoryForType(type: ContentType): string {
 
 // Generate podcast script from deep dive content optimized for ElevenLabs v3
 export async function generatePodcastScript(deepDiveContent: string): Promise<string> {
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
+  const completion = await perplexity.chat.completions.create({
+    model: "sonar-pro", // Using Perplexity pro for script generation too
     messages: [
       {
         role: "system",
