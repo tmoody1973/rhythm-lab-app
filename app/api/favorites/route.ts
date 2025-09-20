@@ -2,8 +2,79 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { auth } from '@clerk/nextjs/server'
 
+// Helper function to ensure profile exists with correct email for Clerk users
+async function ensureClerkProfile(userId: string): Promise<void> {
+  try {
+    // Get Clerk user details
+    const { clerkClient } = await import('@clerk/nextjs/server')
+    const client = await clerkClient()
+    const clerkUser = await client.users.getUser(userId)
+
+    if (!clerkUser) return
+
+    // Use service role to manage profiles
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        },
+        cookies: {
+          getAll() { return [] },
+          setAll() {}
+        }
+      }
+    )
+
+    // Check if profile exists
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .eq('clerk_user_id', userId)
+      .single()
+
+    const userEmail = clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses[0]?.emailAddress
+    const userFullName = clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || userEmail
+
+    if (existingProfile) {
+      // Update if email is missing or incorrect
+      if (!existingProfile.email || existingProfile.email.startsWith('user_') || existingProfile.email !== userEmail) {
+        await supabase
+          .from('profiles')
+          .update({
+            email: userEmail,
+            full_name: userFullName,
+            updated_at: new Date().toISOString()
+          })
+          .eq('clerk_user_id', userId)
+
+        console.log('Updated profile email for Clerk user:', userId)
+      }
+    } else {
+      // Create new profile with proper email
+      const { v4: uuidv4 } = await import('uuid')
+      await supabase
+        .from('profiles')
+        .insert({
+          id: uuidv4(),
+          clerk_user_id: userId,
+          email: userEmail,
+          full_name: userFullName,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      console.log('Created profile for Clerk user:', userId, 'with email:', userEmail)
+    }
+  } catch (error) {
+    console.log('Error ensuring profile:', error)
+  }
+}
+
 // Helper function to get user ID for both Clerk and Supabase users
-async function getUserId(supabase: any, request: NextRequest): Promise<string | null> {
+async function getUserId(request: NextRequest): Promise<string | null> {
   // Try server-side Clerk auth first
   try {
     const authResult = await auth()
@@ -11,9 +82,9 @@ async function getUserId(supabase: any, request: NextRequest): Promise<string | 
     console.log('Clerk userId:', userId)
 
     if (userId) {
-      // With Supabase's built-in Clerk integration, users should be in auth.users
-      // Also ensure profile exists for this Clerk user
-      await ensureProfileExists(supabase, userId)
+      // Ensure profile exists with correct email
+      await ensureClerkProfile(userId)
+      // Return Clerk user ID directly - it will be used as-is in user_favorites
       return userId
     }
   } catch (error) {
@@ -21,60 +92,36 @@ async function getUserId(supabase: any, request: NextRequest): Promise<string | 
   }
 
   // Fallback to Supabase auth (for admin users)
+  // Create a Supabase client to check for admin users
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          // For GET/POST requests, we don't need to set cookies
+        },
+      },
+    }
+  )
+
   const { data: { user }, error } = await supabase.auth.getUser()
   console.log('Supabase fallback user:', { user: user?.id, error })
   return user?.id || null
 }
 
-// Helper function to ensure profile exists for Clerk users
-async function ensureProfileExists(supabase: any, userId: string) {
-  try {
-    // Check if profile already exists
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('clerk_user_id', userId)
-      .single()
-
-    if (!existingProfile) {
-      // Since Supabase's Clerk integration isn't working, get user data from Clerk directly
-      const { clerkClient } = await import('@clerk/nextjs/server')
-      const client = await clerkClient()
-
-      try {
-        const clerkUser = await client.users.getUser(userId)
-
-        if (clerkUser) {
-          // Create profile for this Clerk user
-          const { error: insertError } = await supabase
-            .from('profiles')
-            .insert({
-              id: userId, // Use Clerk ID as profile ID
-              clerk_user_id: userId,
-              email: clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses[0]?.emailAddress,
-              full_name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.primaryEmailAddress?.emailAddress,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-
-          if (insertError) {
-            console.log('Profile creation error:', insertError)
-          } else {
-            console.log('Profile created for Clerk user:', userId)
-          }
-        }
-      } catch (clerkError) {
-        console.log('Error fetching user from Clerk:', clerkError)
-      }
-    }
-  } catch (error) {
-    console.log('Error ensuring profile exists:', error)
-  }
-}
-
 export async function GET(request: NextRequest) {
   try {
-    // Use service role to bypass RLS for dual auth system
+    const userId = await getUserId(request)
+
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Use service role key to bypass RLS since we're handling auth manually
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -93,12 +140,6 @@ export async function GET(request: NextRequest) {
         },
       }
     )
-
-    const userId = await getUserId(supabase, request)
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const { data: favorites, error } = await supabase
       .from('user_favorites')
@@ -146,7 +187,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Use service role to bypass RLS for dual auth system
+    const userId = await getUserId(request)
+
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Use service role to bypass RLS for now
+    // TODO: Once migration is run, we can use regular client with Clerk JWT
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -165,12 +213,6 @@ export async function POST(request: NextRequest) {
         },
       }
     )
-
-    const userId = await getUserId(supabase, request)
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const body = await request.json()
     const { track, content, action } = body

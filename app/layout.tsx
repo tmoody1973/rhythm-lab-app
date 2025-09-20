@@ -29,12 +29,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans ${inter.variable} antialiased`}>
         <ClerkAuthProvider>
-          <AuthProvider>
-            <RadioProvider>
-              <Suspense fallback={null}>{children}</Suspense>
-              <PersistentAudioPlayer />
-            </RadioProvider>
-          </AuthProvider>
+          <RadioProvider>
+            <Suspense fallback={null}>{children}</Suspense>
+            <PersistentAudioPlayer />
+          </RadioProvider>
         </ClerkAuthProvider>
       </body>
     </html>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
+import { AuthProvider } from '@/contexts/auth-context'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import Link from 'next/link'
@@ -11,7 +12,7 @@ interface AdminLayoutProps {
   children: React.ReactNode
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+function AdminLayoutContent({ children }: AdminLayoutProps) {
   const { user, profile, loading, signOut } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
@@ -124,5 +125,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
+  return (
+    <AuthProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </AuthProvider>
   )
 }
