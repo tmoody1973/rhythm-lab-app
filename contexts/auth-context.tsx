@@ -1,300 +1,95 @@
-"use client"
+'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import type { User, Session } from '@supabase/supabase-js'
-import type { Profile } from '@/lib/database/types'
+import React, { createContext, useContext } from 'react'
+
+export interface Profile {
+  id: string
+  username: string | null
+  display_name: string | null
+  email: string
+  role: 'user' | 'admin'
+  avatar_url: string | null
+  created_at: string
+  updated_at: string
+}
 
 interface AuthContextType {
-  user: User | null
+  user: any | null
   profile: Profile | null
-  session: Session | null
+  session: any | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: any }>
-  signUp: (email: string, password: string, username?: string) => Promise<{ error: any }>
+  signIn: (email: string, password: string) => Promise<{ error?: any }>
   signOut: () => Promise<void>
-  refreshProfile: () => Promise<void>
+  createProfile: (user: any, username?: string) => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  profile: null,
+  session: null,
+  loading: false,
+  signIn: async () => ({ error: null }),
+  signOut: async () => {},
+  createProfile: async () => {},
+})
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
-
-  const fetchProfile = async (userId: string) => {
-    try {
-      console.log('Fetching profile for userId:', userId)
-
-      // Add timeout to profile fetch
-      const fetchPromise = supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
-      )
-
-      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any
-
-      if (error) {
-        console.error('Error fetching profile:', error)
-        if (error.code === 'PGRST116') {
-          // No profile found - this is expected for new users
-          console.log('No profile found for user, will be created after email confirmation')
-          setProfile(null)
-          return
-        }
-        // Other errors
-        setProfile(null)
-        return
-      }
-
-      console.log('Profile fetched successfully:', data)
-      setProfile(data || null)
-    } catch (error) {
-      console.error('Profile fetch timeout or error:', error)
-      setProfile(null)
-    }
-  }
-
-  const createProfile = async (user: User, username?: string) => {
-    try {
-      // First check if profile already exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .single()
-
-      if (existingProfile) {
-        console.log('Profile already exists, fetching it...')
-        await fetchProfile(user.id)
-        return
-      }
-
-      // Create profile with direct insert and conflict handling
-      const { error } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: user.email!,
-          username: username,
-          full_name: user.user_metadata?.full_name,
-          avatar_url: user.user_metadata?.avatar_url,
-          role: 'user',
-          is_premium: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-
-      if (error) {
-        console.error('Error creating profile:', error)
-        // If it's a duplicate key error, try to fetch the existing profile
-        if (error.code === '23505') {
-          console.log('Profile already exists (duplicate key), fetching it...')
-          await fetchProfile(user.id)
-        }
-        return
-      }
-
-      await fetchProfile(user.id)
-    } catch (error) {
-      console.error('Error creating profile:', error)
-    }
-  }
-
-  const refreshProfile = async () => {
-    if (user) {
-      await fetchProfile(user.id)
-    }
-  }
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { error }
-  }
-
-  const signUp = async (email: string, password: string, username?: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-        // Skip email confirmation if rate limited or for testing
-        data: {
-          skip_confirmation: true // This helps bypass email confirmation
-        }
-      }
-    })
-
-    // Create profile immediately if email confirmation is skipped or in development
-    if (!error && data.user) {
-      console.log('User created:', data.user.id, 'Email confirmed:', !!data.user.email_confirmed_at)
-
-      // Create profile immediately if no email confirmation required or in development
-      if (!data.user.email_confirmed_at || process.env.NODE_ENV === 'development') {
-        console.log('Creating profile immediately (no email confirmation required)')
-        try {
-          await createProfile(data.user, username)
-        } catch (profileError) {
-          console.error('Profile creation error:', profileError)
-        }
-      }
-    }
-
-    return { error }
-  }
-
-  const signOut = async () => {
-    try {
-      console.log('Signing out...')
-
-      // Clear local state first to provide immediate feedback
-      setUser(null)
-      setProfile(null)
-      setSession(null)
-
-      // Add timeout to prevent hanging, but don't await it
-      const signOutPromise = supabase.auth.signOut()
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Sign out timeout')), 2000)
-      )
-
-      try {
-        await Promise.race([signOutPromise, timeoutPromise])
-        console.log('Successfully signed out')
-      } catch (timeoutError) {
-        console.warn('Sign out timeout (local state cleared):', timeoutError)
-        // Continue - local state is already cleared
-      }
-    } catch (error) {
-      console.warn('Sign out error (local state cleared):', error)
-      // Local state is already cleared, so user appears signed out
-    }
-  }
-
-  useEffect(() => {
-    let mounted = true
-
-    // Set loading timeout as fallback
-    const loadingTimeout = setTimeout(() => {
-      if (mounted) {
-        console.warn('Auth loading timeout - setting loading to false')
-        setLoading(false)
-      }
-    }, 3000) // 3 second timeout
-
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        console.log('Getting initial user...')
-
-        // Add timeout to auth check
-        const authPromise = supabase.auth.getUser()
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Auth check timeout')), 5000)
-        )
-
-        const { data: { user }, error } = await Promise.race([authPromise, timeoutPromise]) as any
-
-        if (error) {
-          console.warn('Auth error (likely invalid session):', error.message)
-          // Clear auth state and continue
-          if (mounted) {
-            setUser(null)
-            setProfile(null)
-            setSession(null)
-            setLoading(false)
-          }
-          return
-        }
-
-        console.log('Initial user:', !!user)
-
-        if (mounted) {
-          setUser(user)
-
-          if (user) {
-            console.log('Fetching profile for user:', user.id)
-            await fetchProfile(user.id)
-          } else {
-            console.log('No user, setting profile to null')
-            setProfile(null)
-          }
-
-          setLoading(false)
-          console.log('Auth initialization complete')
-        }
-      } catch (error) {
-        console.warn('Auth initialization timeout (continuing without auth):', error)
-        if (mounted) {
-          setUser(null)
-          setProfile(null)
-          setSession(null)
-          setLoading(false)
-        }
-      }
-    }
-
-    // Listen to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state change:', event, !!session)
-
-        if (mounted) {
-          setSession(session)
-          setUser(session?.user ?? null)
-
-          if (session?.user) {
-            await fetchProfile(session.user.id)
-          } else {
-            setProfile(null)
-          }
-
-          setLoading(false)
-        }
-      }
-    )
-
-    // Get initial session
-    getInitialSession()
-
-    return () => {
-      mounted = false
-      clearTimeout(loadingTimeout)
-      subscription.unsubscribe()
-    }
-  }, [])
-
-  return (
-    <AuthContext.Provider value={{
-      user,
-      profile,
-      session,
-      loading,
-      signIn,
-      signUp,
-      signOut,
-      refreshProfile,
-    }}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
-
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
+}
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Temporary bypass for development - creating a mock admin user
+  const mockUser = {
+    id: 'admin-user',
+    email: 'admin@test.com'
+  }
+
+  const mockProfile: Profile = {
+    id: 'admin-user',
+    username: 'admin',
+    display_name: 'Admin User',
+    email: 'admin@test.com',
+    role: 'admin',
+    avatar_url: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+
+  const signIn = async (email: string, password: string) => {
+    // Mock sign in - for development only
+    console.log('Mock sign in for:', email)
+
+    // Simple validation for demo purposes
+    if (email === 'admin@test.com' && password === 'admin') {
+      return { error: null }
+    } else {
+      return { error: { message: 'Invalid email or password' } }
+    }
+  }
+
+  const signOut = async () => {
+    // Mock sign out
+    console.log('Mock sign out')
+  }
+
+  const createProfile = async () => {
+    // Mock create profile
+    console.log('Mock create profile')
+  }
+
+  const value: AuthContextType = {
+    user: mockUser,
+    profile: mockProfile,
+    session: { user: mockUser },
+    loading: false,
+    signIn,
+    signOut,
+    createProfile,
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
