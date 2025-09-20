@@ -43,20 +43,20 @@ export async function GET(request: NextRequest) {
         debug: 'Clerk integration working properly'
       })
 
-    } catch (clerkError) {
+    } catch (clerkError: any) {
       console.log('Error fetching user from Clerk:', clerkError)
       return NextResponse.json({
         error: 'Failed to fetch user from Clerk',
-        clerkError: clerkError.message,
+        clerkError: clerkError?.message || 'Unknown error',
         userId: authResult.userId
       }, { status: 500 })
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.log('Error in debug endpoint:', error)
     return NextResponse.json({
       error: 'Debug endpoint failed',
-      message: error.message
+      message: error?.message || 'Unknown error'
     }, { status: 500 })
   }
 }
