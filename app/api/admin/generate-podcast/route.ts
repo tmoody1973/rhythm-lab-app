@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 3: Prepare response
-    const response = {
+    const response: any = {
       success: true,
       podcast: {
         script: podcastResult.script,
