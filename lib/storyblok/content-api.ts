@@ -214,20 +214,21 @@ export async function uploadAudioToStoryblok(
 ): Promise<{ success: boolean; asset?: any; error?: string }> {
   try {
     // First, get signed upload URL
-    const signedResponse = await storyblokClient.post(`spaces/${spaceId}/assets`, {
+    const signedResponse = await callStoryblokAPI(`spaces/${spaceId}/assets`, 'POST', {
       filename: filename,
       asset_folder_id: null, // You can specify a folder ID if needed
       size: audioBuffer.length
     })
 
-    const uploadData = signedResponse.data
+    const uploadData = signedResponse
 
     // Upload file to the signed URL
     const formData = new FormData()
     Object.keys(uploadData.fields).forEach(key => {
       formData.append(key, uploadData.fields[key])
     })
-    formData.append('file', new Blob([audioBuffer]), filename)
+    const arrayBuffer = audioBuffer.buffer.slice(audioBuffer.byteOffset, audioBuffer.byteOffset + audioBuffer.byteLength) as ArrayBuffer
+    formData.append('file', new Blob([arrayBuffer]), filename)
 
     const uploadResponse = await fetch(uploadData.post_url, {
       method: 'POST',
@@ -239,11 +240,11 @@ export async function uploadAudioToStoryblok(
     }
 
     // Finalize the asset
-    const finalizeResponse = await storyblokClient.get(`spaces/${spaceId}/assets/${uploadData.id}`)
+    const finalizeResponse = await callStoryblokAPI(`spaces/${spaceId}/assets/${uploadData.id}`, 'GET')
 
     return {
       success: true,
-      asset: finalizeResponse.data.asset
+      asset: finalizeResponse.asset
     }
   } catch (error: any) {
     console.error('Error uploading audio to Storyblok:', error)
@@ -262,8 +263,8 @@ export async function addAudioToDeepDive(
 ): Promise<{ success: boolean; story?: any; error?: string }> {
   try {
     // Get existing story
-    const response = await storyblokClient.get(`spaces/${spaceId}/stories/${storyId}`)
-    const story = response.data.story
+    const response = await callStoryblokAPI(`spaces/${spaceId}/stories/${storyId}`, 'GET')
+    const story = response.story
 
     // Add audio file to the content
     const updatedContent = {
@@ -282,7 +283,7 @@ export async function addAudioToDeepDive(
     }
 
     // Update the story
-    const updateResponse = await storyblokClient.put(`spaces/${spaceId}/stories/${storyId}`, {
+    const updateResponse = await callStoryblokAPI(`spaces/${spaceId}/stories/${storyId}`, 'PUT', {
       story: {
         ...story,
         content: updatedContent
@@ -292,7 +293,7 @@ export async function addAudioToDeepDive(
 
     return {
       success: true,
-      story: updateResponse.data.story
+      story: updateResponse.story
     }
   } catch (error: any) {
     console.error('Error adding audio to deep dive:', error)
@@ -313,21 +314,17 @@ export async function getStoriesByType(
   try {
     const storyblokContentType = CONTENT_TYPE_MAPPING[contentType]
 
-    const response = await storyblokClient.get(`spaces/${spaceId}/stories`, {
-      filter_query: {
-        component: {
-          in: storyblokContentType
-        }
-      },
-      page: page,
-      per_page: perPage,
-      sort_by: 'created_at:desc'
-    })
+    const filterQuery = encodeURIComponent(JSON.stringify({
+      component: {
+        in: storyblokContentType
+      }
+    }))
+    const response = await callStoryblokAPI(`spaces/${spaceId}/stories?filter_query=${filterQuery}&page=${page}&per_page=${perPage}&sort_by=created_at:desc`, 'GET')
 
     return {
       success: true,
-      stories: response.data.stories,
-      total: response.headers['total']
+      stories: response.stories,
+      total: response.total || response.stories?.length || 0
     }
   } catch (error: any) {
     console.error('Error fetching stories by type:', error)
@@ -369,10 +366,10 @@ function extractMetaDescription(richTextContent: any): string {
 // Get Storyblok space information
 export async function getSpaceInfo(spaceId: number): Promise<{ success: boolean; space?: any; error?: string }> {
   try {
-    const response = await storyblokClient.get(`spaces/${spaceId}`)
+    const response = await callStoryblokAPI(`spaces/${spaceId}`, 'GET')
     return {
       success: true,
-      space: response.data.space
+      space: response.space
     }
   } catch (error: any) {
     console.error('Error fetching space info:', error)
