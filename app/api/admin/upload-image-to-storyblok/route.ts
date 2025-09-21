@@ -25,9 +25,8 @@ async function uploadImageToStoryblok(
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        filename: filename,
-        size: imageBuffer.length
-        // asset_folder_id is optional, omit if not needed
+        filename: filename
+        // Note: size and asset_folder_id cause 500 errors, omit them
       })
     })
 
