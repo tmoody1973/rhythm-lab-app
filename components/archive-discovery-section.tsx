@@ -28,7 +28,7 @@ interface WeeklyShowProps {
 function WeeklyShowCard({ latestShow, showIndex = 0 }: WeeklyShowProps) {
   if (!latestShow) {
     return (
-      <Card className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl">
+      <Card className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl">
         <CardContent className="p-8 text-center">
           <div className="text-muted-foreground">Loading latest show...</div>
         </CardContent>
@@ -58,7 +58,7 @@ function WeeklyShowCard({ latestShow, showIndex = 0 }: WeeklyShowProps) {
 
   return (
     <Link href={`/show/${latestShow.id}`}>
-      <Card className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl">
+      <Card className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl">
         <div className="aspect-[16/9] relative overflow-hidden">
           <img
             src={latestShow.mixcloud_picture || "/images/ALBUM-DEFAULT.png"}
@@ -143,11 +143,11 @@ export function ArchiveDiscoverySection() {
       {/* Archive Shows Section */}
       <div>
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-foreground uppercase tracking-wide flex items-center gap-2 mb-4">📁 WEEKLY SHOW</h2>
+          <h2 className="text-xl font-bold text-foreground uppercase tracking-wide flex items-center gap-2 mb-4">WEEKLY SHOW</h2>
           <div className="grid grid-cols-1 gap-4">
             {/* Recent Mixcloud Shows - Dynamic */}
             {loading ? (
-              <Card className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl">
+              <Card className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl">
                 <CardContent className="p-8 text-center">
                   <div className="text-muted-foreground">Loading latest shows...</div>
                 </CardContent>

@@ -125,7 +125,7 @@ export default async function BlogPage() {
                   return (
                     <Card
                       key={post.id}
-                      className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
+                      className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl"
                     >
                       <Link href={`/blog/${post.slug}`}>
                         <div className="aspect-[16/10] relative overflow-hidden">
@@ -231,13 +231,13 @@ export default async function BlogPage() {
             {/* Regular Posts Grid */}
             <section>
               <h2 className="text-2xl font-bold nts-text-caps mb-6">Latest Posts</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {blogPosts.filter(post => post.content?.featured !== true).map((post) => {
                     const postColor = getPostColor(post.id);
                     return (
                       <Card
                         key={post.id}
-                        className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
+                        className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl"
                       >
                         <Link href={`/blog/${post.slug}`}>
                           <div className="aspect-[16/9] relative overflow-hidden">

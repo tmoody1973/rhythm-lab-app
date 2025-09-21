@@ -200,7 +200,7 @@ export default async function DeepDivesPage() {
                 return (
                 <Card
                   key={dive.id}
-                  className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
+                  className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl"
                 >
                   <Link href={hasDeepDives ? `/deep-dives/${dive.slug}` : '#'}>
                     <div className="aspect-[16/10] relative overflow-hidden">
@@ -321,13 +321,13 @@ export default async function DeepDivesPage() {
           {/* Regular Deep Dives Grid */}
           <div>
             <h2 className="text-2xl font-bold nts-text-caps mb-6">All Deep Dives</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {regularDives.map((dive) => {
                 const diveColor = hasDeepDives ? getPostColor(dive.id) : dive.color;
                 return (
                 <Card
                   key={dive.id}
-                  className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
+                  className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl"
                 >
                   <Link href={hasDeepDives ? `/deep-dives/${dive.slug}` : '#'}>
                     <div className="aspect-[16/9] relative overflow-hidden">

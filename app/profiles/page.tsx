@@ -325,7 +325,7 @@ export default async function ProfilesPage() {
                 return (
                 <Card
                   key={profile.id}
-                  className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
+                  className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl"
                 >
                   <Link href={hasProfiles ? `/profiles/${profile.slug}` : '#'}>
                     <div className="aspect-[16/10] relative overflow-hidden">
@@ -470,13 +470,13 @@ export default async function ProfilesPage() {
           {/* Regular Profiles Grid */}
           <div>
             <h2 className="text-2xl font-bold nts-text-caps mb-6">All Profiles</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {regularProfiles.map((profile) => {
                 const profileColor = hasProfiles ? getProfileColor(profile.id) : profile.color;
                 return (
                 <Card
                   key={profile.id}
-                  className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl"
+                  className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl"
                 >
                   <Link href={hasProfiles ? `/profiles/${profile.slug}` : '#'}>
                     <div className="aspect-[16/9] relative overflow-hidden">
@@ -544,8 +544,15 @@ export default async function ProfilesPage() {
                       </p>
                     )}
                     <div className="flex flex-wrap gap-1 mb-3">
-                      {hasProfiles ? (
-                        (profile.content?.tags || []).slice(0, 2).map((tag: string, index: number) => (
+                      {(() => {
+                        const contentTags = hasProfiles ? (profile.content?.tags || []) : profile.tags;
+                        const genreTags = contentTags.filter((tag: string) =>
+                          !['artist', 'profile', 'music'].includes(tag.toLowerCase())
+                        );
+                        const displayTags = genreTags.length > 0 ? genreTags :
+                          extractGenreTagsFromContent(hasProfiles ? profile.content : null, hasProfiles ? profile.name : profile.title);
+
+                        return displayTags.slice(0, 2).map((tag: string, index: number) => (
                           <Badge
                             key={index}
                             variant="outline"
@@ -554,19 +561,8 @@ export default async function ProfilesPage() {
                           >
                             {String(tag).toUpperCase()}
                           </Badge>
-                        ))
-                      ) : (
-                        profile.tags.slice(0, 2).map((tag: string, index: number) => (
-                          <Badge
-                            key={index}
-                            variant="outline"
-                            className="text-xs px-2 py-1 rounded-full font-medium"
-                            style={{ borderColor: profileColor, color: profileColor }}
-                          >
-                            {tag}
-                          </Badge>
-                        ))
-                      )}
+                        ));
+                      })()}
                     </div>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span className="text-xs">

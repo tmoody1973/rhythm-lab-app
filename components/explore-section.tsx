@@ -341,7 +341,7 @@ export function ExploreSection() {
             return (
               <Card
                 key={item.id}
-                className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl group"
+                className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl group"
               >
                 <Link href={`${routePrefix}/${item.slug}`}>
                   {/* Image/Artwork Section */}
