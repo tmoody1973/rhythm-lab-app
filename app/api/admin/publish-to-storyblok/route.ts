@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createStoryblokStory } from '@/lib/storyblok/content-api'
 import { GeneratedContent, ContentType } from '@/lib/ai/content-generator'
+import { markdownToStoryblokRichtext } from '@storyblok/richtext/markdown-parser'
 
 // You'll need to set these environment variables
 const STORYBLOK_SPACE_ID = parseInt(process.env.STORYBLOK_SPACE_ID || '0')
@@ -86,39 +87,8 @@ export async function POST(request: NextRequest) {
 }
 
 // Convert plain text back to Storyblok rich text format
+// Using markdown-to-richtext for better formatting preservation
 function convertPlainTextToRichText(plainText: string) {
-  const paragraphs = plainText.split('\n\n').filter(p => p.trim())
-
-  return {
-    type: 'doc',
-    content: paragraphs.map(paragraph => {
-      const trimmed = paragraph.trim()
-
-      // Check if it's a heading
-      if (trimmed.startsWith('#')) {
-        const level = trimmed.match(/^#+/)?.[0].length || 1
-        return {
-          type: 'heading',
-          attrs: { level: Math.min(level, 6) },
-          content: [
-            {
-              type: 'text',
-              text: trimmed.replace(/^#+\s*/, '')
-            }
-          ]
-        }
-      }
-
-      // Regular paragraph
-      return {
-        type: 'paragraph',
-        content: [
-          {
-            type: 'text',
-            text: trimmed
-          }
-        ]
-      }
-    })
-  }
+  // The content is likely markdown, so use the proper converter
+  return markdownToStoryblokRichtext(plainText)
 }

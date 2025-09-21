@@ -1,13 +1,6 @@
-import OpenAI from 'openai'
-import { z } from 'zod'
 import { promises as fs } from 'fs'
 import path from 'path'
-
-// Perplexity client only
-const perplexity = new OpenAI({
-  apiKey: process.env.PERPLEXITY_API_KEY!,
-  baseURL: 'https://api.perplexity.ai',
-})
+import { markdownToStoryblokRichtext } from '@storyblok/richtext/markdown-parser'
 
 // Content types
 export type ContentType = 'artist-profile' | 'deep-dive' | 'blog-post'
@@ -184,27 +177,39 @@ export async function generateContent(request: ContentRequest): Promise<Generate
     userPrompt = template.user(request.topic, request.additionalContext)
   }
 
-  // Use Perplexity for real-time web search
-  const completion = await perplexity.chat.completions.create({
-    model: "sonar-pro", // Perplexity's pro model with enhanced web search
-    messages: [
-      {
-        role: "system",
-        content: systemPrompt
-      },
-      {
-        role: "user",
-        content: userPrompt
-      }
-    ],
-    temperature: 0.7,
-    max_tokens: 4000,
+  // Use Perplexity API directly for real-time web search
+  const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: "sonar-pro", // Perplexity's pro model with enhanced web search
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: userPrompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 4000,
+    }),
   })
 
+  if (!response.ok) {
+    throw new Error(`Perplexity API error: ${response.statusText}`)
+  }
+
+  const completion = await response.json()
   const text = completion.choices[0]?.message?.content || ""
 
-  // Convert generated text to Storyblok rich text format
-  const richTextContent = convertToStoryblokRichText(text)
+  // Convert markdown from Perplexity to Storyblok rich text format
+  const richTextContent = markdownToStoryblokRichtext(text)
 
   // Extract title from content or generate one
   const title = extractTitle(text) || generateTitle(request.topic, request.type)
@@ -231,41 +236,10 @@ export async function generateContent(request: ContentRequest): Promise<Generate
   }
 }
 
-// Convert plain text to Storyblok rich text format
-function convertToStoryblokRichText(text: string) {
-  const paragraphs = text.split('\n\n').filter(p => p.trim())
-
-  return {
-    type: 'doc',
-    content: paragraphs.map(paragraph => {
-      // Check if it's a heading
-      if (paragraph.startsWith('#')) {
-        const level = paragraph.match(/^#+/)?.[0].length || 1
-        return {
-          type: 'heading',
-          attrs: { level: Math.min(level, 6) },
-          content: [
-            {
-              type: 'text',
-              text: paragraph.replace(/^#+\s*/, '')
-            }
-          ]
-        }
-      }
-
-      // Regular paragraph
-      return {
-        type: 'paragraph',
-        content: [
-          {
-            type: 'text',
-            text: paragraph
-          }
-        ]
-      }
-    })
-  }
-}
+// Note: We now use @storyblok/richtext's markdownToRichtext function
+// which properly handles all markdown formatting including:
+// - Bold, italic, strikethrough, links, lists, code blocks, quotes, images
+// - Citations from Perplexity as clickable links
 
 // Helper functions
 function extractTitle(text: string): string | null {
@@ -323,12 +297,18 @@ function getCategoryForType(type: ContentType): string {
 
 // Generate podcast script from deep dive content optimized for ElevenLabs v3
 export async function generatePodcastScript(deepDiveContent: string): Promise<string> {
-  const completion = await perplexity.chat.completions.create({
-    model: "sonar-pro", // Using Perplexity pro for script generation too
-    messages: [
-      {
-        role: "system",
-        content: `You are a podcast script writer who creates engaging audio content optimized for ElevenLabs v3 text-to-speech.
+  const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: "sonar-pro", // Using Perplexity pro for script generation too
+      messages: [
+        {
+          role: "system",
+          content: `You are a podcast script writer who creates engaging audio content optimized for ElevenLabs v3 text-to-speech.
 
 CRITICAL REQUIREMENTS FOR ELEVENLABS V3:
 - Use audio tags for natural speech: [whispers], [excited], [thoughtful], [emphasizes], [chuckles], [serious]
@@ -344,10 +324,10 @@ STYLE GUIDELINES:
 - Add emotional responses to interesting facts
 - Use rhetorical questions to engage listeners
 - Maintain authenticity and enthusiasm for the subject`
-      },
-      {
-        role: "user",
-        content: `Transform this deep dive article into an engaging podcast script optimized for ElevenLabs v3:
+        },
+        {
+          role: "user",
+          content: `Transform this deep dive article into an engaging podcast script optimized for ElevenLabs v3:
 
 ${deepDiveContent}
 
@@ -359,11 +339,17 @@ Create a compelling script with:
 - Compelling conclusion with [warm] call-to-action
 
 Use ElevenLabs v3 audio formatting throughout. Minimum 250 characters required.`
-      }
-    ],
-    temperature: 0.7,
-    max_tokens: 4000
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 4000
+    }),
   })
 
+  if (!response.ok) {
+    throw new Error(`Perplexity API error: ${response.statusText}`)
+  }
+
+  const completion = await response.json()
   return completion.choices[0]?.message?.content || ""
 }

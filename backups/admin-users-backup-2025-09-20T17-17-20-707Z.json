@@ -1,0 +1,136 @@
+{
+  "backup_date": "2025-09-20T17:17:20.706Z",
+  "backup_purpose": "Admin auth migration from Supabase to Clerk",
+  "admin_profiles": [
+    {
+      "id": "f88ef150-83c3-473d-863c-42bdca72d953",
+      "email": "testuser@example.com",
+      "username": null,
+      "full_name": null,
+      "avatar_url": null,
+      "bio": null,
+      "website": null,
+      "location": null,
+      "favorite_genres": null,
+      "is_premium": false,
+      "created_at": "2025-09-16T21:50:32.153558+00:00",
+      "updated_at": "2025-09-17T18:59:42.787225+00:00",
+      "role": "admin",
+      "clerk_user_id": null
+    },
+    {
+      "id": "4caac7ca-1186-49f6-af80-a97ef33ac20c",
+      "email": "tarikjmoody@gmail.com",
+      "username": null,
+      "full_name": null,
+      "avatar_url": null,
+      "bio": null,
+      "website": null,
+      "location": null,
+      "favorite_genres": null,
+      "is_premium": false,
+      "created_at": "2025-09-17T15:51:19.725878+00:00",
+      "updated_at": "2025-09-17T15:52:43.059357+00:00",
+      "role": "admin",
+      "clerk_user_id": null
+    },
+    {
+      "id": "cbae6afe-fe71-4feb-b0d9-a4056da8561a",
+      "email": "admin@rhythmlabradio.com",
+      "username": "admin",
+      "full_name": null,
+      "avatar_url": null,
+      "bio": null,
+      "website": null,
+      "location": null,
+      "favorite_genres": null,
+      "is_premium": false,
+      "created_at": "2025-09-17T23:08:07.751+00:00",
+      "updated_at": "2025-09-17T23:08:07.918345+00:00",
+      "role": "admin",
+      "clerk_user_id": null
+    }
+  ],
+  "auth_users": [
+    {
+      "id": "cbae6afe-fe71-4feb-b0d9-a4056da8561a",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "admin@rhythmlabradio.com",
+      "email_confirmed_at": "2025-09-17T23:08:07.771224Z",
+      "phone": "",
+      "confirmed_at": "2025-09-17T23:08:07.771224Z",
+      "last_sign_in_at": "2025-09-18T00:01:57.438694Z",
+      "app_metadata": {
+        "provider": "email",
+        "providers": [
+          "email"
+        ]
+      },
+      "user_metadata": {
+        "email_verified": true
+      },
+      "identities": null,
+      "created_at": "2025-09-17T23:08:07.708848Z",
+      "updated_at": "2025-09-18T00:01:57.454607Z",
+      "is_anonymous": false
+    },
+    {
+      "id": "4caac7ca-1186-49f6-af80-a97ef33ac20c",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "tarikjmoody@gmail.com",
+      "email_confirmed_at": "2025-09-17T15:51:19.760845Z",
+      "phone": "",
+      "confirmed_at": "2025-09-17T15:51:19.760845Z",
+      "last_sign_in_at": "2025-09-20T16:41:57.057785Z",
+      "app_metadata": {
+        "provider": "email",
+        "providers": [
+          "email"
+        ]
+      },
+      "user_metadata": {
+        "email": "tarikjmoody@gmail.com",
+        "email_verified": true,
+        "phone_verified": false,
+        "sub": "4caac7ca-1186-49f6-af80-a97ef33ac20c"
+      },
+      "identities": null,
+      "created_at": "2025-09-17T15:51:19.72756Z",
+      "updated_at": "2025-09-20T16:41:57.060969Z",
+      "is_anonymous": false
+    },
+    {
+      "id": "f88ef150-83c3-473d-863c-42bdca72d953",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "testuser@example.com",
+      "email_confirmed_at": "2025-09-16T21:50:32.179076Z",
+      "phone": "",
+      "confirmed_at": "2025-09-16T21:50:32.179076Z",
+      "last_sign_in_at": "2025-09-16T21:50:32.187471Z",
+      "app_metadata": {
+        "provider": "email",
+        "providers": [
+          "email"
+        ]
+      },
+      "user_metadata": {
+        "email": "testuser@example.com",
+        "email_verified": true,
+        "phone_verified": false,
+        "sub": "f88ef150-83c3-473d-863c-42bdca72d953"
+      },
+      "identities": null,
+      "created_at": "2025-09-16T21:50:32.153928Z",
+      "updated_at": "2025-09-16T21:50:32.19194Z",
+      "is_anonymous": false
+    }
+  ],
+  "migration_notes": [
+    "These users need to be recreated in Clerk with admin roles",
+    "Original passwords cannot be migrated - users will need new passwords",
+    "Email addresses should remain the same for continuity"
+  ]
+}
