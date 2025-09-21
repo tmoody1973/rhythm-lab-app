@@ -27,6 +27,18 @@ export interface GeneratedContent {
     contentType: ContentType
     wordCount: number
   }
+  // SEO nestable block data
+  seoBlock?: {
+    component: 'seo'
+    title: string
+    description: string
+    og_title: string
+    og_description: string
+    og_image?: any
+    twitter_title: string
+    twitter_description: string
+    twitter_image?: any
+  }
 }
 
 // Prompt templates for different content types
@@ -144,15 +156,121 @@ async function loadCustomPrompts() {
   }
 }
 
-// Generate simple SEO-optimized title and meta description
-async function generateSimpleSEOData(content: string, originalTitle: string) {
-  // Simple SEO optimization without OpenAI
+// Generate comprehensive SEO data using Perplexity AI
+async function generateEnhancedSEOData(content: string, originalTitle: string, type: ContentType): Promise<{
+  seoTitle: string
+  metaDescription: string
+  seoBlock: GeneratedContent['seoBlock']
+}> {
+  try {
+    // Use Perplexity to generate optimized SEO content
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: "sonar", // Use faster model for SEO generation
+        messages: [
+          {
+            role: "system",
+            content: `You are an SEO expert. Generate optimized SEO metadata for web content.
+
+            Requirements:
+            - Title tags: 50-60 characters, include primary keyword
+            - Meta descriptions: 150-160 characters, compelling call-to-action
+            - Open Graph: Optimized for social sharing
+            - Twitter Cards: Optimized for Twitter engagement
+            - Use natural language, avoid keyword stuffing
+            - Make each variant slightly different but consistent`
+          },
+          {
+            role: "user",
+            content: `Generate SEO metadata for this ${type} content:
+
+            Title: ${originalTitle}
+            Content excerpt: ${content.substring(0, 500)}...
+
+            Return a JSON object with these exact fields:
+            {
+              "title": "SEO optimized title tag",
+              "description": "Meta description",
+              "og_title": "Open Graph title",
+              "og_description": "Open Graph description",
+              "twitter_title": "Twitter card title",
+              "twitter_description": "Twitter description"
+            }`
+          }
+        ],
+        temperature: 0.3, // Lower temperature for consistent SEO
+        max_tokens: 500,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`SEO generation failed: ${response.statusText}`)
+    }
+
+    const completion = await response.json()
+    const seoText = completion.choices[0]?.message?.content || ""
+
+    // Try to parse JSON response
+    let seoData
+    try {
+      // Extract JSON from the response (in case it's wrapped in text)
+      const jsonMatch = seoText.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        seoData = JSON.parse(jsonMatch[0])
+      } else {
+        throw new Error('No JSON found in response')
+      }
+    } catch (parseError) {
+      console.warn('Failed to parse SEO JSON, using fallback:', parseError)
+      // Fallback to simple generation
+      return generateSimpleSEOFallback(content, originalTitle)
+    }
+
+    return {
+      seoTitle: seoData.title || originalTitle,
+      metaDescription: seoData.description || content.substring(0, 160),
+      seoBlock: {
+        component: 'seo',
+        title: seoData.title || originalTitle,
+        description: seoData.description || content.substring(0, 160),
+        og_title: seoData.og_title || seoData.title || originalTitle,
+        og_description: seoData.og_description || seoData.description || content.substring(0, 160),
+        twitter_title: seoData.twitter_title || seoData.title || originalTitle,
+        twitter_description: seoData.twitter_description || seoData.description || content.substring(0, 160),
+      }
+    }
+  } catch (error) {
+    console.error('Enhanced SEO generation failed, using fallback:', error)
+    return generateSimpleSEOFallback(content, originalTitle)
+  }
+}
+
+// Fallback for simple SEO generation without AI
+function generateSimpleSEOFallback(content: string, originalTitle: string): {
+  seoTitle: string
+  metaDescription: string
+  seoBlock: GeneratedContent['seoBlock']
+} {
   const seoTitle = originalTitle.length > 60 ? originalTitle.substring(0, 57) + '...' : originalTitle
   const metaDescription = content.length > 160 ? content.substring(0, 157) + '...' : content
 
   return {
     seoTitle,
-    metaDescription
+    metaDescription,
+    seoBlock: {
+      component: 'seo',
+      title: seoTitle,
+      description: metaDescription,
+      og_title: seoTitle,
+      og_description: metaDescription,
+      twitter_title: seoTitle,
+      twitter_description: metaDescription,
+    }
   }
 }
 
@@ -217,8 +335,8 @@ export async function generateContent(request: ContentRequest): Promise<Generate
   // Generate tags based on content
   const tags = generateTags(text, request.type)
 
-  // Generate SEO-optimized title and meta description using simple approach
-  const seoData = await generateSimpleSEOData(text, title)
+  // Generate enhanced SEO data with nestable block structure
+  const seoData = await generateEnhancedSEOData(text, title, request.type)
 
   return {
     title,
@@ -232,7 +350,8 @@ export async function generateContent(request: ContentRequest): Promise<Generate
       generatedAt: new Date().toISOString(),
       contentType: request.type,
       wordCount: text.split(' ').length
-    }
+    },
+    seoBlock: seoData.seoBlock
   }
 }
 

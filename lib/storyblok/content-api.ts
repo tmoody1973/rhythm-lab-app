@@ -85,6 +85,8 @@ export async function createStoryblokStory(
       category: content.category,
       published_at: content.metadata.generatedAt,
       author: 'AI Content Generator',
+      // Add SEO nestable block if available
+      ...(content.seoBlock ? { seo: [content.seoBlock] } : {}),
     }
 
     // Add type-specific fields
@@ -104,14 +106,17 @@ export async function createStoryblokStory(
       content: storyContent,
       parent_id: folderId || 0,
       tag_list: content.tags,
-      meta_data: {
-        title: content.seoTitle,
-        description: content.metaDescription,
-        og_title: content.seoTitle,
-        og_description: content.metaDescription,
-        twitter_title: content.seoTitle,
-        twitter_description: content.metaDescription
-      }
+      // Only use meta_data as fallback if no SEO block
+      ...(content.seoBlock ? {} : {
+        meta_data: {
+          title: content.seoTitle,
+          description: content.metaDescription,
+          og_title: content.seoTitle,
+          og_description: content.metaDescription,
+          twitter_title: content.seoTitle,
+          twitter_description: content.metaDescription
+        }
+      })
     }
 
     const response = await callStoryblokAPI(`spaces/${spaceId}/stories/`, 'POST', {
@@ -149,16 +154,21 @@ export async function updateStoryblokStory(
         tags: content.tags,
         category: content.category,
         author: 'AI Content Generator',
+        // Add SEO nestable block if available
+        ...(content.seoBlock ? { seo: [content.seoBlock] } : {}),
       },
       tag_list: content.tags,
-      meta_data: {
-        title: content.seoTitle,
-        description: content.metaDescription,
-        og_title: content.seoTitle,
-        og_description: content.metaDescription,
-        twitter_title: content.seoTitle,
-        twitter_description: content.metaDescription
-      }
+      // Only use meta_data as fallback if no SEO block
+      ...(content.seoBlock ? {} : {
+        meta_data: {
+          title: content.seoTitle,
+          description: content.metaDescription,
+          og_title: content.seoTitle,
+          og_description: content.metaDescription,
+          twitter_title: content.seoTitle,
+          twitter_description: content.metaDescription
+        }
+      })
     }
 
     const response = await callStoryblokAPI(`spaces/${spaceId}/stories/${storyId}`, 'PUT', {
