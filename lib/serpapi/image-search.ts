@@ -14,9 +14,9 @@ export interface ImageResult {
 export interface ImageSearchOptions {
   query: string
   safeSearch?: 'active' | 'off'
-  imageType?: 'photos' | 'clipart' | 'lineart'
-  imageSize?: 'large' | 'medium' | 'icon'
-  aspectRatio?: 'tall' | 'square' | 'wide'
+  imageType?: 'photos' | 'clipart' | 'lineart' | 'any'
+  imageSize?: 'large' | 'medium' | 'any'
+  aspectRatio?: 'tall' | 'square' | 'wide' | 'any'
   page?: number
   maxResults?: number
 }
@@ -41,6 +41,7 @@ export async function searchImages(options: ImageSearchOptions): Promise<ImageSe
     safeSearch = 'active',
     imageType = 'photos',
     imageSize = 'large',
+    aspectRatio = 'any',
     page = 1,
     maxResults = 20
   } = options
@@ -66,9 +67,20 @@ export async function searchImages(options: ImageSearchOptions): Promise<ImageSe
 
     // Add advanced filters using tbs parameter
     const filters: string[] = []
+
+    // Image type filters
     if (imageType === 'photos') filters.push('itp:photos')
+    if (imageType === 'clipart') filters.push('itp:clipart')
+    if (imageType === 'lineart') filters.push('itp:lineart')
+
+    // Image size filters (imgsz parameter)
     if (imageSize === 'large') filters.push('isz:l')
     if (imageSize === 'medium') filters.push('isz:m')
+
+    // Aspect ratio filters (imgar parameter)
+    if (aspectRatio === 'wide') filters.push('iar:w')
+    if (aspectRatio === 'tall') filters.push('iar:t')
+    if (aspectRatio === 'square') filters.push('iar:s')
 
     if (filters.length > 0) {
       params.append('tbs', filters.join(','))

@@ -5,7 +5,7 @@ import { searchImages, generateImageSearchQueries } from '@/lib/serpapi/image-se
 export const POST = withAdminAuth(async (request: NextRequest) => {
   try {
     const body = await request.json()
-    const { query, contentType, maxResults = 20 } = body
+    const { query, contentType, maxResults = 20, filters } = body
 
     if (!query?.trim()) {
       return NextResponse.json(
@@ -14,12 +14,13 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
       )
     }
 
-    // Search for images using SerpAPI
+    // Search for images using SerpAPI with user filters
     const searchResult = await searchImages({
       query: query.trim(),
       safeSearch: 'active',
-      imageType: 'photos',
-      imageSize: 'large',
+      imageType: filters?.imageType || 'photos',
+      imageSize: filters?.imageSize || 'large',
+      aspectRatio: filters?.aspectRatio || 'any',
       maxResults,
       page: 1
     })
