@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { currentUser } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export interface AdminUser {
@@ -14,48 +14,33 @@ export interface AuthResult {
 
 /**
  * Admin authentication middleware for API routes
- * Verifies user is authenticated and has admin role
+ * Verifies user is authenticated and has admin role using Clerk
  */
-export async function verifyAdminAuth(request: NextRequest): Promise<AuthResult> {
+export async function verifyAdminAuth(_request: NextRequest): Promise<AuthResult> {
   try {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll()
-          },
-          setAll(cookiesToSet) {
-            // For API routes, we don't need to set cookies
-          },
-        },
-      }
-    )
+    // Get authenticated user from Clerk
+    const user = await currentUser()
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
+    if (!user) {
       return { error: 'Authentication required' }
     }
 
-    // Check admin role
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Check admin role in Clerk metadata
+    const metadata = user.publicMetadata as { role?: string; isAdmin?: boolean }
+    const isAdmin = metadata?.role === 'admin' || metadata?.isAdmin === true
 
-    if (profileError || !profile || profile.role !== 'admin') {
+    if (!isAdmin) {
       return { error: 'Admin access required' }
     }
+
+    // Get email from emailAddresses
+    const email = user.emailAddresses?.[0]?.emailAddress || ''
 
     return {
       user: {
         id: user.id,
-        email: user.email || '',
-        role: profile.role
+        email: email,
+        role: 'admin'
       }
     }
   } catch (error) {
