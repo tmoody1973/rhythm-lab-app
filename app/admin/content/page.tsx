@@ -9,8 +9,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Loader2, Sparkles, FileText, Mic, Upload, Eye, ExternalLink, Settings } from 'lucide-react'
+import { Loader2, Sparkles, FileText, Mic, Upload, Eye, ExternalLink, Settings, Image } from 'lucide-react'
 import { ContentType } from '@/lib/ai/content-generator'
+import { ImageSelector } from '@/components/admin/image-selector'
+import { ImageResult } from '@/lib/serpapi/image-search'
 
 interface GenerationRequest {
   type: ContentType
@@ -42,6 +44,7 @@ export default function ContentGenerationPage() {
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null)
   const [isPublishing, setIsPublishing] = useState(false)
   const [publishResult, setPublishResult] = useState<{ success: boolean; url?: string; storyId?: string; error?: string } | null>(null)
+  const [selectedImage, setSelectedImage] = useState<ImageResult & { uploadedAsset?: any } | null>(null)
 
   const handleGenerate = async () => {
     if (!request.topic.trim()) return
@@ -90,7 +93,8 @@ export default function ContentGenerationPage() {
         },
         body: JSON.stringify({
           content: generatedContent,
-          contentType: request.type
+          contentType: request.type,
+          selectedImage: selectedImage // Include selected image data
         }),
       })
 
@@ -184,6 +188,10 @@ export default function ContentGenerationPage() {
           <TabsTrigger value="preview" disabled={!generatedContent}>
             <Eye className="w-4 h-4 mr-2" />
             Preview
+          </TabsTrigger>
+          <TabsTrigger value="images" disabled={!generatedContent}>
+            <Image className="w-4 h-4 mr-2" />
+            Images
           </TabsTrigger>
           <TabsTrigger value="history">
             <FileText className="w-4 h-4 mr-2" />
@@ -458,6 +466,17 @@ export default function ContentGenerationPage() {
                 </Card>
               )}
             </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="images">
+          {generatedContent && (
+            <ImageSelector
+              onImageSelect={setSelectedImage}
+              contentTitle={generatedContent.title}
+              contentType={request.type}
+              selectedImage={selectedImage}
+            />
           )}
         </TabsContent>
 

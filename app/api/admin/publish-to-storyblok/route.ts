@@ -16,7 +16,7 @@ const STORYBLOK_FOLDERS = {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { content, contentType } = body
+    const { content, contentType, selectedImage } = body
 
     if (!content || !contentType) {
       return NextResponse.json(
@@ -51,7 +51,19 @@ export async function POST(request: NextRequest) {
         generatedAt: new Date().toISOString(),
         contentType: contentType as ContentType,
         wordCount: content.wordCount
-      }
+      },
+      // Add SEO block with selected image if available
+      seoBlock: selectedImage ? {
+        component: 'seo',
+        title: content.seoTitle || content.title,
+        description: content.metaDescription,
+        og_title: content.seoTitle || content.title,
+        og_description: content.metaDescription,
+        og_image: selectedImage.uploadedAsset || undefined,
+        twitter_title: content.seoTitle || content.title,
+        twitter_description: content.metaDescription,
+        twitter_image: selectedImage.uploadedAsset || undefined,
+      } : undefined
     }
 
     // Get the appropriate folder ID based on content type
