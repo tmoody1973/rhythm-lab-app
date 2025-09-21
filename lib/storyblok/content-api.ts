@@ -7,7 +7,7 @@ async function callStoryblokAPI(endpoint: string, method: string = 'GET', data?:
   const response = await fetch(`https://mapi.storyblok.com/v1/${endpoint}`, {
     method,
     headers: {
-      'Authorization': token,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
     body: data ? JSON.stringify(data) : undefined

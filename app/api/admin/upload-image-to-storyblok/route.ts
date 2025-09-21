@@ -15,11 +15,13 @@ async function uploadImageToStoryblok(
     const token = process.env.STORYBLOK_MANAGEMENT_TOKEN!
     const actualSpaceId = spaceId || parseInt(process.env.STORYBLOK_SPACE_ID!)
 
+    console.log('Uploading to Storyblok space:', actualSpaceId)
+
     // First, get signed upload URL
     const signedResponse = await fetch(`https://mapi.storyblok.com/v1/spaces/${actualSpaceId}/assets`, {
       method: 'POST',
       headers: {
-        'Authorization': token,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -65,7 +67,7 @@ async function uploadImageToStoryblok(
     const finalizeResponse = await fetch(`https://mapi.storyblok.com/v1/spaces/${actualSpaceId}/assets/${uploadData.id}`, {
       method: 'GET',
       headers: {
-        'Authorization': token
+        'Authorization': `Bearer ${token}`
       }
     })
 
