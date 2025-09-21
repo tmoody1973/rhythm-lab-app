@@ -60,7 +60,9 @@ export default function ContentGenerationPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to generate content')
+        const errorText = await response.text()
+        console.error('API Response Error:', errorText)
+        throw new Error(`Failed to generate content: ${response.status}`)
       }
 
       const result = await response.json()
@@ -68,7 +70,7 @@ export default function ContentGenerationPage() {
       setActiveTab('preview')
     } catch (error) {
       console.error('Generation error:', error)
-      // Handle error
+      alert(`Error generating content: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsGenerating(false)
     }
