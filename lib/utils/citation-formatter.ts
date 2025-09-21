@@ -4,7 +4,26 @@ interface Citation {
   url: string
 }
 
-export function formatContentWithCitations(content: string): string {
+interface SearchResult {
+  title: string
+  url: string
+  date?: string
+}
+
+export function formatContentWithCitations(content: string, searchResults?: SearchResult[]): string {
+  // If we have search results from Perplexity, use those for accurate citations
+  if (searchResults && searchResults.length > 0) {
+    let formattedContent = content + '\n\n---\n\n## 📚 Sources & References\n\n'
+
+    searchResults.forEach((source, index) => {
+      formattedContent += `**[${index + 1}]** [${source.title} →](${source.url})\n\n`
+    })
+
+    formattedContent += '\n*Sources automatically gathered from web search.*'
+    return formattedContent
+  }
+
+  // Fallback: extract any citations that might be embedded in content
   const { mainContent, citations } = extractCitationsFromText(content)
 
   if (citations.length === 0) {

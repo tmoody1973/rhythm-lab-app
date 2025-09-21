@@ -31,6 +31,12 @@ interface GeneratedContent {
   tags: string[]
   category: string
   wordCount: number
+  seoBlock?: any
+  searchResults?: Array<{
+    title: string
+    url: string
+    date?: string
+  }>
 }
 
 export default function ContentGenerationPage() {
@@ -338,6 +344,7 @@ export default function ContentGenerationPage() {
 
                     <CitationDisplay
                       content={generatedContent.content}
+                      searchResults={generatedContent.searchResults}
                       className="prose max-w-none"
                     />
                   </div>

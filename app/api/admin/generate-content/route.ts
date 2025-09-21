@@ -36,7 +36,9 @@ export async function POST(request: NextRequest) {
         content: plainTextContent,
         tags: generatedContent.tags,
         category: generatedContent.category,
-        wordCount: generatedContent.metadata.wordCount
+        wordCount: generatedContent.metadata.wordCount,
+        seoBlock: generatedContent.seoBlock, // Include the SEO block data
+        searchResults: generatedContent.searchResults // Include source metadata from Perplexity
       },
       metadata: generatedContent.metadata
     }
@@ -56,15 +58,29 @@ export async function POST(request: NextRequest) {
 function extractPlainTextFromRichText(richTextContent: any): string {
   if (!richTextContent?.content) return ''
 
+  let isFirstHeading = true
+
   return richTextContent.content
     .map((node: any) => {
       if (node.type === 'paragraph' && node.content) {
         return node.content.map((textNode: any) => textNode.text || '').join('')
       }
       if (node.type === 'heading' && node.content) {
+        // Skip the first h1 heading as it's the title
+        if (isFirstHeading && node.attrs?.level === 1) {
+          isFirstHeading = false
+          return '' // Skip the title
+        }
         const level = '#'.repeat(node.attrs?.level || 1)
         const text = node.content.map((textNode: any) => textNode.text || '').join('')
         return `${level} ${text}`
+      }
+      if (node.type === 'bullet_list' || node.type === 'ordered_list') {
+        // Handle lists
+        return node.content?.map((item: any) => {
+          const itemText = item.content?.[0]?.content?.map((t: any) => t.text || '').join('') || ''
+          return node.type === 'bullet_list' ? `• ${itemText}` : `- ${itemText}`
+        }).join('\n') || ''
       }
       return ''
     })

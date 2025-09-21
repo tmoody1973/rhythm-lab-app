@@ -39,6 +39,12 @@ export interface GeneratedContent {
     twitter_description: string
     twitter_image?: any
   }
+  // Source metadata from Perplexity API search_results field
+  searchResults?: Array<{
+    title: string
+    url: string
+    date?: string
+  }>
 }
 
 // Prompt templates for different content types
@@ -70,9 +76,8 @@ REQUIREMENTS:
 - Use web search to gather the most current information about the artist
 - Include recent releases, tours, collaborations, and news (2024-2025)
 - Verify biographical details and career milestones
-- Add hyperlinked citations at the end in format: "## Sources\n[1] [Website Name - Article Title](URL)\n[2] [Website Name - Article Title](URL)"
-- Ensure all citations include the full URL
 - Focus on factual accuracy and current relevance
+- Write comprehensive, well-researched content without embedded citations
 
 Write in an engaging, journalistic style suitable for music enthusiasts.`
   },
@@ -105,9 +110,8 @@ REQUIREMENTS:
 - Research thoroughly using web search for current information and recent developments
 - Include specific examples, dates, and cultural references
 - Verify historical facts and recent developments (2024-2025)
-- Add hyperlinked citations at the end in format: "## Sources\n[1] [Website Name - Article Title](URL)\n[2] [Website Name - Article Title](URL)"
-- Ensure all citations include the full URL
 - Balance scholarly depth with accessibility
+- Write comprehensive, well-researched content without embedded citations
 
 Write for both music enthusiasts and general audiences.`
   },
@@ -140,9 +144,8 @@ REQUIREMENTS:
 - Use web search to find the latest trends, news, and developments (2024-2025)
 - Include current social media buzz, streaming numbers, or recent events
 - Reference recent releases, chart positions, or industry news
-- Add hyperlinked citations at the end in format: "## Sources\n[1] [Website Name - Article Title](URL)\n[2] [Website Name - Article Title](URL)"
-- Ensure all citations include the full URL
 - Keep tone conversational but well-informed
+- Write comprehensive, well-researched content without embedded citations
 
 Write in a conversational yet informed tone suitable for music blog readers.`
   }
@@ -319,6 +322,8 @@ export async function generateContent(request: ContentRequest): Promise<Generate
       ],
       temperature: 0.7,
       max_tokens: 4000,
+      return_citations: true, // Request citation metadata if available
+      return_related_questions: false, // We don't need related questions
     }),
   })
 
@@ -327,7 +332,11 @@ export async function generateContent(request: ContentRequest): Promise<Generate
   }
 
   const completion = await response.json()
+
   const text = completion.choices[0]?.message?.content || ""
+
+  // Extract source metadata from Perplexity's search_results field
+  const searchResults = completion.search_results || []
 
   // Convert markdown from Perplexity to Storyblok rich text format
   const richTextContent = markdownToStoryblokRichtext(text)
@@ -354,7 +363,9 @@ export async function generateContent(request: ContentRequest): Promise<Generate
       contentType: request.type,
       wordCount: text.split(' ').length
     },
-    seoBlock: seoData.seoBlock
+    seoBlock: seoData.seoBlock,
+    // Include source metadata from Perplexity's search_results field
+    searchResults: searchResults
   }
 }
 
@@ -366,13 +377,23 @@ export async function generateContent(request: ContentRequest): Promise<Generate
 // Helper functions
 function extractTitle(text: string): string | null {
   const lines = text.split('\n')
-  const titleLine = lines.find(line => line.startsWith('#'))
+  // Find the first heading that is NOT "Sources" or "References"
+  const titleLine = lines.find(line => {
+    if (!line.startsWith('#')) return false
+    const headingText = line.replace(/^#+\s*/, '').toLowerCase()
+    return !headingText.includes('source') && !headingText.includes('reference')
+  })
   return titleLine?.replace(/^#+\s*/, '') || null
 }
 
 function extractSubtitle(text: string): string | undefined {
   const lines = text.split('\n')
-  const titleIndex = lines.findIndex(line => line.startsWith('#'))
+  // Find the first heading that is NOT "Sources" or "References"
+  const titleIndex = lines.findIndex(line => {
+    if (!line.startsWith('#')) return false
+    const headingText = line.replace(/^#+\s*/, '').toLowerCase()
+    return !headingText.includes('source') && !headingText.includes('reference')
+  })
   if (titleIndex >= 0 && titleIndex < lines.length - 1) {
     const nextLine = lines[titleIndex + 1]
     if (nextLine && !nextLine.startsWith('#')) {

@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
       spaceId: STORYBLOK_SPACE_ID
     })
 
-    // Format content with styled citations
-    const formattedContent = formatContentWithCitations(content.content)
+    // Format content with styled citations using search results metadata
+    const formattedContent = formatContentWithCitations(content.content, content.searchResults)
 
     // Convert the preview content back to GeneratedContent format
     const generatedContent: GeneratedContent = {
@@ -56,18 +56,29 @@ export async function POST(request: NextRequest) {
         contentType: contentType as ContentType,
         wordCount: content.wordCount
       },
-      // Add SEO block with selected image if available
-      seoBlock: selectedImage ? {
+      // Use the SEO block from generated content, adding image if available
+      seoBlock: content.seoBlock ? {
+        ...content.seoBlock,
+        // Add image fields if an image was selected and uploaded
+        ...(selectedImage?.uploadedAsset ? {
+          og_image: selectedImage.uploadedAsset,
+          twitter_image: selectedImage.uploadedAsset
+        } : {})
+      } : {
+        // Fallback SEO block if none was generated
         component: 'seo',
         title: content.seoTitle || content.title,
         description: content.metaDescription,
         og_title: content.seoTitle || content.title,
         og_description: content.metaDescription,
-        og_image: selectedImage.uploadedAsset || undefined,
         twitter_title: content.seoTitle || content.title,
         twitter_description: content.metaDescription,
-        twitter_image: selectedImage.uploadedAsset || undefined,
-      } : undefined
+        // Add image fields if available
+        ...(selectedImage?.uploadedAsset ? {
+          og_image: selectedImage.uploadedAsset,
+          twitter_image: selectedImage.uploadedAsset
+        } : {})
+      }
     }
 
     // Get the appropriate folder ID based on content type
