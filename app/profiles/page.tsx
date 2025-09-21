@@ -34,37 +34,38 @@ export default async function ProfilesPage() {
     // Fetch artist profiles from Storyblok
     const storyblokApi = sb();
 
-    // Search for artist profiles using component type
+    // Fetch artist profiles from the profiles folder
     let response;
     try {
-      // First try to get all stories and filter by component type
+      // Fetch stories from the profiles folder
       response = await storyblokApi.get('cdn/stories', {
         version: 'published',
         per_page: 100,
-        sort_by: 'first_published_at:desc'
+        sort_by: 'first_published_at:desc',
+        starts_with: 'profiles/' // Fetch from the profiles folder (correct path)
       });
 
-      // Filter for stories with artist-profile component type
-      response.data.stories = response.data.stories.filter((story: any) =>
-        story.content?.component === 'artist-profile' ||
-        story.content?.component === 'artist_profile'
-      );
+      // If the folder approach doesn't work, try getting by parent_id
+      if (!response.data.stories || response.data.stories.length === 0) {
+        const profilesFolderId = process.env.NEXT_PUBLIC_STORYBLOK_PROFILES_FOLDER_ID || '91849981506993';
 
-      // If no artist-profile components found, try fallback search
-      if (response.data.stories.length === 0) {
-        response = await storyblokApi.get('cdn/stories', {
+        // Get all stories and filter by parent folder
+        const allStoriesResponse = await storyblokApi.get('cdn/stories', {
           version: 'published',
           per_page: 100,
           sort_by: 'first_published_at:desc'
         });
 
-        // Filter for stories that might be artist profiles
-        response.data.stories = response.data.stories.filter((story: any) =>
-          story.name.toLowerCase().includes('profile') ||
-          story.slug.includes('profile') ||
-          story.content?.category?.toLowerCase().includes('profile') ||
-          story.tag_list?.some((tag: string) => tag.toLowerCase().includes('profile'))
-        );
+        // Note: We can't filter by parent_id in the CDN API, so we get all and filter
+        // The proper way would be to check the full_slug for the folder path
+        response.data.stories = allStoriesResponse.data.stories.filter((story: any) => {
+          // Check if the story's full_slug starts with a profiles folder path
+          return story.full_slug?.startsWith('artist-profiles/') ||
+                 story.full_slug?.startsWith('profiles/') ||
+                 // Fallback to component type check
+                 story.content?.component === 'artist-profile' ||
+                 story.content?.component === 'artist_profile';
+        });
       }
     } catch (error) {
       console.error('Error fetching artist profiles:', error);
