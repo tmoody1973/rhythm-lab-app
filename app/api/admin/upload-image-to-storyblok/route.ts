@@ -21,7 +21,7 @@ async function uploadImageToStoryblok(
     const signedResponse = await fetch(`https://mapi.storyblok.com/v1/spaces/${actualSpaceId}/assets`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': token,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -67,7 +67,7 @@ async function uploadImageToStoryblok(
     const finalizeResponse = await fetch(`https://mapi.storyblok.com/v1/spaces/${actualSpaceId}/assets/${uploadData.id}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': token
       }
     })
 
