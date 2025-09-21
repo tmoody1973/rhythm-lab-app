@@ -94,6 +94,10 @@ export async function createStoryblokStory(
       storyContent.artist_name = content.title
       storyContent.subtitle = content.subtitle
       storyContent.full_biography = content.richTextContent
+      // Add artist photo if available (from SEO block or direct upload)
+      if (content.seoBlock?.og_image) {
+        storyContent.artist_photo = content.seoBlock.og_image
+      }
     } else {
       storyContent.title = content.title
       storyContent.subtitle = content.subtitle

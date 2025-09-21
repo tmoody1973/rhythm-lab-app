@@ -8,12 +8,12 @@ async function uploadImageToStoryblok(
   imageBuffer: Buffer,
   filename: string,
   contentType: string,
-  spaceId: number
+  spaceId: string
 ): Promise<{ success: boolean; asset?: any; error?: string }> {
   try {
     // Get Storyblok management token and space ID
     const token = process.env.STORYBLOK_MANAGEMENT_TOKEN!
-    const actualSpaceId = spaceId || parseInt(process.env.STORYBLOK_SPACE_ID!)
+    const actualSpaceId = spaceId || process.env.STORYBLOK_SPACE_ID!
 
     console.log('Uploading to Storyblok space:', actualSpaceId)
 
@@ -26,8 +26,8 @@ async function uploadImageToStoryblok(
       },
       body: JSON.stringify({
         filename: filename,
-        asset_folder_id: null, // You can specify a folder ID if needed
         size: imageBuffer.length
+        // asset_folder_id is optional, omit if not needed
       })
     })
 
@@ -145,7 +145,7 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
       downloadResult.buffer!,
       finalFilename,
       downloadResult.contentType!,
-      parseInt(process.env.STORYBLOK_SPACE_ID!)
+      process.env.STORYBLOK_SPACE_ID!
     )
 
     if (!uploadResult.success) {
