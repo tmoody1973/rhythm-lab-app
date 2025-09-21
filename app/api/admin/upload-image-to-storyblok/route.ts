@@ -31,7 +31,8 @@ async function uploadImageToStoryblok(
 
     if (!signedResponse.ok) {
       const errorText = await signedResponse.text()
-      throw new Error(`Failed to get upload URL: ${signedResponse.status} ${errorText}`)
+      console.error('Storyblok signed URL error:', errorText)
+      throw new Error(`Failed to get upload URL: ${signedResponse.status} - ${errorText}`)
     }
 
     const uploadData = await signedResponse.json()
@@ -55,7 +56,9 @@ async function uploadImageToStoryblok(
     })
 
     if (!uploadResponse.ok) {
-      throw new Error(`Failed to upload image: ${uploadResponse.status}`)
+      const errorText = await uploadResponse.text().catch(() => 'No error details')
+      console.error('Image upload error:', errorText)
+      throw new Error(`Failed to upload image: ${uploadResponse.status} - ${errorText}`)
     }
 
     // Finalize the asset
@@ -67,7 +70,9 @@ async function uploadImageToStoryblok(
     })
 
     if (!finalizeResponse.ok) {
-      throw new Error('Failed to finalize asset')
+      const errorText = await finalizeResponse.text().catch(() => 'No error details')
+      console.error('Asset finalization error:', errorText)
+      throw new Error(`Failed to finalize asset: ${finalizeResponse.status} - ${errorText}`)
     }
 
     const finalizedAsset = await finalizeResponse.json()
@@ -94,6 +99,21 @@ export const POST = withAdminAuth(async (request: NextRequest) => {
       return NextResponse.json(
         { success: false, error: 'Image URL is required' },
         { status: 400 }
+      )
+    }
+
+    // Check required environment variables
+    if (!process.env.STORYBLOK_MANAGEMENT_TOKEN) {
+      return NextResponse.json(
+        { success: false, error: 'Storyblok management token not configured' },
+        { status: 500 }
+      )
+    }
+
+    if (!process.env.STORYBLOK_SPACE_ID) {
+      return NextResponse.json(
+        { success: false, error: 'Storyblok space ID not configured' },
+        { status: 500 }
       )
     }
 

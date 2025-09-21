@@ -34,48 +34,41 @@ export default async function ProfilesPage() {
     // Fetch artist profiles from Storyblok
     const storyblokApi = sb();
 
-    // Try multiple approaches to find artist profile content
+    // Search for artist profiles using component type
     let response;
     try {
-      // First try with artist-profiles/ folder
-      response = await storyblokApi.get('cdn/stories', {
-        version: 'published',
-        per_page: 100,
-        sort_by: 'first_published_at:desc',
-        starts_with: 'artist-profiles/'
-      });
-
-      if (response.data.stories.length === 0) {
-        // Try finding all stories and filter for profile related ones
-        const allResponse = await storyblokApi.get('cdn/stories', {
-          version: 'published',
-          per_page: 100,
-          sort_by: 'first_published_at:desc'
-        });
-
-        // Filter for stories that might be artist profiles
-        response.data.stories = allResponse.data.stories.filter((story: any) =>
-          story.name.toLowerCase().includes('profile') ||
-          story.slug.includes('profile') ||
-          story.content?.category?.toLowerCase().includes('profile') ||
-          story.tag_list?.some((tag: string) => tag.toLowerCase().includes('profile'))
-        );
-      }
-    } catch (folderError) {
-      // If that fails, try getting all stories
+      // First try to get all stories and filter by component type
       response = await storyblokApi.get('cdn/stories', {
         version: 'published',
         per_page: 100,
         sort_by: 'first_published_at:desc'
       });
 
-      // Filter for potential artist profile content
+      // Filter for stories with artist-profile component type
       response.data.stories = response.data.stories.filter((story: any) =>
-        story.name.toLowerCase().includes('profile') ||
-        story.slug.includes('profile') ||
-        story.content?.category?.toLowerCase().includes('profile') ||
-        story.tag_list?.some((tag: string) => tag.toLowerCase().includes('profile'))
+        story.content?.component === 'artist-profile' ||
+        story.content?.component === 'artist_profile'
       );
+
+      // If no artist-profile components found, try fallback search
+      if (response.data.stories.length === 0) {
+        response = await storyblokApi.get('cdn/stories', {
+          version: 'published',
+          per_page: 100,
+          sort_by: 'first_published_at:desc'
+        });
+
+        // Filter for stories that might be artist profiles
+        response.data.stories = response.data.stories.filter((story: any) =>
+          story.name.toLowerCase().includes('profile') ||
+          story.slug.includes('profile') ||
+          story.content?.category?.toLowerCase().includes('profile') ||
+          story.tag_list?.some((tag: string) => tag.toLowerCase().includes('profile'))
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching artist profiles:', error);
+      response = { data: { stories: [] } };
     }
 
     profiles = response.data.stories || [];
@@ -235,7 +228,13 @@ export default async function ProfilesPage() {
                   <Link href={hasProfiles ? `/profiles/${profile.slug}` : '#'}>
                     <div className="aspect-[16/10] relative overflow-hidden">
                       {hasProfiles ? (
-                        profile.content?.artist_photo?.filename ? (
+                        profile.content?.seo?.[0]?.og_image?.filename ? (
+                          <img
+                            src={profile.content.seo[0].og_image.filename}
+                            alt={profile.content.seo[0].og_image.alt || profile.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : profile.content?.artist_photo?.filename ? (
                           <img
                             src={profile.content.artist_photo.filename}
                             alt={profile.content.artist_photo.alt || profile.name}
@@ -275,7 +274,7 @@ export default async function ProfilesPage() {
                     </div>
                     <div className="mb-3">
                       <span className="text-sm text-muted-foreground nts-text-caps">
-                        {hasProfiles ? (profile.content?.artist || profile.name) : profile.artist}
+                        {hasProfiles ? (profile.content?.artist_name || profile.content?.artist || profile.name) : profile.artist}
                       </span>
                     </div>
                     <Link href={hasProfiles ? `/profiles/${profile.slug}` : '#'}>
@@ -285,7 +284,7 @@ export default async function ProfilesPage() {
                     </Link>
                     <p className="text-muted-foreground text-base mb-4 leading-relaxed">
                       {hasProfiles
-                        ? (profile.content?.intro || profile.content?.description || 'Discover in-depth conversations with music\'s most innovative creators.')
+                        ? (profile.content?.subtitle || profile.content?.intro || profile.content?.description || 'Discover in-depth conversations with music\'s most innovative creators.')
                         : profile.description
                       }
                     </p>
@@ -367,7 +366,13 @@ export default async function ProfilesPage() {
                   <Link href={hasProfiles ? `/profiles/${profile.slug}` : '#'}>
                     <div className="aspect-[16/9] relative overflow-hidden">
                       {hasProfiles ? (
-                        profile.content?.artist_photo?.filename ? (
+                        profile.content?.seo?.[0]?.og_image?.filename ? (
+                          <img
+                            src={profile.content.seo[0].og_image.filename}
+                            alt={profile.content.seo[0].og_image.alt || profile.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : profile.content?.artist_photo?.filename ? (
                           <img
                             src={profile.content.artist_photo.filename}
                             alt={profile.content.artist_photo.alt || profile.name}
@@ -407,7 +412,7 @@ export default async function ProfilesPage() {
                     </div>
                     <div className="mb-2">
                       <span className="text-xs text-muted-foreground nts-text-caps">
-                        {hasProfiles ? (profile.content?.artist || profile.name) : profile.artist}
+                        {hasProfiles ? (profile.content?.artist_name || profile.content?.artist || profile.name) : profile.artist}
                       </span>
                     </div>
                     <Link href={hasProfiles ? `/profiles/${profile.slug}` : '#'}>
@@ -415,10 +420,10 @@ export default async function ProfilesPage() {
                         {hasProfiles ? profile.name : profile.title}
                       </h3>
                     </Link>
-                    {(hasProfiles ? (profile.content?.intro || profile.content?.description) : profile.description) && (
+                    {(hasProfiles ? (profile.content?.subtitle || profile.content?.intro || profile.content?.description) : profile.description) && (
                       <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-3">
                         {hasProfiles
-                          ? (profile.content?.intro || profile.content?.description)
+                          ? (profile.content?.subtitle || profile.content?.intro || profile.content?.description)
                           : profile.description
                         }
                       </p>

@@ -108,7 +108,15 @@ export function ImageSelector({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to upload image')
+        // Get the error details from the response
+        let errorMessage = 'Failed to upload image'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`
+        } catch {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`
+        }
+        throw new Error(errorMessage)
       }
 
       const result = await response.json()
