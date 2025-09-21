@@ -1,25 +1,21 @@
-import { createClient } from '@/lib/supabase/server'
+import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { MixcloudAdminInterface } from '@/components/admin/mixcloud-admin-interface'
 
 export default async function MixcloudAdminPage() {
-  // Check authentication and admin role
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // Check authentication and admin role using Clerk
+  const user = await currentUser()
 
   if (!user) {
-    redirect('/admin/login')
+    redirect('/sign-in')
   }
 
-  // Check if user has admin role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+  // Check if user has admin role in Clerk metadata
+  const metadata = user.publicMetadata as { role?: string; isAdmin?: boolean }
+  const isAdmin = metadata?.role === 'admin' || metadata?.isAdmin === true
 
-  if (!profile || profile.role !== 'admin') {
-    redirect('/admin')
+  if (!isAdmin) {
+    redirect('/')
   }
 
   return (
