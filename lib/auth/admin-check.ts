@@ -1,4 +1,4 @@
-import { currentUser } from '@clerk/nextjs'
+import { currentUser } from '@clerk/nextjs/server'
 
 export async function isAdmin(): Promise<boolean> {
   const user = await currentUser()
