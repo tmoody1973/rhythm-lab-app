@@ -70,7 +70,8 @@ REQUIREMENTS:
 - Use web search to gather the most current information about the artist
 - Include recent releases, tours, collaborations, and news (2024-2025)
 - Verify biographical details and career milestones
-- Add citations at the end in format: "Sources: [1] Website Name - Article Title, [2] Website Name - Article Title"
+- Add hyperlinked citations at the end in format: "## Sources\n[1] [Website Name - Article Title](URL)\n[2] [Website Name - Article Title](URL)"
+- Ensure all citations include the full URL
 - Focus on factual accuracy and current relevance
 
 Write in an engaging, journalistic style suitable for music enthusiasts.`
@@ -104,7 +105,8 @@ REQUIREMENTS:
 - Research thoroughly using web search for current information and recent developments
 - Include specific examples, dates, and cultural references
 - Verify historical facts and recent developments (2024-2025)
-- Add citations at the end in format: "Sources: [1] Website Name - Article Title, [2] Website Name - Article Title"
+- Add hyperlinked citations at the end in format: "## Sources\n[1] [Website Name - Article Title](URL)\n[2] [Website Name - Article Title](URL)"
+- Ensure all citations include the full URL
 - Balance scholarly depth with accessibility
 
 Write for both music enthusiasts and general audiences.`
@@ -138,7 +140,8 @@ REQUIREMENTS:
 - Use web search to find the latest trends, news, and developments (2024-2025)
 - Include current social media buzz, streaming numbers, or recent events
 - Reference recent releases, chart positions, or industry news
-- Add citations at the end in format: "Sources: [1] Website Name - Article Title, [2] Website Name - Article Title"
+- Add hyperlinked citations at the end in format: "## Sources\n[1] [Website Name - Article Title](URL)\n[2] [Website Name - Article Title](URL)"
+- Ensure all citations include the full URL
 - Keep tone conversational but well-informed
 
 Write in a conversational yet informed tone suitable for music blog readers.`

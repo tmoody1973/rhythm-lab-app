@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createStoryblokStory } from '@/lib/storyblok/content-api'
 import { GeneratedContent, ContentType } from '@/lib/ai/content-generator'
 import { markdownToStoryblokRichtext } from '@storyblok/richtext/markdown-parser'
+import { formatContentWithCitations } from '@/components/admin/citation-display'
 
 // You'll need to set these environment variables
 const STORYBLOK_SPACE_ID = parseInt(process.env.STORYBLOK_SPACE_ID || '0')
@@ -38,13 +39,16 @@ export async function POST(request: NextRequest) {
       spaceId: STORYBLOK_SPACE_ID
     })
 
+    // Format content with styled citations
+    const formattedContent = formatContentWithCitations(content.content)
+
     // Convert the preview content back to GeneratedContent format
     const generatedContent: GeneratedContent = {
       title: content.title,
       subtitle: content.subtitle,
       seoTitle: content.seoTitle,
       metaDescription: content.metaDescription,
-      richTextContent: convertPlainTextToRichText(content.content),
+      richTextContent: convertPlainTextToRichText(formattedContent),
       tags: content.tags,
       category: content.category,
       metadata: {

@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Loader2, Sparkles, FileText, Mic, Upload, Eye, ExternalLink, Settings, Image } from 'lucide-react'
 import { ContentType } from '@/lib/ai/content-generator'
 import { ImageSelector } from '@/components/admin/image-selector'
+import { CitationDisplay } from '@/components/admin/citation-display'
 import { ImageResult } from '@/lib/serpapi/image-search'
 
 interface GenerationRequest {
@@ -335,11 +336,10 @@ export default function ContentGenerationPage() {
                       ))}
                     </div>
 
-                    <div className="prose max-w-none">
-                      <div className="whitespace-pre-wrap">
-                        {generatedContent.content}
-                      </div>
-                    </div>
+                    <CitationDisplay
+                      content={generatedContent.content}
+                      className="prose max-w-none"
+                    />
                   </div>
                 </CardContent>
               </Card>
