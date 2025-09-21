@@ -42,7 +42,8 @@ export default async function ProfilesPage() {
         version: 'published',
         per_page: 100,
         sort_by: 'first_published_at:desc',
-        starts_with: 'profiles/' // Fetch from the profiles folder (correct path)
+        starts_with: 'profiles/', // Fetch from the profiles folder (correct path)
+        cv: Date.now() // Cache busting to get latest content
       });
 
       // If the folder approach doesn't work, try getting by parent_id

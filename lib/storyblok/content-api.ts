@@ -108,7 +108,7 @@ export async function createStoryblokStory(
       name: content.title,
       slug: slug,
       content: storyContent,
-      parent_id: folderId || 0,
+      parent_id: folderId || null, // Use null instead of 0 if no folder ID
       tag_list: content.tags,
       // Only use meta_data as fallback if no SEO block
       ...(content.seoBlock ? {} : {
@@ -126,6 +126,18 @@ export async function createStoryblokStory(
     const response = await callStoryblokAPI(`spaces/${spaceId}/stories/`, 'POST', {
       story: storyData
     })
+
+    // Automatically publish the story so it appears on the CDN immediately
+    if (response.story?.id) {
+      try {
+        const publishResponse = await callStoryblokAPI(`spaces/${spaceId}/stories/${response.story.id}`, 'PUT', {
+          story: { published: true }
+        })
+        console.log('Story published successfully:', publishResponse.story?.full_slug)
+      } catch (publishError) {
+        console.error('Failed to publish story, but creation succeeded:', publishError)
+      }
+    }
 
     return {
       success: true,
