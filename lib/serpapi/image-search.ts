@@ -1,5 +1,5 @@
 // SerpAPI Image Search Integration
-import fetch from 'node-fetch'
+// Using native fetch API available in Next.js
 
 export interface ImageResult {
   position: number
@@ -92,7 +92,7 @@ export async function searchImages(options: ImageSearchOptions): Promise<ImageSe
       throw new Error(`SerpAPI error: ${response.status} ${response.statusText}`)
     }
 
-    const data = await response.json() as any
+    const data = await response.json()
 
     // Handle SerpAPI errors
     if (data.error) {
