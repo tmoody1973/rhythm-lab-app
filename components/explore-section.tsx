@@ -50,6 +50,107 @@ function getRoutePrefix(type: string) {
   }
 }
 
+// Helper function to extract meaningful genre tags from content
+function extractGenreTagsFromContent(content: any, itemName: string = ''): string[] {
+  // Comprehensive genre mapping
+  const genreMap: Record<string, string[]> = {
+    // Electronic genres
+    'electronic': ['electronic', 'electronica', 'edm', 'synthesizer', 'synth'],
+    'house': ['house', 'deep house', 'tech house', 'progressive house'],
+    'techno': ['techno', 'detroit techno', 'minimal techno'],
+    'ambient': ['ambient', 'atmospheric', 'drone', 'soundscape'],
+    'experimental': ['experimental', 'avant-garde', 'abstract', 'noise'],
+    'idm': ['idm', 'intelligent dance music', 'braindance'],
+    'dnb': ['drum and bass', 'dnb', 'jungle', 'liquid'],
+    'dubstep': ['dubstep', 'bass music', 'future bass'],
+    'trap': ['trap', 'future trap', 'hybrid trap'],
+
+    // Jazz genres
+    'jazz': ['jazz', 'bebop', 'hard bop', 'free jazz'],
+    'fusion': ['fusion', 'jazz fusion', 'jazz rock'],
+    'smooth jazz': ['smooth jazz', 'contemporary jazz'],
+    'neo-soul': ['neo-soul', 'nu-soul', 'future soul'],
+
+    // Hip-hop genres
+    'hip-hop': ['hip-hop', 'hip hop', 'rap', 'hiphop'],
+    'lo-fi': ['lo-fi', 'lofi', 'chillhop', 'boom bap'],
+
+    // Rock genres
+    'rock': ['rock', 'indie rock', 'alt rock', 'alternative'],
+    'post-rock': ['post-rock', 'instrumental rock', 'math rock'],
+
+    // World/Folk
+    'afrobeat': ['afrobeat', 'afro', 'african'],
+    'latin': ['latin', 'salsa', 'reggaeton', 'bossa nova'],
+    'folk': ['folk', 'acoustic', 'singer-songwriter'],
+
+    // Pop/R&B
+    'r&b': ['r&b', 'rnb', 'rhythm and blues'],
+    'soul': ['soul', 'funk', 'motown'],
+    'pop': ['pop', 'synth-pop', 'indie pop'],
+
+    // Specific producer/artist styles
+    'uk garage': ['uk garage', 'garage', 'grime'],
+    'footwork': ['footwork', 'juke', 'chicago footwork'],
+    'vaporwave': ['vaporwave', 'synthwave', 'retrowave'],
+    'breakbeat': ['breakbeat', 'breaks', 'big beat']
+  };
+
+  // Get all text content to analyze
+  const textContent = [
+    content?.title || '',
+    content?.subtitle || '',
+    content?.artist_name || '',
+    content?.full_biography?.content?.[0]?.content?.[0]?.text || '',
+    content?.content?.content?.[0]?.content?.[0]?.text || '',
+    content?.description || '',
+    content?.intro || '',
+    itemName
+  ].join(' ').toLowerCase();
+
+  // Find matching genres
+  const foundGenres: string[] = [];
+
+  for (const [genre, keywords] of Object.entries(genreMap)) {
+    if (keywords.some(keyword => textContent.includes(keyword))) {
+      foundGenres.push(genre);
+    }
+  }
+
+  // Artist-specific mappings (hardcoded for known artists)
+  const artistGenreMap: Record<string, string[]> = {
+    'sudan archives': ['experimental', 'electronic', 'r&b'],
+    'nubya garcia': ['jazz', 'neo-soul', 'uk garage'],
+    'floating points': ['electronic', 'ambient', 'jazz'],
+    'kerri chandler': ['house', 'deep house', 'soul'],
+    'aphex twin': ['electronic', 'experimental', 'idm'],
+    'nina kraviz': ['techno', 'house'],
+    'kokoroko': ['jazz', 'afrobeat', 'funk'],
+    'boiler room': ['electronic', 'house', 'techno'],
+    'four tet': ['electronic', 'experimental', 'house'],
+    'burial': ['electronic', 'dubstep', 'ambient'],
+    'doechii': ['hip-hop', 'r&b']
+  };
+
+  // Check for specific artist mappings
+  const lowerItemName = itemName.toLowerCase();
+  for (const [artist, genres] of Object.entries(artistGenreMap)) {
+    if (lowerItemName.includes(artist) || textContent.includes(artist)) {
+      foundGenres.push(...genres);
+    }
+  }
+
+  // Remove duplicates and return top 3
+  const uniqueGenres = [...new Set(foundGenres)];
+
+  // If no genres found, provide sensible defaults based on context
+  if (uniqueGenres.length === 0) {
+    return ['electronic', 'experimental', 'music'];
+  }
+
+  return uniqueGenres.slice(0, 3);
+}
+
 export function ExploreSection() {
   const [activeFilter, setActiveFilter] = useState<ContentType>('all')
   const [allContent, setAllContent] = useState<ContentItem[]>([])
@@ -307,20 +408,31 @@ export function ExploreSection() {
                   )}
 
                   {/* Tags */}
-                  {(item.content?.tags || item.content?.genres) && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {(item.content.tags || item.content.genres || []).slice(0, 4).map((tag: string, index: number) => (
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {(() => {
+                      // Extract genre tags from content, excluding generic tags
+                      const contentTags = item.content?.tags || item.content?.genres || [];
+                      const genreTags = contentTags.filter((tag: string) =>
+                        !['artist', 'profile', 'music'].includes(tag.toLowerCase())
+                      );
+
+                      // If no genre tags found, create meaningful ones based on content
+                      const displayTags = genreTags.length > 0 ? genreTags :
+                        extractGenreTagsFromContent(item.content, item.name);
+
+                      return displayTags.slice(0, 3).map((tag: string, index: number) => (
                         <Badge
                           key={index}
                           variant="outline"
                           className="text-xs px-2 py-0.5 rounded-full"
                           style={{ borderColor: itemColor + '50', color: itemColor }}
+                          title={`Genre tag: ${tag} (from ${genreTags.length > 0 ? 'content' : 'extraction'})`}
                         >
-                          {tag}
+                          {String(tag).toUpperCase()}
                         </Badge>
-                      ))}
-                    </div>
-                  )}
+                      ));
+                    })()}
+                  </div>
 
                   {/* Footer */}
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
