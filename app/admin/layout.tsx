@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useAuth } from '@/contexts/auth-context'
-import { AuthProvider } from '@/contexts/auth-context'
+import { useUser, useClerk } from '@clerk/nextjs'
+import { isAdminUser, getAdminMetadata } from '@/lib/auth/admin-client-utils'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import Link from 'next/link'
@@ -13,13 +12,14 @@ interface AdminLayoutProps {
 }
 
 function AdminLayoutContent({ children }: AdminLayoutProps) {
-  const { user, profile, loading, signOut } = useAuth()
+  const { isLoaded, isSignedIn, user } = useUser()
+  const { signOut } = useClerk()
   const router = useRouter()
   const pathname = usePathname()
 
   const handleSignOut = async () => {
     await signOut()
-    router.replace('/admin/login')
+    router.replace('/sign-in')
   }
 
   // Allow login page to render without auth check
@@ -27,8 +27,8 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
     return <>{children}</>
   }
 
-  // Show loading state while checking auth
-  if (loading) {
+  // Show loading state while Clerk loads
+  if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -41,15 +41,39 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
     )
   }
 
-  // If middleware let us through, we're authorized - just show loading if we don't have profile yet
-  if (!user || !profile) {
+  // Check if user is signed in and is admin
+  if (!isSignedIn || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="text-lg">Loading profile...</div>
+          <div className="text-lg">Please sign in</div>
           <div className="text-sm text-gray-500 mt-2">
-            Please wait...
+            Redirecting to login...
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Check admin status
+  const isUserAdmin = isAdminUser(user)
+  const adminMetadata = getAdminMetadata(user)
+
+  if (!isUserAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg">Admin access required</div>
+          <div className="text-sm text-gray-500 mt-2">
+            You don't have permission to access this area.
+          </div>
+          <Button
+            onClick={handleSignOut}
+            variant="outline"
+            className="mt-4"
+          >
+            Sign Out
+          </Button>
         </div>
       </div>
     )
@@ -69,10 +93,10 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
 
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-700">
-                Welcome, {profile.username || user?.email}
+                Welcome, {user.username || user.firstName || user.emailAddresses[0]?.emailAddress}
               </span>
               <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                {profile.role}
+                {adminMetadata.role || 'admin'}
               </span>
               <Button
                 variant="outline"
@@ -129,9 +153,5 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  return (
-    <AuthProvider>
-      <AdminLayoutContent>{children}</AdminLayoutContent>
-    </AuthProvider>
-  )
+  return <AdminLayoutContent>{children}</AdminLayoutContent>
 }
