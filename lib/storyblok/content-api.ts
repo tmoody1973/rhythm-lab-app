@@ -161,14 +161,14 @@ export async function updateStoryblokStory(
       }
     }
 
-    const response = await storyblokClient.put(`spaces/${spaceId}/stories/${storyId}`, {
+    const response = await callStoryblokAPI(`spaces/${spaceId}/stories/${storyId}`, 'PUT', {
       story: updateData,
       publish: 0 // Keep as draft
     })
 
     return {
       success: true,
-      story: response.data.story
+      story: response.story
     }
   } catch (error: any) {
     console.error('Error updating Storyblok story:', error)
