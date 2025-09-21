@@ -26,6 +26,105 @@ function getProfileColor(id: number) {
   return colors[id % colors.length];
 }
 
+// Helper function to extract meaningful genre tags from profile content
+function extractGenreTagsFromContent(content: any, artistName: string = ''): string[] {
+  // Comprehensive genre mapping
+  const genreMap: Record<string, string[]> = {
+    // Electronic genres
+    'electronic': ['electronic', 'electronica', 'edm', 'synthesizer', 'synth'],
+    'house': ['house', 'deep house', 'tech house', 'progressive house'],
+    'techno': ['techno', 'detroit techno', 'minimal techno'],
+    'ambient': ['ambient', 'atmospheric', 'drone', 'soundscape'],
+    'experimental': ['experimental', 'avant-garde', 'abstract', 'noise'],
+    'idm': ['idm', 'intelligent dance music', 'braindance'],
+    'dnb': ['drum and bass', 'dnb', 'jungle', 'liquid'],
+    'dubstep': ['dubstep', 'bass music', 'future bass'],
+    'trap': ['trap', 'future trap', 'hybrid trap'],
+
+    // Jazz genres
+    'jazz': ['jazz', 'bebop', 'hard bop', 'free jazz'],
+    'fusion': ['fusion', 'jazz fusion', 'jazz rock'],
+    'smooth jazz': ['smooth jazz', 'contemporary jazz'],
+    'neo-soul': ['neo-soul', 'nu-soul', 'future soul'],
+
+    // Hip-hop genres
+    'hip-hop': ['hip-hop', 'hip hop', 'rap', 'hiphop'],
+    'lo-fi': ['lo-fi', 'lofi', 'chillhop', 'boom bap'],
+
+    // Rock genres
+    'rock': ['rock', 'indie rock', 'alt rock', 'alternative'],
+    'post-rock': ['post-rock', 'instrumental rock', 'math rock'],
+
+    // World/Folk
+    'afrobeat': ['afrobeat', 'afro', 'african'],
+    'latin': ['latin', 'salsa', 'reggaeton', 'bossa nova'],
+    'folk': ['folk', 'acoustic', 'singer-songwriter'],
+
+    // Pop/R&B
+    'r&b': ['r&b', 'rnb', 'rhythm and blues'],
+    'soul': ['soul', 'funk', 'motown'],
+    'pop': ['pop', 'synth-pop', 'indie pop'],
+
+    // Specific producer/artist styles
+    'uk garage': ['uk garage', 'garage', 'grime'],
+    'footwork': ['footwork', 'juke', 'chicago footwork'],
+    'vaporwave': ['vaporwave', 'synthwave', 'retrowave'],
+    'breakbeat': ['breakbeat', 'breaks', 'big beat']
+  };
+
+  // Get all text content to analyze
+  const textContent = [
+    content?.title || '',
+    content?.subtitle || '',
+    content?.artist_name || '',
+    content?.full_biography?.content?.[0]?.content?.[0]?.text || '',
+    content?.content?.content?.[0]?.content?.[0]?.text || '',
+    content?.description || '',
+    artistName
+  ].join(' ').toLowerCase();
+
+  // Find matching genres
+  const foundGenres: string[] = [];
+
+  for (const [genre, keywords] of Object.entries(genreMap)) {
+    if (keywords.some(keyword => textContent.includes(keyword))) {
+      foundGenres.push(genre);
+    }
+  }
+
+  // Artist-specific mappings (hardcoded for known artists)
+  const artistGenreMap: Record<string, string[]> = {
+    'sudan archives': ['experimental', 'electronic', 'r&b'],
+    'nubya garcia': ['jazz', 'neo-soul', 'uk garage'],
+    'floating points': ['electronic', 'ambient', 'jazz'],
+    'kerri chandler': ['house', 'deep house', 'soul'],
+    'aphex twin': ['electronic', 'experimental', 'idm'],
+    'nina kraviz': ['techno', 'house'],
+    'kokoroko': ['jazz', 'afrobeat', 'funk'],
+    'boiler room': ['electronic', 'house', 'techno'],
+    'four tet': ['electronic', 'experimental', 'house'],
+    'burial': ['electronic', 'dubstep', 'ambient']
+  };
+
+  // Check for specific artist mappings
+  const lowerArtistName = artistName.toLowerCase();
+  for (const [artist, genres] of Object.entries(artistGenreMap)) {
+    if (lowerArtistName.includes(artist) || textContent.includes(artist)) {
+      foundGenres.push(...genres);
+    }
+  }
+
+  // Remove duplicates and return top 3
+  const uniqueGenres = [...new Set(foundGenres)];
+
+  // If no genres found, provide sensible defaults based on context
+  if (uniqueGenres.length === 0) {
+    return ['electronic', 'experimental', 'music'];
+  }
+
+  return uniqueGenres.slice(0, 3);
+}
+
 export default async function ProfilesPage() {
   let profiles: any[] = [];
   let error: string | null = null;
@@ -75,6 +174,7 @@ export default async function ProfilesPage() {
 
     profiles = response.data.stories || [];
     console.log('Found artist profiles:', profiles.length, profiles.map(p => ({ slug: p.slug, name: p.name, full_slug: p.full_slug })));
+
   } catch (err) {
     console.error('Error fetching artist profiles:', err);
     error = 'Failed to load artist profiles. Please try again later.';
@@ -292,16 +392,29 @@ export default async function ProfilesPage() {
                     </p>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {hasProfiles ? (
-                        (profile.content?.tags || []).slice(0, 3).map((tag: string, index: number) => (
-                          <Badge
-                            key={index}
-                            variant="outline"
-                            className="text-xs px-3 py-1 rounded-full font-medium"
-                            style={{ borderColor: profileColor, color: profileColor }}
-                          >
-                            {String(tag).toUpperCase()}
-                          </Badge>
-                        ))
+                        (() => {
+                          // Extract genre tags from content, excluding generic tags
+                          const contentTags = profile.content?.tags || [];
+                          const genreTags = contentTags.filter((tag: string) =>
+                            !['artist', 'profile', 'music'].includes(tag.toLowerCase())
+                          );
+
+                          // If no genre tags found, create meaningful ones based on content
+                          const displayTags = genreTags.length > 0 ? genreTags :
+                            extractGenreTagsFromContent(profile.content, profile.name);
+
+                          return displayTags.slice(0, 3).map((tag: string, index: number) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="text-xs px-3 py-1 rounded-full font-medium"
+                              style={{ borderColor: profileColor, color: profileColor }}
+                              title={`Genre tag: ${tag} (from ${genreTags.length > 0 ? 'content' : 'extraction'})`}
+                            >
+                              {String(tag).toUpperCase()}
+                            </Badge>
+                          ));
+                        })()
                       ) : (
                         profile.tags.map((tag: string, index: number) => (
                           <Badge
