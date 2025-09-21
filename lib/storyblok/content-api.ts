@@ -185,17 +185,17 @@ export async function publishStoryblokStory(
   spaceId: number
 ): Promise<{ success: boolean; story?: any; error?: string }> {
   try {
-    const response = await storyblokClient.get(`spaces/${spaceId}/stories/${storyId}`)
-    const story = response.data.story
+    const response = await callStoryblokAPI(`spaces/${spaceId}/stories/${storyId}`, 'GET')
+    const story = response.story
 
-    const publishResponse = await storyblokClient.put(`spaces/${spaceId}/stories/${storyId}`, {
+    const publishResponse = await callStoryblokAPI(`spaces/${spaceId}/stories/${storyId}`, 'PUT', {
       story: story,
       publish: 1
     })
 
     return {
       success: true,
-      story: publishResponse.data.story
+      story: publishResponse.story
     }
   } catch (error: any) {
     console.error('Error publishing Storyblok story:', error)
