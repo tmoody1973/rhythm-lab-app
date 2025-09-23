@@ -57,7 +57,7 @@ function WeeklyShowCard({ latestShow, showIndex = 0 }: WeeklyShowProps) {
   const colors = colorSchemes[showIndex % colorSchemes.length]
 
   return (
-    <Link href={`/show/${latestShow.id}`}>
+    <Link href={`/show/${latestShow.slug}`}>
       <Card className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl">
         <div className="aspect-[16/9] relative overflow-hidden">
           <img

@@ -54,8 +54,15 @@ export async function GET(
       }, { status: 500 })
     }
 
-    // Fetch from Storyblok by story ID
-    const response = await fetch(`https://api.storyblok.com/v2/cdn/stories/${showId}?token=${storyblokToken}&version=published`, {
+    // Fetch from Storyblok by story ID or slug - try full path first for slugs
+    let storyblokPath = showId
+
+    // If it looks like a slug (contains dashes), try with 'shows/' prefix
+    if (showId.includes('-')) {
+      storyblokPath = `shows/${showId}`
+    }
+
+    const response = await fetch(`https://api.storyblok.com/v2/cdn/stories/${storyblokPath}?token=${storyblokToken}&version=published`, {
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Rhythm Lab Radio App'
