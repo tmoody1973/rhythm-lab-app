@@ -222,6 +222,18 @@ export function UploadNewShow() {
       })
 
       // Step 4: Create show record and sync to Storyblok
+      // Extract cover image URL from Mixcloud response
+      let coverImageUrl = ''
+      if (uploadResult.details) {
+        // Check various possible locations for the cover image in Mixcloud response
+        coverImageUrl = uploadResult.details.pictures?.large ||
+                       uploadResult.details.pictures?.medium ||
+                       uploadResult.details.pictures?.small ||
+                       uploadResult.details.result?.pictures?.large ||
+                       uploadResult.details.cloudcast?.pictures?.large ||
+                       ''
+      }
+
       const syncResponse = await fetch('/api/mixcloud/create-show', {
         method: 'POST',
         headers: {
@@ -233,7 +245,7 @@ export function UploadNewShow() {
           mixcloud_url: uploadResult.url,
           published_date: formData.publishDate,
           playlist_text: formData.playlistText,
-          cover_image_url: '' // TODO: Handle cover image upload if needed
+          cover_image_url: coverImageUrl
         })
       })
 

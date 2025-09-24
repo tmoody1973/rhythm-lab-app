@@ -3,6 +3,8 @@
  * Handles creation and updates of Storyblok stories via Management API
  */
 
+import { getMixcloudCoverImage, uploadImageUrlToStoryblok } from './mixcloud/cover-image'
+
 interface StoryblokStoryContent {
   component: string
   [key: string]: any
@@ -143,13 +145,31 @@ export async function createMixcloudShowStory({
     .replace(/-+/g, '-') // Replace multiple hyphens with single
     .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
 
+  // Handle cover image - get from Mixcloud if not provided and upload to Storyblok
+  let storyblokImageAsset = ''
+  const imageUrl = coverImageUrl || await getMixcloudCoverImage(mixcloudUrl)
+
+  if (imageUrl) {
+    try {
+      const assetData = await uploadImageUrlToStoryblok(imageUrl, slug)
+      if (assetData) {
+        // For Storyblok asset fields, we can use either the full URL or just the path
+        storyblokImageAsset = assetData.public_url
+      }
+    } catch (error) {
+      console.warn('Failed to upload cover image to Storyblok:', error)
+      // Fallback to original URL if Storyblok upload fails
+      storyblokImageAsset = imageUrl
+    }
+  }
+
   const storyContent = {
     component: 'mixcloud_show',
     title,
     description: description || '',
     mixcloud_url: mixcloudUrl,
     mixcloud_embed: embedCode,
-    mixcloud_picture: coverImageUrl || '',
+    mixcloud_picture: storyblokImageAsset,
     published_date: formatDateForStoryblok(publishedDate),
     tracklist: tracklist || [], // Now properly formatted as Blocks array
     show_id: showId
