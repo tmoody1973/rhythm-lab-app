@@ -11,8 +11,8 @@ interface StoryblokShow {
     published_date: string
     mixcloud_url: string
     mixcloud_embed: string
-    mixcloud_picture: string
-    tracklist: string // JSON string of tracks
+    mixcloud_picture: string | { filename?: string; url?: string; alt?: string } // Can be string (old) OR Asset object (new)
+    tracklist: string | any[] // Can be JSON string (old) OR Blocks array (new)
     show_id: string
   }
   published_at: string
@@ -89,12 +89,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const mixcloudStories = data.stories?.filter(story => story.content?.component === 'mixcloud_show') || []
 
     const transformedShows = mixcloudStories.map(story => {
-      // Parse tracklist JSON
+      // Parse tracklist - handle both old (JSON string) and new (Blocks array) formats
       let tracks = []
       let trackCount = 0
       try {
         if (story.content.tracklist) {
-          tracks = JSON.parse(story.content.tracklist)
+          if (typeof story.content.tracklist === 'string') {
+            // OLD FORMAT: JSON string - parse it
+            tracks = JSON.parse(story.content.tracklist)
+          } else if (Array.isArray(story.content.tracklist)) {
+            // NEW FORMAT: Blocks array - use directly
+            tracks = story.content.tracklist
+          }
           trackCount = Array.isArray(tracks) ? tracks.length : 0
         }
       } catch (e) {
@@ -107,7 +113,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         title: story.content.title || story.name,
         description: story.content.description || '',
         published_date: story.content.published_date || story.published_at,
-        mixcloud_picture: story.content.mixcloud_picture || '',
+        mixcloud_picture: extractImageUrl(story.content.mixcloud_picture),
         mixcloud_url: story.content.mixcloud_url || '',
         mixcloud_embed: story.content.mixcloud_embed || '',
         duration_formatted: extractDuration(story.content.title, story.content.description),
@@ -216,4 +222,33 @@ function extractTags(title: string, description: string): string[] {
 
   // Return unique tags, max 3
   return [...new Set(tags)].slice(0, 3)
+}
+
+/**
+ * Extract image URL from Storyblok Asset field or text field
+ * Handles both old format (string URL) and new format (Asset object)
+ */
+function extractImageUrl(imageField: any): string {
+  if (!imageField) {
+    return ''
+  }
+
+  // If it's a string (old format), return as-is
+  if (typeof imageField === 'string') {
+    return imageField
+  }
+
+  // If it's an Asset object (new format), extract the URL
+  if (typeof imageField === 'object' && imageField.filename) {
+    // Storyblok assets come with full URL in filename
+    return imageField.filename
+  }
+
+  // If it's an Asset object with alt text but no filename (edge case)
+  if (typeof imageField === 'object' && imageField.url) {
+    return imageField.url
+  }
+
+  console.warn('Unknown image field format:', imageField)
+  return ''
 }
