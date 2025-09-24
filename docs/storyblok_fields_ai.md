@@ -94,4 +94,4 @@ Required Storyblok Content Types & Fields
   3. Multiple Values: Tags field must allow multiple values
   4. Asset Fields: Configure asset fields to accept appropriate file types (images, audio)
   5. SEO Fields: All SEO fields should have character limits matching the implementation (60 chars for titles, 160
-   for descriptions)
+   for descriptions)0

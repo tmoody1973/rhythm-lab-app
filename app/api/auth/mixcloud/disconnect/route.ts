@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdminAuth } from '@/lib/auth/admin'
-import { revokeMixcloudToken } from '@/lib/mixcloud/oauth'
+import { revokeMixcloudToken } from '@/lib/auth/mixcloud-oauth'
 
 /**
  * Disconnect Mixcloud OAuth connection

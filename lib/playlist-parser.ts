@@ -160,6 +160,10 @@ function parseTrackLine(
   let artist = line.substring(0, separatorIndex);
   let track = line.substring(separatorIndex + 3); // Skip " - "
 
+  // Remove quotes from track names (handles "song title" format)
+  track = track.replace(/^[""]|[""]$/g, ''); // Remove leading/trailing quotes
+  track = track.replace(/["]/g, '"'); // Normalize fancy quotes to regular quotes
+
   if (options.trimWhitespace) {
     artist = artist.trim();
     track = track.trim();

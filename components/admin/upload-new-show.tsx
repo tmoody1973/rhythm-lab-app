@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { parsePlaylistText } from '@/lib/playlist-parser'
 import { useDropzone } from 'react-dropzone'
+import { uploadToMixcloudDirect, getMixcloudAccessToken } from '@/lib/mixcloud/client-upload-v2'
 
 interface UploadState {
   status: 'idle' | 'uploading' | 'uploaded' | 'queued' | 'failed'
@@ -60,41 +61,8 @@ export function UploadNewShow() {
     coverImage: null
   })
 
-  const [oauthConnected, setOauthConnected] = useState(false)
   const [playlistPreview, setPlaylistPreview] = useState<any>(null)
   const [tagInput, setTagInput] = useState('')
-
-  const checkOAuthStatus = async () => {
-    try {
-      const response = await fetch('/api/auth/mixcloud/status')
-      const data = await response.json()
-      setOauthConnected(data.connected)
-    } catch (error) {
-      console.error('Failed to check OAuth status:', error)
-    }
-  }
-
-  // Check OAuth status on component mount
-  useEffect(() => {
-    checkOAuthStatus()
-  }, [])
-
-  const connectMixcloud = () => {
-    window.location.href = '/api/auth/mixcloud/authorize'
-  }
-
-  const disconnectMixcloud = async () => {
-    try {
-      const response = await fetch('/api/auth/mixcloud/disconnect', { method: 'POST' })
-      if (response.ok) {
-        setOauthConnected(false)
-      } else {
-        console.error('Failed to disconnect from Mixcloud')
-      }
-    } catch (error) {
-      console.error('Failed to disconnect from Mixcloud:', error)
-    }
-  }
 
   // Audio file dropzone
   const onAudioDrop = useCallback((acceptedFiles: File[]) => {
@@ -195,108 +163,114 @@ export function UploadNewShow() {
       return
     }
 
-    if (!oauthConnected) {
-      alert('Please connect your Mixcloud account first')
-      return
-    }
-
     setUploadState({
       status: 'uploading',
       progress: 0,
-      message: 'Starting upload...'
+      message: 'Getting authentication token...'
     })
 
     try {
-      const uploadFormData = new FormData()
-      uploadFormData.append('audioFile', formData.audioFile)
-      uploadFormData.append('showTitle', formData.showTitle)
-      uploadFormData.append('showDescription', formData.showDescription)
-      uploadFormData.append('showTags', JSON.stringify(formData.showTags))
-      uploadFormData.append('publishDate', formData.publishDate)
-      uploadFormData.append('playlistText', formData.playlistText)
-
-      if (formData.coverImage) {
-        uploadFormData.append('coverImage', formData.coverImage)
+      // Step 1: Get access token from server (secure)
+      const accessToken = await getMixcloudAccessToken()
+      if (!accessToken) {
+        throw new Error('Failed to get Mixcloud access token. Please reconnect your account.')
       }
 
-      const response = await fetch('/api/mixcloud/upload', {
-        method: 'POST',
-        body: uploadFormData
+      setUploadState({
+        status: 'uploading',
+        progress: 10,
+        message: 'Uploading directly to Mixcloud...'
       })
 
-      const result = await response.json()
+      // Step 2: Parse playlist if provided
+      const parsedPlaylist = formData.playlistText
+        ? parsePlaylistText(formData.playlistText)
+        : { tracks: [], errors: [] }
 
-      if (result.success) {
-        setUploadState({
-          status: result.status,
-          progress: 100,
-          message: result.message,
-          mixcloudUrl: result.mixcloud_url,
-          jobId: result.job_id,
-          errors: result.errors
-        })
-      } else {
-        setUploadState({
-          status: 'failed',
-          progress: 0,
-          message: result.message,
-          errors: result.errors
-        })
+      // Step 3: Upload directly to Mixcloud from browser (bypasses server limits)
+      const uploadResult = await uploadToMixcloudDirect(
+        accessToken,
+        {
+          file: formData.audioFile,
+          title: formData.showTitle,
+          description: formData.showDescription,
+          tags: formData.showTags,
+          tracks: parsedPlaylist.tracks,
+          coverImage: formData.coverImage || undefined
+        },
+        // Progress callback - update the UI as upload progresses
+        (percent) => {
+          setUploadState(prev => ({
+            ...prev,
+            progress: percent,
+            message: percent < 90 ? 'Uploading to Mixcloud...' : 'Processing response...'
+          }))
+        }
+      )
+
+      console.log('Upload result:', uploadResult)
+
+      // Check if upload failed
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Upload to Mixcloud failed')
       }
+
+      setUploadState({
+        status: 'uploading',
+        progress: 90,
+        message: 'Saving to database...'
+      })
+
+      // Step 4: Save upload record to our database (lightweight call)
+      const recordResponse = await fetch('/api/mixcloud/record-upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          showTitle: formData.showTitle,
+          showDescription: formData.showDescription,
+          showTags: formData.showTags,
+          publishDate: formData.publishDate,
+          playlistText: formData.playlistText,
+          parsedTracks: parsedPlaylist.tracks,
+          mixcloudUrl: uploadResult.url,
+          uploadDetails: uploadResult.details
+        })
+      })
+
+      const recordResult = await recordResponse.json()
+
+      // Upload was successful
+      setUploadState({
+        status: 'uploaded',
+        progress: 100,
+        message: 'Show uploaded successfully to Mixcloud!',
+        mixcloudUrl: uploadResult.url,
+        jobId: recordResult.jobId,
+        errors: []
+      })
     } catch (error) {
+      console.error('Upload failed:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
       setUploadState({
         status: 'failed',
         progress: 0,
         message: 'Upload failed',
-        errors: [error instanceof Error ? error.message : 'Unknown error']
+        errors: [errorMessage]
       })
+
+      // Also show alert for immediate feedback
+      alert(`Upload failed: ${errorMessage}`);
     }
   }
 
-  const isFormValid = formData.audioFile && formData.showTitle && oauthConnected
+  const isFormValid = formData.audioFile && formData.showTitle
 
   return (
     <div className="space-y-6">
-      {/* OAuth Connection Status */}
-      <Card className="border border-amber-200/50 shadow-md bg-white/70 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-t-lg border-b border-amber-100">
-          <CardTitle className="flex items-center gap-2 text-amber-900">
-            <LinkIcon className="h-5 w-5 text-orange-600" />
-            Mixcloud Connection
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          {oauthConnected ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <span className="text-green-700">Connected to Mixcloud</span>
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-                  Ready to Upload
-                </Badge>
-              </div>
-              <Button
-                onClick={disconnectMixcloud}
-                variant="outline"
-                size="sm"
-                className="text-red-600 border-red-300 hover:bg-red-50"
-              >
-                Disconnect from Mixcloud
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-amber-600" />
-                <span className="text-amber-700">Not connected to Mixcloud</span>
-              </div>
-              <Button onClick={connectMixcloud} className="bg-orange-600 hover:bg-orange-700">
-                Connect Mixcloud Account
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+{/* OAuth Connection Status is now shown at the top of the admin interface */}
 
       {/* Upload Form */}
       <Card className="border border-amber-200/50 shadow-md bg-white/70 backdrop-blur-sm">
@@ -370,7 +344,7 @@ export function UploadNewShow() {
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     placeholder="Add a tag"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                   />
                   <Button type="button" onClick={addTag} variant="outline">
                     Add

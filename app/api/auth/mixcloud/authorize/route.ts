@@ -39,7 +39,7 @@ async function handleAuthorize(request: NextRequest, user: any) {
     const response = NextResponse.redirect(authUrl.toString())
     response.cookies.set('mixcloud_oauth_state', state, {
       httpOnly: true,
-      secure: false, // Set to false for localhost development
+      secure: process.env.NODE_ENV === 'production', // Secure in production, allow HTTP in development
       sameSite: 'lax',
       maxAge: 600, // 10 minutes
       path: '/' // Ensure cookie is available for all paths

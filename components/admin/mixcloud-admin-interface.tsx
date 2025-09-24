@@ -18,12 +18,18 @@ import { PlaylistParserTest } from './playlist-parser-test'
 import { ImportByUrl } from './import-by-url'
 import { ArchiveImport } from './archive-import'
 import { UploadNewShow } from './upload-new-show'
+import { MixcloudConnectionStatus } from './mixcloud-connection-status'
 
 export function MixcloudAdminInterface() {
   const [activeTab, setActiveTab] = useState('archive')
 
   return (
     <div className="w-full bg-gradient-to-br from-amber-50 to-orange-50 min-h-screen p-6 rounded-xl">
+      {/* Connection Status Header */}
+      <div className="mb-6">
+        <MixcloudConnectionStatus />
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Navigation Tabs */}
         <TabsList className="grid w-full grid-cols-5 bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-200/50 shadow-sm rounded-xl p-1">

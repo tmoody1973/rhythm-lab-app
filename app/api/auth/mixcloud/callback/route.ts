@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdminAuth } from '@/lib/auth/admin'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 interface MixcloudTokenResponse {
   access_token: string
@@ -51,8 +52,14 @@ async function handleCallback(request: NextRequest, user: any) {
       cookiesAvailable: request.cookies.getAll().map(c => c.name)
     })
 
-    // Skip state verification for now - focus on getting OAuth working
-    console.log('Skipping state verification to test OAuth token generation')
+    if (!storedState || !state || storedState !== state) {
+      console.error('OAuth state verification failed:', {
+        hasStoredState: !!storedState,
+        hasReceivedState: !!state,
+        statesMatch: storedState === state
+      })
+      return NextResponse.redirect(`${baseUrl}/admin?error=invalid_state`)
+    }
 
     // Exchange authorization code for access token
     const tokenResponse = await exchangeCodeForToken(code, baseUrl)
@@ -62,15 +69,76 @@ async function handleCallback(request: NextRequest, user: any) {
     }
 
     // Store token in database
-    const supabase = await createClient()
+    // Use service role client to bypass RLS for admin operations
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          persistSession: false
+        }
+      }
+    )
+
+    // First, get the profile UUID for this Clerk user
+    console.log('Looking up profile for Clerk user:', user.id)
+    let { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, clerk_user_id, email')
+      .eq('clerk_user_id', user.id)
+      .single()
+
+    if (profileError || !profile) {
+      console.error('Profile lookup error:', {
+        error: profileError,
+        clerkUserId: user.id,
+        userObject: user
+      })
+
+      // Try to create the profile if it doesn't exist
+      console.log('Attempting to create profile for user:', user.id)
+      const { data: newProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert({
+          clerk_user_id: user.id,
+          email: user.email || '',
+          full_name: user.fullName || ''
+        })
+        .select('id')
+        .single()
+
+      if (createError || !newProfile) {
+        console.error('Failed to create profile:', createError)
+        return NextResponse.redirect(`${baseUrl}/admin?error=profile_creation_failed`)
+      }
+
+      console.log('Created new profile:', newProfile)
+      profile = newProfile
+    }
+
+    // Safety check - profile must exist at this point
+    if (!profile) {
+      console.error('Profile is still null after lookup/creation')
+      return NextResponse.redirect(`${baseUrl}/admin?error=profile_null`)
+    }
+
     const expiresAt = tokenResponse.expires_in
       ? new Date(Date.now() + (tokenResponse.expires_in * 1000))
       : null
 
+    console.log('Attempting to store token for user:', {
+      clerkUserId: user.id,
+      profileId: profile.id,
+      hasAccessToken: !!tokenResponse.access_token,
+      hasRefreshToken: !!tokenResponse.refresh_token,
+      expiresAt: expiresAt?.toISOString(),
+      mixcloudUsername: tokenResponse.user?.username
+    })
+
     const { error: dbError } = await supabase
       .from('mixcloud_oauth_tokens')
       .upsert({
-        user_id: user.id,
+        user_id: profile.id, // Use the profile UUID instead of Clerk user ID
         access_token: tokenResponse.access_token,
         refresh_token: tokenResponse.refresh_token,
         token_type: tokenResponse.token_type,
@@ -83,8 +151,14 @@ async function handleCallback(request: NextRequest, user: any) {
       })
 
     if (dbError) {
-      console.error('Database error storing token:', dbError)
-      return NextResponse.redirect(`${baseUrl}/admin?error=db_error`)
+      console.error('Database error storing token:', {
+        error: dbError,
+        code: dbError.code,
+        message: dbError.message,
+        details: dbError.details,
+        hint: dbError.hint
+      })
+      return NextResponse.redirect(`${baseUrl}/admin?error=db_error&details=${encodeURIComponent(dbError.message)}`)
     }
 
     // Clear state cookie
@@ -132,18 +206,35 @@ async function exchangeCodeForToken(code: string, baseUrl?: string): Promise<Mix
 
   const tokenData = await response.json()
 
+  // Log the raw response from Mixcloud to debug the format
+  console.log('Raw Mixcloud token response:', JSON.stringify(tokenData, null, 2))
+
+  // Log what Mixcloud actually returned
+  console.log('Token exchange response:', {
+    hasAccessToken: !!tokenData.access_token,
+    tokenType: tokenData.token_type,
+    expiresIn: tokenData.expires_in,
+    scope: tokenData.scope,
+    refreshToken: !!tokenData.refresh_token,
+    error: tokenData.error
+  })
+
   // Fetch user info if we have a valid token
   if (tokenData.access_token) {
     try {
-      const userResponse = await fetch('https://api.mixcloud.com/me/', {
-        headers: {
-          'Authorization': `Bearer ${tokenData.access_token}`
-        }
-      })
+      const userUrl = new URL('https://api.mixcloud.com/me/')
+      userUrl.searchParams.set('access_token', tokenData.access_token)
+
+      const userResponse = await fetch(userUrl.toString())
 
       if (userResponse.ok) {
         const userData = await userResponse.json()
-        tokenData.user = userData
+        // Check if we got an error in the response
+        if (!userData.error) {
+          tokenData.user = userData
+        } else {
+          console.warn('User info fetch returned error:', userData.error)
+        }
       }
     } catch (userError) {
       console.warn('Failed to fetch user info:', userError)
