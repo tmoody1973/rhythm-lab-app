@@ -12,7 +12,7 @@ interface StoryblokShow {
     mixcloud_url: string
     mixcloud_embed: string
     mixcloud_picture: string
-    tracklist: string // JSON string of tracks
+    tracklist: string | any[] // Can be JSON string (old) OR Blocks array (new)
     show_id: string
   }
   published_at: string
@@ -94,14 +94,27 @@ export async function GET(
       }, { status: 404 })
     }
 
-    // Parse tracks from tracklist JSON
+    // Parse tracks from tracklist - handle both old (JSON string) and new (Blocks array) formats
     let tracks = []
     try {
       if (story.content.tracklist) {
-        tracks = JSON.parse(story.content.tracklist)
+        let rawTracks: any[] = []
 
-        // Transform tracks to match expected format
-        tracks = tracks.map((track: any, index: number) => ({
+        // Check if tracklist is a string (old format) or array (new format)
+        if (typeof story.content.tracklist === 'string') {
+          // OLD FORMAT: JSON string - parse it
+          console.log('Processing old format tracklist (JSON string) for story:', story.id)
+          rawTracks = JSON.parse(story.content.tracklist)
+        } else if (Array.isArray(story.content.tracklist)) {
+          // NEW FORMAT: Blocks array - use directly
+          console.log('Processing new format tracklist (Blocks array) for story:', story.id)
+          rawTracks = story.content.tracklist
+        } else {
+          console.warn('Unexpected tracklist format for story:', story.id, typeof story.content.tracklist)
+        }
+
+        // Transform tracks to match expected format (same for both old and new)
+        tracks = rawTracks.map((track: any, index: number) => ({
           id: track._uid || `track_${index}`,
           position: track.position || index + 1,
           artist: track.artist || 'Unknown Artist',
