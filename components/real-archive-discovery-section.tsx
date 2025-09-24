@@ -271,34 +271,6 @@ export function RealArchiveDiscoverySection() {
         </div>
       </div>
 
-      {/* Quick Stats Dashboard */}
-      {shows.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold text-foreground mb-4">Quick Stats</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-muted rounded-lg">
-              <div className="text-2xl font-bold text-[#b12e2e] mb-1">
-                {shows.reduce((total, show) => total + show.track_count, 0)}
-              </div>
-              <div className="text-xs text-muted-foreground">Total Tracks</div>
-            </div>
-            <div className="text-center p-3 bg-muted rounded-lg">
-              <div className="text-2xl font-bold text-[#8b5cf6] mb-1">{shows.length}</div>
-              <div className="text-xs text-muted-foreground">Shows Displayed</div>
-            </div>
-            <div className="text-center p-3 bg-muted rounded-lg">
-              <div className="text-2xl font-bold text-[#10b981] mb-1">{totalCount}</div>
-              <div className="text-xs text-muted-foreground">Total Archive</div>
-            </div>
-            <div className="text-center p-3 bg-muted rounded-lg">
-              <div className="text-2xl font-bold text-[#f59e0b] mb-1">
-                {shows.filter(show => show.tags.length > 0).length}
-              </div>
-              <div className="text-xs text-muted-foreground">Tagged Shows</div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
