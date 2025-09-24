@@ -186,28 +186,6 @@ export function ArchiveDiscoverySection() {
         </div>
       </div>
 
-      {/* Quick Stats Dashboard */}
-      <div>
-        <h3 className="text-lg font-semibold text-foreground mb-4">Quick Stats</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-[#b12e2e] mb-1">247</div>
-            <div className="text-xs text-muted-foreground">Tracks Today</div>
-          </div>
-          <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-[#8b5cf6] mb-1">12</div>
-            <div className="text-xs text-muted-foreground">Episodes This Week</div>
-          </div>
-          <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-[#10b981] mb-1">156</div>
-            <div className="text-xs text-muted-foreground">Archive Shows</div>
-          </div>
-          <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-[#f59e0b] mb-1">89</div>
-            <div className="text-xs text-muted-foreground">Your Discoveries</div>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
