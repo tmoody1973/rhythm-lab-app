@@ -131,27 +131,35 @@ body {
     @apply bg-[oklch(0.95_0.02_85)] text-[oklch(0.15_0_0)];
   }
 
-  /* Apply Outfit font at medium weight (500) to all headings and titles */
+  /* Apply Outfit font at medium weight (500) to all headings and titles with uppercase */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
   }
 
   /* Apply to common title classes */
   .font-bold, .font-semibold, .font-medium {
     font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
   }
 
   /* Apply to card titles and other title-like elements */
   [class*="title"], [class*="heading"], .text-lg, .text-xl, .text-2xl, .text-3xl, .text-4xl, .text-5xl, .text-6xl {
     font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
   }
 
   /* Ensure medium weight for various font weight classes when using headings */
   .font-heading {
     font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
   }
 }
 
@@ -188,6 +196,13 @@ body {
   .font-outfit-medium {
     font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
     font-weight: 500;
+  }
+
+  .font-outfit-heading {
+    font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
   }
 }
 
