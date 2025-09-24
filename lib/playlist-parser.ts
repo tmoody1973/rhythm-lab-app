@@ -225,19 +225,28 @@ export function tracksToDbFormat(tracks: ParsedTrack[]): Array<{
 
 /**
  * Convert parsed tracks to Storyblok blocks format
+ * Now generates proper Blocks with unique UIDs for Storyblok's visual editor
  */
 export function tracksToStoryblokFormat(tracks: ParsedTrack[]) {
   return tracks.map(track => ({
     component: 'track',
-    _uid: `track_${track.position}`,
+    _uid: generateStoryblokUID(), // Generate unique UID for each block
     position: track.position,
-    hour: track.hour,
+    hour: track.hour || 1, // Default to hour 1 if not specified
     artist: track.artist,
     track: track.track,
     spotify_url: '',
     youtube_url: '',
     discogs_url: ''
   }));
+}
+
+/**
+ * Generate a unique Storyblok block UID
+ * Format: 8-character alphanumeric string
+ */
+function generateStoryblokUID(): string {
+  return Math.random().toString(36).substring(2, 10);
 }
 
 /**

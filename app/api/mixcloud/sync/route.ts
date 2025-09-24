@@ -147,7 +147,6 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
     }
 
     // 4. Update Storyblok if requested and story exists
-    let storyblokUpdated = false
     if (body.update_storyblok !== false && existingShow.storyblok_id) {
       try {
         // Get updated show data
@@ -173,8 +172,8 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
           const formattedTracks = tracksToStoryblokFormat(parseResult.tracks)
           console.log('Formatted tracks for Storyblok:', JSON.stringify(formattedTracks.slice(0, 2), null, 2)) // Log first 2 tracks
 
-          // Storyblok expects JSON string for text fields, not object arrays
-          storyblokContent.tracklist = JSON.stringify(formattedTracks)
+          // Storyblok now expects Blocks array for the tracklist field
+          storyblokContent.tracklist = formattedTracks
         }
 
         await updateStoryblokShow(existingShow.storyblok_id, {
@@ -182,7 +181,6 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
           content: storyblokContent
         })
 
-        storyblokUpdated = true
       } catch (storyblokError) {
         warnings.push(`Storyblok update failed: ${storyblokError instanceof Error ? storyblokError.message : 'Unknown error'}`)
       }

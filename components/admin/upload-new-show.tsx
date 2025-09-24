@@ -218,37 +218,37 @@ export function UploadNewShow() {
       setUploadState({
         status: 'uploading',
         progress: 90,
-        message: 'Saving to database...'
+        message: 'Syncing to Storyblok...'
       })
 
-      // Step 4: Save upload record to our database (lightweight call)
-      const recordResponse = await fetch('/api/mixcloud/record-upload', {
+      // Step 4: Create show record and sync to Storyblok
+      const syncResponse = await fetch('/api/mixcloud/create-show', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          showTitle: formData.showTitle,
-          showDescription: formData.showDescription,
-          showTags: formData.showTags,
-          publishDate: formData.publishDate,
-          playlistText: formData.playlistText,
-          parsedTracks: parsedPlaylist.tracks,
-          mixcloudUrl: uploadResult.url,
-          uploadDetails: uploadResult.details
+          title: formData.showTitle,
+          description: formData.showDescription,
+          mixcloud_url: uploadResult.url,
+          published_date: formData.publishDate,
+          playlist_text: formData.playlistText,
+          cover_image_url: '' // TODO: Handle cover image upload if needed
         })
       })
 
-      const recordResult = await recordResponse.json()
+      const syncResult = await syncResponse.json()
 
-      // Upload was successful
+      // Upload and sync was successful
       setUploadState({
         status: 'uploaded',
         progress: 100,
-        message: 'Show uploaded successfully to Mixcloud!',
+        message: syncResult.storyblok_id
+          ? 'Show uploaded to Mixcloud and synced to Storyblok!'
+          : 'Show uploaded to Mixcloud (Storyblok sync failed)',
         mixcloudUrl: uploadResult.url,
-        jobId: recordResult.jobId,
-        errors: []
+        jobId: syncResult.show_id,
+        errors: syncResult.errors || []
       })
     } catch (error) {
       console.error('Upload failed:', error)
