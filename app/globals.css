@@ -84,6 +84,7 @@ body {
 @theme inline {
   --font-sans: var(--font-inter);
   --font-mono: var(--font-inter);
+  --font-heading: var(--font-outfit);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -129,6 +130,29 @@ body {
   body {
     @apply bg-[oklch(0.95_0.02_85)] text-[oklch(0.15_0_0)];
   }
+
+  /* Apply Outfit font at medium weight (500) to all headings and titles */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+    font-weight: 500;
+  }
+
+  /* Apply to common title classes */
+  .font-bold, .font-semibold, .font-medium {
+    font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+    font-weight: 500;
+  }
+
+  /* Apply to card titles and other title-like elements */
+  [class*="title"], [class*="heading"], .text-lg, .text-xl, .text-2xl, .text-3xl, .text-4xl, .text-5xl, .text-6xl {
+    font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+  }
+
+  /* Ensure medium weight for various font weight classes when using headings */
+  .font-heading {
+    font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+    font-weight: 500;
+  }
 }
 
 @layer components {
@@ -138,7 +162,9 @@ body {
   }
 
   .nts-text-caps {
-    @apply uppercase font-bold;
+    @apply uppercase;
+    font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+    font-weight: 500;
     letter-spacing: 0.05em;
   }
 
@@ -148,8 +174,20 @@ body {
   }
 
   .nts-button {
-    @apply bg-transparent border border-foreground/20 text-foreground hover:bg-foreground hover:text-background transition-all duration-200 font-bold uppercase text-sm;
+    @apply bg-transparent border border-foreground/20 text-foreground hover:bg-foreground hover:text-background transition-all duration-200 uppercase text-sm;
+    font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+    font-weight: 500;
     letter-spacing: 0.05em;
+  }
+
+  /* Utility classes for explicit Outfit usage */
+  .font-outfit {
+    font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+  }
+
+  .font-outfit-medium {
+    font-family: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+    font-weight: 500;
   }
 }
 

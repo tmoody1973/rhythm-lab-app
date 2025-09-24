@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Inter, Outfit } from "next/font/google"
 import { Suspense } from "react"
 import "./globals.css"
 import { PersistentAudioPlayer } from "@/components/persistent-audio-player"
@@ -10,8 +10,14 @@ import { ClerkAuthProvider } from "@/contexts/clerk-auth-context"
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-inter",
+})
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-outfit",
 })
 
 export const metadata: Metadata = {
@@ -27,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans ${inter.variable} antialiased`}>
+      <body className={`font-sans ${inter.variable} ${outfit.variable} antialiased`}>
         <ClerkAuthProvider>
           <RadioProvider>
             <Suspense fallback={null}>{children}</Suspense>
