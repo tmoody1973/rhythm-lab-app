@@ -43,6 +43,12 @@ interface RealShowDetailProps {
   showId: string
 }
 
+// Helper function to generate YouTube search URL
+function generateYouTubeSearchUrl(artist: string, track: string): string {
+  const searchQuery = encodeURIComponent(`${artist} ${track}`)
+  return `https://www.youtube.com/results?search_query=${searchQuery}`
+}
+
 export function RealShowDetail({ showId }: RealShowDetailProps) {
   const [show, setShow] = useState<Show | null>(null)
   const [tracks, setTracks] = useState<Track[]>([])
@@ -58,7 +64,7 @@ export function RealShowDetail({ showId }: RealShowDetailProps) {
   const fetchShowDetail = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/storyblok/shows/${showId}`)
+      const response = await fetch(`/api/shows/${showId}`)
       const data: ShowDetailResponse = await response.json()
 
       if (data.success) {
@@ -291,19 +297,30 @@ export function RealShowDetail({ showId }: RealShowDetailProps) {
                                 </span>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-[#2d1810] font-semibold text-base mb-1">
-                                    {track.artist}
+                                    {track.discogs_url ? (
+                                      <a
+                                        href={track.discogs_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:text-[#8b6914] underline decoration-2 underline-offset-2"
+                                      >
+                                        {track.artist}
+                                      </a>
+                                    ) : (
+                                      track.artist
+                                    )}
                                   </p>
                                   <p className="text-[#6b4226] text-sm">
-                                    {track.track}
+                                    <a
+                                      href={track.youtube_url || generateYouTubeSearchUrl(track.artist, track.track)}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="hover:text-[#a0522d] underline decoration-2 underline-offset-2"
+                                    >
+                                      {track.track}
+                                    </a>
                                   </p>
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-[#8b6914] hover:text-[#2f5233] hover:bg-[#e8ddd1] p-2"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
                               </div>
                             ))}
                           </div>
@@ -322,19 +339,30 @@ export function RealShowDetail({ showId }: RealShowDetailProps) {
                                   </span>
                                   <div className="flex-1 min-w-0">
                                     <p className="text-[#2d1810] font-semibold text-base mb-1 truncate">
-                                      {track.artist}
+                                      {track.discogs_url ? (
+                                        <a
+                                          href={track.discogs_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="hover:text-[#8b6914] underline decoration-2 underline-offset-2"
+                                        >
+                                          {track.artist}
+                                        </a>
+                                      ) : (
+                                        track.artist
+                                      )}
                                     </p>
                                     <p className="text-[#6b4226] text-sm truncate">
-                                      {track.track}
+                                      <a
+                                        href={track.youtube_url || generateYouTubeSearchUrl(track.artist, track.track)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:text-[#a0522d] underline decoration-2 underline-offset-2"
+                                      >
+                                        {track.track}
+                                      </a>
                                     </p>
                                   </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-[#8b6914] hover:text-[#2f5233] hover:bg-[#e8ddd1] p-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                  >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
                                 </div>
                               ))}
                             </div>
@@ -351,19 +379,30 @@ export function RealShowDetail({ showId }: RealShowDetailProps) {
                                   </span>
                                   <div className="flex-1 min-w-0">
                                     <p className="text-[#2d1810] font-semibold text-base mb-1">
-                                      {track.artist}
+                                      {track.discogs_url ? (
+                                        <a
+                                          href={track.discogs_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="hover:text-[#8b6914] underline decoration-2 underline-offset-2"
+                                        >
+                                          {track.artist}
+                                        </a>
+                                      ) : (
+                                        track.artist
+                                      )}
                                     </p>
                                     <p className="text-[#6b4226] text-sm">
-                                      {track.track}
+                                      <a
+                                        href={track.youtube_url || generateYouTubeSearchUrl(track.artist, track.track)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:text-[#a0522d] underline decoration-2 underline-offset-2"
+                                      >
+                                        {track.track}
+                                      </a>
                                     </p>
                                   </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-[#8b6914] hover:text-[#2f5233] hover:bg-[#e8ddd1] p-2"
-                                  >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
                                 </div>
                               ))}
                             </div>

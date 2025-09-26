@@ -27,6 +27,16 @@ export async function GET(
       }, { status: 400 })
     }
 
+    console.log(`[Shows API] Looking for show with ID/slug: "${showId}"`)
+
+    // Extract numeric ID from end of slug if present (e.g., "title-123" -> "123")
+    let numericId = null
+    const lastPart = showId.split('-').pop()
+    if (lastPart && /^\d+$/.test(lastPart)) {
+      numericId = lastPart
+      console.log(`[Shows API] Extracted numeric ID: "${numericId}"`)
+    }
+
     // Create Supabase client
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,12 +51,98 @@ export async function GET(
       }
     )
 
-    // Fetch show details
-    const { data: show, error: showError } = await supabase
+    // Fetch show details - try by ID first, then by slug if it fails
+    let show, showError
+
+    // First try as UUID (direct ID lookup)
+    console.log(`[Shows API] Trying UUID lookup: "${showId}"`)
+    const idResult = await supabase
       .from('shows')
       .select('*')
       .eq('id', showId)
       .single()
+
+    console.log(`[Shows API] UUID result:`, idResult.data ? 'FOUND' : 'NOT FOUND')
+
+    if (idResult.data) {
+      show = idResult.data
+      showError = null
+    } else {
+      // If ID lookup fails, try as slug
+      console.log(`[Shows API] Trying slug lookup: "${showId}"`)
+      const slugResult = await supabase
+        .from('shows')
+        .select('*')
+        .eq('slug', showId)
+        .single()
+
+      console.log(`[Shows API] Slug result:`, slugResult.data ? 'FOUND' : 'NOT FOUND')
+
+      if (slugResult.data) {
+        show = slugResult.data
+        showError = null
+      } else {
+        // If slug fails, try multiple approaches to find the show
+        let found = false
+
+        // First try: numeric ID from slug as storyblok_id
+        if (numericId) {
+          console.log(`[Shows API] Trying storyblok_id lookup: "${numericId}"`)
+          const storyblokResult = await supabase
+            .from('shows')
+            .select('*')
+            .eq('storyblok_id', numericId)
+            .limit(1)
+
+          if (storyblokResult.data && storyblokResult.data.length > 0) {
+            show = storyblokResult.data[0]
+            showError = null
+            found = true
+            console.log(`[Shows API] Found by storyblok_id: ${numericId}`)
+          }
+        }
+
+        // Second try: look up by slug pattern in the slug field
+        if (!found) {
+          console.log(`[Shows API] Trying slug pattern lookup`)
+          const slugResult = await supabase
+            .from('shows')
+            .select('*')
+            .ilike('slug', `%${showId}%`)
+            .limit(1)
+
+          if (slugResult.data && slugResult.data.length > 0) {
+            show = slugResult.data[0]
+            showError = null
+            found = true
+            console.log(`[Shows API] Found by slug pattern`)
+          } else {
+            // Third try: match by title keywords (jones girls, quincy jones, bobbi humphrey, massive attack)
+            console.log(`[Shows API] Trying title keyword lookup`)
+            const titleResult = await supabase
+              .from('shows')
+              .select('*')
+              .ilike('title', '%jones girls%')
+              .ilike('title', '%quincy jones%')
+              .ilike('title', '%bobbi humphrey%')
+              .ilike('title', '%massive attack%')
+              .limit(1)
+
+            if (titleResult.data && titleResult.data.length > 0) {
+              show = titleResult.data[0]
+              showError = null
+              found = true
+              console.log(`[Shows API] Found by title keywords`)
+            }
+          }
+        }
+
+        console.log(`[Shows API] Final result:`, found ? 'FOUND' : 'NOT FOUND')
+        if (!found) {
+          showError = { message: 'Show not found' }
+        }
+      }
+    }
 
     if (showError || !show) {
       return NextResponse.json({
@@ -59,7 +155,7 @@ export async function GET(
     const { data: tracks, error: tracksError } = await supabase
       .from('mixcloud_tracks')
       .select('*')
-      .eq('show_id', showId)
+      .eq('show_id', show.id)
       .order('position', { ascending: true })
 
     if (tracksError) {
