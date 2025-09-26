@@ -3,6 +3,8 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useOutsideClick } from "@/hooks/use-outside-click";
+import { YouTubeVideoGrid } from '@/components/youtube-video-embed';
+import { YouTubeVideo } from '@/lib/youtube/api';
 
 /**
  * EXPLANATION: These interfaces define the shape of our data
@@ -57,8 +59,13 @@ export function ExpandableReleaseCard({ releases, children }: ExpandableReleaseC
   // EXPLANATION: State to store any error messages
   const [error, setError] = useState<string | null>(null)
 
-  // EXPLANATION: State to track which tab is active (details or tracklist)
-  const [activeTab, setActiveTab] = useState<'details' | 'tracklist'>('details')
+  // EXPLANATION: State to track which tab is active (details, tracklist, or videos)
+  const [activeTab, setActiveTab] = useState<'details' | 'tracklist' | 'videos'>('details')
+
+  // EXPLANATION: State for YouTube videos
+  const [youtubeVideos, setYoutubeVideos] = useState<YouTubeVideo[]>([])
+  const [loadingVideos, setLoadingVideos] = useState(false)
+  const [videoError, setVideoError] = useState<string | null>(null)
 
   // EXPLANATION: Reference to the expanded card DOM element (for outside click detection)
   const ref = useRef<HTMLDivElement>(null)
@@ -94,6 +101,39 @@ export function ExpandableReleaseCard({ releases, children }: ExpandableReleaseC
   useOutsideClick(ref, () => setActiveRelease(null))
 
   /**
+   * EXPLANATION: Function to fetch YouTube videos for the current release
+   */
+  const fetchYouTubeVideos = async (artist: string, album: string) => {
+    setLoadingVideos(true)
+    setVideoError(null)
+
+    try {
+      const response = await fetch('/api/youtube/search-videos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ artist, album, maxResults: 6 }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to search videos: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (data.success) {
+        setYoutubeVideos(data.videos)
+      } else {
+        throw new Error(data.error || 'Failed to search videos')
+      }
+    } catch (error: any) {
+      console.error('[ExpandableCard] YouTube video search error:', error)
+      setVideoError(error.message || 'Failed to load videos')
+    } finally {
+      setLoadingVideos(false)
+    }
+  }
+
+  /**
    * EXPLANATION: This function handles when someone clicks to expand a release card
    * It fetches detailed information from our API and updates the state
    */
@@ -104,6 +144,8 @@ export function ExpandableReleaseCard({ releases, children }: ExpandableReleaseC
     setActiveRelease(release)
     setError(null)
     setActiveTab('details') // Reset to details tab when opening
+    setYoutubeVideos([]) // Clear previous videos
+    setVideoError(null)
 
     // EXPLANATION: If we already have detailed data, don't fetch it again
     if (release.detailed) {
@@ -278,6 +320,23 @@ export function ExpandableReleaseCard({ releases, children }: ExpandableReleaseC
                     >
                       Tracklist ({activeRelease.detailed.tracklist.length})
                     </button>
+                    <button
+                      onClick={() => {
+                        setActiveTab('videos')
+                        if (youtubeVideos.length === 0 && !loadingVideos) {
+                          // Clean the artist name by removing "Artist Profile: " prefix
+                          const cleanArtistName = activeRelease.artist_name.replace(/^Artist Profile:\s*/i, '')
+                          fetchYouTubeVideos(cleanArtistName, activeRelease.title)
+                        }
+                      }}
+                      className={`flex-1 px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                        activeTab === 'videos'
+                          ? 'text-green-600 dark:text-green-400 border-b-2 border-green-600 dark:border-green-400 -mb-[1px]'
+                          : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
+                      }`}
+                    >
+                      Videos
+                    </button>
                   </div>
                 )}
 
@@ -310,8 +369,14 @@ export function ExpandableReleaseCard({ releases, children }: ExpandableReleaseC
                       >
                         {activeTab === 'details' ? (
                           <ReleaseDetailsContent release={activeRelease} showTracklist={false} />
-                        ) : (
+                        ) : activeTab === 'tracklist' ? (
                           <TracklistTab tracklist={activeRelease.detailed.tracklist} />
+                        ) : (
+                          <YouTubeVideoGrid
+                            videos={youtubeVideos}
+                            loading={loadingVideos}
+                            error={videoError}
+                          />
                         )}
                       </motion.div>
                     ) : (
