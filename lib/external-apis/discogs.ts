@@ -79,6 +79,8 @@ interface DiscogsArtist {
 interface DiscogsRelease {
   id: number
   title: string
+  type?: 'master' | 'release'  // This field comes from the artist releases endpoint
+  main_release?: number  // Present for master releases
   artists: Array<{
     name: string
     anv: string
@@ -116,6 +118,41 @@ interface DiscogsRelease {
       average: number
     }
   }
+}
+
+interface DiscogsDetailedRelease extends DiscogsRelease {
+  master_id?: number
+  master_url?: string
+  type?: 'master' | 'release'
+  status: string
+  released?: string
+  released_formatted?: string
+  country?: string
+  notes?: string
+  data_quality?: string
+  images?: Array<{
+    type: 'primary' | 'secondary'
+    uri: string
+    resource_url: string
+    uri150: string
+    width: number
+    height: number
+  }>
+}
+
+interface StoryblokReleaseItem {
+  component: 'release_item'
+  _uid: string
+  title: string
+  year: number
+  type: 'master' | 'release' | 'appearance' | 'track'
+  label: string
+  catalog_no: string
+  cover_image_url: string
+  discogs_release_id: number
+  discogs_master_id?: number
+  discogs_url: string
+  formats: string[]
 }
 
 interface DiscogsArtistResult {
@@ -239,7 +276,7 @@ export async function searchDiscogsArtist(
     type?: 'artist' | 'release' | 'master' | 'label'
   } = {}
 ): Promise<DiscogsArtistResult | null> {
-  const { maxResults = 1, type = 'artist' } = options
+  const { maxResults = 5, type = 'artist' } = options // Increased to get more candidates
 
   try {
     const result = await rateLimiter.addToQueue(async () => {
@@ -269,11 +306,27 @@ export async function searchDiscogsArtist(
     })
 
     if (result.results && result.results.length > 0) {
-      const artist = result.results[0]
+      // Filter to only artist results and find the best match
+      const artistResults = result.results.filter(r => r.type === 'artist')
 
-      if (artist.type === 'artist') {
+      if (artistResults.length === 0) {
+        console.log(`[Discogs API] No artist results found for: "${artistName}"`)
+        return null
+      }
+
+      console.log(`[Discogs API] Found ${artistResults.length} artist candidates:`)
+      artistResults.forEach((artist, index) => {
+        console.log(`  ${index + 1}. ${artist.title} (ID: ${artist.id})`)
+      })
+
+      // Find the best matching artist
+      const bestMatch = findBestArtistMatch(artistName, artistResults)
+
+      if (bestMatch) {
+        console.log(`[Discogs API] Selected best match: ${bestMatch.title} (ID: ${bestMatch.id})`)
+
         // Fetch detailed artist information
-        const artistDetails = await getDiscogsArtistDetails(artist.id)
+        const artistDetails = await getDiscogsArtistDetails(bestMatch.id)
 
         if (artistDetails) {
           const artistResult: DiscogsArtistResult = {
@@ -281,13 +334,13 @@ export async function searchDiscogsArtist(
             name: artistDetails.name,
             realname: artistDetails.realname,
             profile: artistDetails.profile,
-            imageUrl: artistDetails.images?.[0]?.uri150 || artist.thumb,
+            imageUrl: artistDetails.images?.[0]?.uri150 || bestMatch.thumb,
             discogsUrl: `https://www.discogs.com/artist/${artistDetails.id}`,
             genres: [], // Will be populated from releases if needed
             aliases: artistDetails.aliases?.map(alias => alias.name)
           }
 
-          console.log(`[Discogs API] Found artist: ${artistResult.name}`)
+          console.log(`[Discogs API] Found artist: ${artistResult.name} (ID: ${artistResult.artistId})`)
           return artistResult
         }
       }
@@ -300,6 +353,54 @@ export async function searchDiscogsArtist(
     console.error('[Discogs API] Search error:', error)
     return null
   }
+}
+
+/**
+ * Find the best matching artist from search results
+ */
+function findBestArtistMatch(searchTerm: string, candidates: any[]): any | null {
+  if (candidates.length === 0) return null
+  if (candidates.length === 1) return candidates[0]
+
+  const cleanSearchTerm = searchTerm.toLowerCase().trim()
+
+  // Score each candidate
+  const scoredCandidates = candidates.map(candidate => {
+    const candidateName = candidate.title.toLowerCase().trim()
+    let score = 0
+
+    // Exact match gets highest score
+    if (candidateName === cleanSearchTerm) {
+      score += 100
+    }
+    // Check if search term is contained in candidate name
+    else if (candidateName.includes(cleanSearchTerm)) {
+      score += 50
+    }
+    // Check if candidate name is contained in search term
+    else if (cleanSearchTerm.includes(candidateName)) {
+      score += 30
+    }
+
+    // Prefer shorter names (less likely to be compilation artists)
+    if (candidateName.length <= cleanSearchTerm.length + 5) {
+      score += 10
+    }
+
+    // Prefer artists with images (usually main artists)
+    if (candidate.thumb) {
+      score += 5
+    }
+
+    console.log(`[Discogs API] Scoring "${candidate.title}": ${score} points`)
+
+    return { candidate, score }
+  })
+
+  // Sort by score (highest first)
+  scoredCandidates.sort((a, b) => b.score - a.score)
+
+  return scoredCandidates[0].candidate
 }
 
 /**
@@ -468,5 +569,484 @@ export async function getArtistGenres(artistId: number): Promise<string[]> {
   } catch (error) {
     console.error('[Discogs API] Genres error:', error)
     return []
+  }
+}
+
+/**
+ * Get detailed release information from Discogs
+ */
+export async function getDiscogsReleaseDetails(
+  releaseId: number,
+  type?: 'release' | 'master'
+): Promise<DiscogsDetailedRelease | null> {
+  try {
+    const result = await rateLimiter.addToQueue(async () => {
+      // Use appropriate endpoint based on type
+      const endpoint = type === 'master' ? 'masters' : 'releases'
+      const url = `https://api.discogs.com/${endpoint}/${releaseId}`
+
+      console.log(`[Discogs API] Fetching ${type || 'release'} details for ID: ${releaseId}`)
+
+      const response = await fetch(url, {
+        headers: getDiscogsHeaders()
+      })
+
+      if (!response.ok) {
+        const errorData: DiscogsApiError = await response.json()
+        throw new Error(`Discogs API error (${response.status}): ${errorData.message}`)
+      }
+
+      return response.json() as Promise<DiscogsDetailedRelease>
+    })
+
+    return result
+
+  } catch (error) {
+    console.error('[Discogs API] Release details error:', error)
+    return null
+  }
+}
+
+/**
+ * Get artist discography with detailed release information
+ */
+export async function getArtistDiscography(
+  artistId: number,
+  options: {
+    maxResults?: number
+    sort?: 'year' | 'title' | 'format'
+    order?: 'asc' | 'desc'
+    includeDetails?: boolean
+  } = {}
+): Promise<StoryblokReleaseItem[]> {
+  const { maxResults = 20, sort = 'year', order = 'desc', includeDetails = true } = options
+
+  try {
+    console.log(`[Discogs API] Fetching discography for artist ID: ${artistId}`)
+
+    // Get artist releases with a higher limit to allow for filtering
+    const releases = await getDiscogsArtistReleases(artistId, { maxResults: maxResults * 3, sort, order })
+    const discographyItems: StoryblokReleaseItem[] = []
+
+    // Define formats we want to include (albums, singles, EPs)
+    const allowedFormats = new Set([
+      'album', 'lp', 'vinyl', 'cd', '12"', '7"', 'single', 'ep', 'maxi-single'
+    ])
+
+    // Process each release
+    console.log(`[Discography Filter] Processing ${releases.length} releases for filtering...`)
+
+    for (let i = 0; i < releases.length && discographyItems.length < maxResults; i++) {
+      const release = releases[i]
+      let detailedRelease: DiscogsDetailedRelease | null = null
+
+      // Optionally fetch detailed information
+      if (includeDetails) {
+        detailedRelease = await getDiscogsReleaseDetails(release.id, release.type as 'release' | 'master')
+        console.log(`[Discography Filter] Fetched details for "${release.title}": ${detailedRelease ? 'success' : 'failed'}`)
+      }
+
+      // Check if this release should be included based on format
+      const releaseToCheck = detailedRelease || release
+      const formats = releaseToCheck.formats?.map(f => f.name?.toLowerCase() || '') || []
+
+      // More lenient format checking - include if ANY format info suggests it's a main release
+      const hasAllowedFormat = formats.length === 0 || // Include releases with no format info
+        formats.some(format =>
+          allowedFormats.has(format) ||
+          format.includes('album') ||
+          format.includes('single') ||
+          format.includes('ep') ||
+          format.includes('lp') ||
+          format.includes('vinyl') ||
+          format.includes('cd')
+        )
+
+      // Skip compilations, bootlegs, and other unwanted types
+      const title = releaseToCheck.title?.toLowerCase() || ''
+      const isCompilation = title.includes('compilation') || title.includes('best of') || title.includes('greatest hits')
+      const isBootleg = title.includes('bootleg') || title.includes('unofficial')
+      const isRemix = title.includes('remix') && !title.includes('remixes')  // Skip single remixes but allow remix albums
+
+      // Skip very obvious non-album releases
+      const isObviousSingle = title.includes(' / ') || title.includes(' b/w ')  // likely single with B-side
+
+      // DEBUG: Log only problematic cases
+      if (!hasAllowedFormat || isCompilation || isBootleg || isRemix || isObviousSingle) {
+        console.log(`[Discography Filter] SKIPPING "${releaseToCheck.title}": formats=[${formats.join(', ')}], comp=${isCompilation}, bootleg=${isBootleg}, remix=${isRemix}, single=${isObviousSingle}`)
+      }
+
+      if (hasAllowedFormat && !isCompilation && !isBootleg && !isRemix && !isObviousSingle) {
+        // Create Storyblok release item
+        const releaseItem = transformToStoryblokReleaseItem(releaseToCheck)
+        if (releaseItem) {
+          discographyItems.push(releaseItem)
+          console.log(`  ✓ Added to discography (${discographyItems.length}/${maxResults})`)
+        } else {
+          console.log(`  ✗ Failed to transform to StoryblokReleaseItem`)
+        }
+      } else {
+        console.log(`  ✗ Filtered out`)
+      }
+
+      // Log progress
+      if ((i + 1) % 10 === 0) {
+        console.log(`[Discogs API] Processed ${i + 1}/${releases.length} releases, found ${discographyItems.length} albums/singles/EPs`)
+      }
+    }
+
+    console.log(`[Discogs API] Discography completed: ${discographyItems.length} albums/singles/EPs from ${releases.length} total releases`)
+    return discographyItems
+
+  } catch (error) {
+    console.error('[Discogs API] Discography error:', error)
+    return []
+  }
+}
+
+/**
+ * Extract Discogs artist ID from URL
+ */
+function extractArtistIdFromUrl(discogsUrl: string): number | null {
+  try {
+    // Handle various Discogs URL formats:
+    // https://www.discogs.com/artist/123456-Artist-Name
+    // https://discogs.com/artist/123456-Artist-Name
+    // /artist/123456-Artist-Name
+    const match = discogsUrl.match(/\/artist\/(\d+)(?:-|$)/)
+    if (match && match[1]) {
+      return parseInt(match[1], 10)
+    }
+    return null
+  } catch (error) {
+    console.error('[Discogs URL Parser] Error parsing URL:', error)
+    return null
+  }
+}
+
+/**
+ * Transform Discogs release to Storyblok release_item block
+ */
+function transformToStoryblokReleaseItem(release: DiscogsRelease | DiscogsDetailedRelease): StoryblokReleaseItem | null {
+  try {
+    // Generate unique ID for Storyblok block
+    const uid = `release_${release.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
+    // Determine release type
+    // Check multiple indicators for master releases
+    let releaseType: 'master' | 'release' | 'appearance' | 'track' = 'release'
+
+    // Check if it's explicitly marked as master
+    if ('type' in release && release.type === 'master') {
+      releaseType = 'master'
+    }
+    // Check if it has main_release field (masters have this)
+    else if ('main_release' in release && release.main_release) {
+      releaseType = 'master'
+    }
+    // Check if the resource_url indicates it's a master
+    else if ('resource_url' in release && release.resource_url && release.resource_url.includes('/masters/')) {
+      releaseType = 'master'
+    }
+
+    console.log(`[Release Type Detection] "${release.title}": type=${releaseType}, has main_release=${'main_release' in release}, type field=${release.type || 'none'}`)
+
+    // Get label and catalog info with improved fallback logic
+    const primaryLabel = release.labels?.[0]
+
+    // Try multiple strategies to get a valid label name
+    let label = 'Unknown Label'
+    let catalogNo = ''
+
+    if (primaryLabel) {
+      // First try the name field
+      if (primaryLabel.name && primaryLabel.name.trim()) {
+        label = primaryLabel.name.trim()
+        catalogNo = primaryLabel.catno || ''
+      } else if (release.labels && release.labels.length > 0) {
+        // Try to find any label with a valid name
+        for (const labelItem of release.labels) {
+          if (labelItem.name && labelItem.name.trim()) {
+            label = labelItem.name.trim()
+            catalogNo = labelItem.catno || ''
+            break
+          }
+        }
+      }
+    }
+
+    // Enhanced debug logging for label extraction
+    if (label === 'Unknown Label' && release.labels?.length) {
+      console.log(`[Label Debug] Release "${release.title}": Failed to extract label name from:`, {
+        labelsCount: release.labels.length,
+        firstLabel: release.labels[0],
+        allLabels: release.labels.map(l => ({ name: l.name, catno: l.catno }))
+      })
+    } else if (!release.labels?.length) {
+      console.log(`[Label Debug] Release "${release.title}": no labels array`)
+    } else {
+      console.log(`[Label Debug] Release "${release.title}": Successfully extracted label "${label}"`)
+    }
+
+    // Get formats
+    const formats = release.formats?.map(format => {
+      const formatName = format.name || 'Unknown'
+      const descriptions = format.descriptions?.join(', ') || ''
+      return descriptions ? `${formatName} (${descriptions})` : formatName
+    }) || []
+
+    // Get cover image
+    let coverImageUrl = release.cover_image || release.thumb || ''
+    if ('images' in release && release.images?.length) {
+      coverImageUrl = release.images[0]?.uri || coverImageUrl
+    }
+
+    // Create URLs - use master or release depending on type
+    const discogsUrl = releaseType === 'master'
+      ? `https://www.discogs.com/master/${release.id}`
+      : `https://www.discogs.com/release/${release.id}`
+
+    return {
+      component: 'release_item',
+      _uid: uid,
+      title: release.title,
+      year: release.year || 0,
+      type: releaseType,
+      label,
+      catalog_no: catalogNo,
+      cover_image_url: coverImageUrl,
+      // Put the ID in the correct field based on the release type
+      discogs_release_id: releaseType === 'master' ? undefined : release.id,
+      discogs_master_id: releaseType === 'master' ? release.id : (('master_id' in release) ? release.master_id : undefined),
+      discogs_url: discogsUrl,
+      formats
+    }
+
+  } catch (error) {
+    console.error('[Discogs API] Transform error:', error)
+    return null
+  }
+}
+
+/**
+ * Search for multiple artists on Discogs for user selection
+ */
+export async function searchDiscogsArtists(
+  query: string,
+  limit: number = 10
+): Promise<Array<{
+  id: number
+  name: string
+  profile?: string
+  images?: Array<{ type: string; uri: string }>
+  resource_url: string
+  uri: string
+}> | null> {
+  try {
+    const result = await rateLimiter.addToQueue(async () => {
+      const url = `https://api.discogs.com/database/search?q=${encodeURIComponent(query)}&type=artist&per_page=${limit}`
+
+      console.log(`[Discogs API] Searching artists: ${url}`)
+
+      const response = await fetch(url, {
+        headers: getDiscogsHeaders()
+      })
+
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data.results || []
+    })
+
+    if (!result || result.length === 0) {
+      console.log('[Discogs API] No artists found')
+      return []
+    }
+
+    console.log(`[Discogs API] Found ${result.length} artists`)
+
+    return result.map((artist: any) => ({
+      id: artist.id,
+      name: artist.title, // Discogs search uses 'title' field for name
+      profile: artist.profile || '',
+      images: artist.images || [],
+      resource_url: artist.resource_url,
+      uri: artist.uri
+    }))
+
+  } catch (error) {
+    console.error('[Discogs API] Artists search error:', error)
+    return null
+  }
+}
+
+/**
+ * Get artist discography and format for Storyblok artist profile
+ */
+export async function getArtistDiscographyByIdForProfile(
+  artistId: number,
+  options: {
+    maxReleases?: number
+    includeDetails?: boolean
+  } = {}
+): Promise<{
+  success: boolean
+  releases: StoryblokReleaseItem[]
+  artistInfo: DiscogsArtistResult | null
+  error?: string
+}> {
+  const { maxReleases = 15, includeDetails = true } = options
+
+  try {
+    console.log(`[Discogs API] Getting discography for artist ID: ${artistId}`)
+
+    // Get the artist info directly by ID
+    let artistInfo: DiscogsArtistResult | null = null
+    try {
+      const result = await rateLimiter.addToQueue(async () => {
+        const url = `https://api.discogs.com/artists/${artistId}`
+        const response = await fetch(url, {
+          headers: getDiscogsHeaders()
+        })
+
+        if (!response.ok) {
+          throw new Error(`Artist fetch failed: ${response.status}`)
+        }
+
+        return response.json()
+      })
+
+      artistInfo = {
+        id: result.id,
+        name: result.name,
+        resource_url: result.resource_url,
+        uri: result.uri,
+        // Additional fields from direct artist fetch
+        profile: result.profile,
+        data_quality: result.data_quality,
+        namevariations: result.namevariations || [],
+        aliases: result.aliases || [],
+        urls: result.urls || [],
+        images: result.images || []
+      }
+
+      console.log(`[Discogs API] Found artist: ${artistInfo.name}`)
+    } catch (error) {
+      console.warn(`[Discogs API] Could not fetch artist info for ID ${artistId}:`, error)
+      // Continue with discography fetch even if artist info fails
+    }
+
+    // Get artist releases
+    const releases = await getArtistReleases(artistId, {
+      maxResults: maxReleases * 3, // Get more to filter down
+      includeDetails
+    })
+
+    if (releases.length === 0) {
+      return {
+        success: false,
+        releases: [],
+        artistInfo,
+        error: `No releases found for artist ID ${artistId}`
+      }
+    }
+
+    console.log(`[Discogs API] Successfully fetched ${releases.length} releases`)
+
+    return {
+      success: true,
+      releases: releases.slice(0, maxReleases),
+      artistInfo,
+      error: undefined
+    }
+
+  } catch (error) {
+    console.error('[Discogs API] Discography by ID error:', error)
+    return {
+      success: false,
+      releases: [],
+      artistInfo: null,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    }
+  }
+}
+
+export async function getArtistDiscographyForProfile(
+  artistName: string,
+  options: {
+    maxReleases?: number
+    includeDetails?: boolean
+    discogsUrl?: string  // New optional parameter
+    discogsId?: string   // New optional parameter
+  } = {}
+): Promise<{
+  success: boolean
+  releases: StoryblokReleaseItem[]
+  artistInfo: DiscogsArtistResult | null
+  error?: string
+}> {
+  const { maxReleases = 15, includeDetails = true, discogsUrl, discogsId } = options
+
+  try {
+    // Priority 1: Use discogsId if provided
+    if (discogsId) {
+      const artistIdNum = parseInt(discogsId.toString(), 10)
+      if (!isNaN(artistIdNum)) {
+        console.log(`[Discogs API] Getting discography using provided ID: ${artistIdNum}`)
+        return await getArtistDiscographyByIdForProfile(artistIdNum, { maxReleases, includeDetails })
+      } else {
+        console.warn(`[Discogs API] Invalid discogs_id provided: ${discogsId}`)
+      }
+    }
+
+    // Priority 2: If we have a Discogs URL, extract the artist ID and use direct fetch
+    if (discogsUrl) {
+      console.log(`[Discogs API] Getting discography using URL: ${discogsUrl}`)
+
+      const artistId = extractArtistIdFromUrl(discogsUrl)
+      if (artistId) {
+        console.log(`[Discogs API] Extracted artist ID: ${artistId}`)
+        return await getArtistDiscographyByIdForProfile(artistId, { maxReleases, includeDetails })
+      } else {
+        console.warn(`[Discogs API] Could not extract artist ID from URL: ${discogsUrl}`)
+        // Fall back to name search
+      }
+    }
+
+    console.log(`[Discogs API] Getting discography by searching for: ${artistName}`)
+
+    // First, find the artist
+    const artistInfo = await searchDiscogsArtist(artistName)
+    if (!artistInfo) {
+      return {
+        success: false,
+        releases: [],
+        artistInfo: null,
+        error: `Artist "${artistName}" not found on Discogs`
+      }
+    }
+
+    // Get the discography
+    const releases = await getArtistDiscography(artistInfo.artistId, {
+      maxResults: maxReleases,
+      includeDetails
+    })
+
+    return {
+      success: true,
+      releases,
+      artistInfo
+    }
+
+  } catch (error) {
+    console.error('[Discogs API] Profile discography error:', error)
+    return {
+      success: false,
+      releases: [],
+      artistInfo: null,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
   }
 }
