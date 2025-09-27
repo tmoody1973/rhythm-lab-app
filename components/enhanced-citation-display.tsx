@@ -231,22 +231,43 @@ export function EnhancedCitationDisplay({
 
   const renderCompactCitation = (citation: Citation) => {
     const isValidUrl = citation.url && !citation.url.startsWith('#source-')
-    const Component = isValidUrl ? 'a' : 'div'
-    const linkProps = isValidUrl ? {
-      href: citation.url,
-      target: "_blank",
-      rel: "noopener noreferrer"
-    } : {}
+
+    if (isValidUrl) {
+      return (
+        <a
+          key={citation.number}
+          href={citation.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all duration-200 border border-gray-200 hover:border-gray-300"
+        >
+          <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+            {citation.number}
+          </div>
+          <div className="flex-grow min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs">{getSourceIcon(citation.url, citation.type)}</span>
+              <span className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-700 transition-colors">
+                {citation.title}
+              </span>
+            </div>
+            <div className="text-xs text-gray-500 truncate">
+              {citation.domain}
+            </div>
+          </div>
+          <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
+        </a>
+      )
+    }
 
     return (
-      <Component
+      <div
         key={citation.number}
-        {...linkProps}
         className="group flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all duration-200 border border-gray-200 hover:border-gray-300"
       >
-      <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
-        {citation.number}
-      </div>
+        <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+          {citation.number}
+        </div>
         <div className="flex-grow min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-xs">{getSourceIcon(citation.url, citation.type)}</span>
@@ -258,8 +279,7 @@ export function EnhancedCitationDisplay({
             {citation.domain}
           </div>
         </div>
-        {isValidUrl && <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />}
-      </Component>
+      </div>
     )
   }
 

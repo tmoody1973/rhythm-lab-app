@@ -22,6 +22,13 @@ interface CitationDisplayProps {
 }
 
 export function CitationDisplay({ content, searchResults, className = '' }: CitationDisplayProps) {
+  // Ensure content is a string
+  const contentStr = typeof content === 'string'
+    ? content
+    : (typeof content === 'object' && content !== null && 'content' in content)
+      ? String((content as any).content)
+      : String(content || '')
+
   // Extract citations from the content
   const extractCitations = (text: string): { mainContent: string; citations: Citation[] } => {
     const citations: Citation[] = []
@@ -69,16 +76,16 @@ export function CitationDisplay({ content, searchResults, className = '' }: Cita
       title: result.title,
       url: result.url
     })) :
-    extractCitations(content).citations
+    extractCitations(contentStr).citations
 
-  const mainContent = searchResults ? content : extractCitations(content).mainContent
+  const mainContent = searchResults ? contentStr : extractCitations(contentStr).mainContent
 
   if (citations.length === 0) {
     return (
       <div className={className}>
         <div className="prose prose-lg max-w-none">
           <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
-            {content}
+            {contentStr}
           </div>
         </div>
       </div>

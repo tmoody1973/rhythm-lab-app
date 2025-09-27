@@ -10,10 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Loader2, Sparkles, FileText, Mic, Upload, Eye, ExternalLink, Settings, Image, Disc3, CheckCircle2, XCircle, Music, Clock, Calendar, Filter, ChevronDown, ChevronRight } from 'lucide-react'
+import { Loader2, Sparkles, FileText, Mic, Upload, Eye, ExternalLink, Settings, Image, Disc3, CheckCircle2, XCircle, Music, Clock, Calendar, Filter, ChevronDown, ChevronRight, Play, Edit, Save, Volume2, Download } from 'lucide-react'
 import { ContentType } from '@/lib/ai/content-generator'
 import { ImageSelector } from '@/components/admin/image-selector'
 import { CitationDisplay } from '@/components/admin/citation-display'
+import { EnhancedCitationDisplay } from '@/components/enhanced-citation-display'
 import { ImageResult } from '@/lib/serpapi/image-search'
 import SmartArtistSearch from '@/components/smart-artist-search'
 
@@ -82,6 +83,8 @@ export default function ContentGenerationPage() {
   const [discographyData, setDiscographyData] = useState<any[] | null>(null)
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
   const [isGeneratingDiscography, setIsGeneratingDiscography] = useState(false)
+  const [citationDisplayMode, setCitationDisplayMode] = useState<'classic' | 'enhanced'>('enhanced')
+  const [enhancedCitationMode, setEnhancedCitationMode] = useState<'full' | 'compact' | 'minimal' | 'grid'>('compact')
 
   // Content History State
   const [contentHistory, setContentHistory] = useState<any[]>([])
@@ -278,55 +281,368 @@ export default function ContentGenerationPage() {
     }
   }, [publishResult])
 
-  const [isGeneratingPodcast, setIsGeneratingPodcast] = useState(false)
-  const [podcastResult, setPodcastResult] = useState<{ success: boolean; podcast?: any; storyblok?: any; error?: string } | null>(null)
 
-  const handleGeneratePodcast = async () => {
+  // Sound Refinery podcast state
+  const [isGeneratingScript, setIsGeneratingScript] = useState(false)
+  const [podcastScript, setPodcastScript] = useState<Array<{ speaker: 'Samara' | 'Carl', text: string }> | null>(null)
+  const [isEditingScript, setIsEditingScript] = useState(false)
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
+  const [audioResult, setAudioResult] = useState<{ data: string; mimeType: string; size: number; duration: number } | null>(null)
+  const [scriptGenerationError, setScriptGenerationError] = useState<string | null>(null)
+  const [audioGenerationError, setAudioGenerationError] = useState<string | null>(null)
+  const [isUploadingToStoryblok, setIsUploadingToStoryblok] = useState(false)
+  const [storyblokUploadResult, setStoryblokUploadResult] = useState<any>(null)
+  const [isPublishingToPodbean, setIsPublishingToPodbean] = useState(false)
+  const [podbeanPublishResult, setPodbeanPublishResult] = useState<any>(null)
+  const [currentPodcastId, setCurrentPodcastId] = useState<string | null>(null)
+
+  // Sound Refinery script generation
+  const handleGenerateScript = async () => {
     if (!generatedContent || request.type !== 'deep-dive') return
 
-    setIsGeneratingPodcast(true)
-    setPodcastResult(null)
+    setIsGeneratingScript(true)
+    setScriptGenerationError(null)
+    setPodcastScript(null)
 
     try {
-      const response = await fetch('/api/admin/generate-podcast', {
+      // Create podcast history entry
+      const historyResponse = await fetch('/api/admin/podcast-history', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: generatedContent.title,
+          sourceType: 'deep-dive',
+          sourceId: publishResult?.storyId,
+          status: 'processing',
+          script: null,
+          audio: null,
+          storyblok: null,
+          podbean: null,
+          metadata: {
+            generatedBy: 'admin-ui'
+          }
+        }),
+      })
+
+      let podcastId = null
+      if (historyResponse.ok) {
+        const historyResult = await historyResponse.json()
+        podcastId = historyResult.entry?.id
+        setCurrentPodcastId(podcastId)
+      }
+
+      const response = await fetch('/api/podcast/generate-script', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           content: generatedContent.content,
-          voice: 'professional_male', // Default voice
-          storyId: publishResult?.storyId // Include story ID if content was published
+          additionalContext: request.additionalContext || ''
         }),
       })
 
       if (!response.ok) {
-        throw new Error('Failed to generate podcast')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to generate script')
       }
 
       const result = await response.json()
-      setPodcastResult(result)
+      if (result.success && result.script) {
+        setPodcastScript(result.script)
 
-      // If audio is returned as base64, create download link
-      if (result.podcast?.audioBase64) {
-        const audioBlob = new Blob([
-          Uint8Array.from(atob(result.podcast.audioBase64), c => c.charCodeAt(0))
-        ], { type: 'audio/mpeg' })
-
-        const url = URL.createObjectURL(audioBlob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `podcast-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`
-        a.click()
-        URL.revokeObjectURL(url)
+        // Update podcast history with script
+        if (podcastId) {
+          await fetch('/api/admin/podcast-history', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id: podcastId,
+              script: result.script,
+              metadata: {
+                scriptGeneratedAt: new Date().toISOString(),
+                scriptLineCount: result.script.length,
+                estimatedDuration: Math.round(result.script.length * 0.8),
+                generatedBy: 'admin-ui'
+              }
+            }),
+          })
+        }
+      } else {
+        throw new Error(result.error || 'Invalid script response')
       }
     } catch (error) {
-      console.error('Podcast generation error:', error)
-      setPodcastResult({ success: false, error: 'Failed to generate podcast' })
+      console.error('Script generation error:', error)
+      setScriptGenerationError(error instanceof Error ? error.message : 'Failed to generate script')
+
+      // Update podcast history with error
+      if (currentPodcastId) {
+        await fetch('/api/admin/podcast-history', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: currentPodcastId,
+            status: 'error',
+            errorMessage: error instanceof Error ? error.message : 'Script generation failed'
+          }),
+        })
+      }
     } finally {
-      setIsGeneratingPodcast(false)
+      setIsGeneratingScript(false)
     }
   }
+
+  // Sound Refinery audio generation
+  const handleGenerateAudio = async () => {
+    if (!podcastScript) return
+
+    setIsGeneratingAudio(true)
+    setAudioGenerationError(null)
+    setAudioResult(null)
+
+    try {
+      const response = await fetch('/api/podcast/generate-audio', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          script: podcastScript
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to generate audio')
+      }
+
+      const result = await response.json()
+      if (result.success && result.audio) {
+        setAudioResult(result.audio)
+
+        // Update podcast history with audio
+        if (currentPodcastId) {
+          await fetch('/api/admin/podcast-history', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id: currentPodcastId,
+              status: 'completed',
+              audio: {
+                duration: result.audio.duration,
+                fileSize: result.audio.size,
+                mimeType: result.audio.mimeType
+              },
+              metadata: {
+                audioGeneratedAt: new Date().toISOString(),
+                generatedBy: 'admin-ui'
+              }
+            }),
+          })
+        }
+      } else {
+        throw new Error(result.error || 'Invalid audio response')
+      }
+    } catch (error) {
+      console.error('Audio generation error:', error)
+      setAudioGenerationError(error instanceof Error ? error.message : 'Failed to generate audio')
+    } finally {
+      setIsGeneratingAudio(false)
+    }
+  }
+
+  // Save edited script
+  const handleSaveScript = () => {
+    setIsEditingScript(false)
+  }
+
+  // Download audio file
+  const handleDownloadAudio = () => {
+    if (!audioResult || !generatedContent) return
+
+    try {
+      const audioBlob = new Blob([
+        Uint8Array.from(atob(audioResult.data), c => c.charCodeAt(0))
+      ], { type: audioResult.mimeType })
+
+      const url = URL.createObjectURL(audioBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Download error:', error)
+    }
+  }
+
+  // Upload audio to Supabase Storage
+  const handleUploadToSupabase = async () => {
+    if (!audioResult || !generatedContent) return
+
+    setIsUploadingToStoryblok(true)
+    setStoryblokUploadResult(null)
+
+    try {
+      const fileName = `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`
+      const title = `Sound Refinery: ${generatedContent.title}`
+
+      const response = await fetch('/api/podcast/upload-to-supabase', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          audioData: audioResult.data,
+          audioMimeType: audioResult.mimeType,
+          fileName: fileName,
+          title: title,
+          storyId: publishResult?.storyId // Include story ID if content was published to Storyblok
+        }),
+      })
+
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type') || ''
+        let errorMessage = 'Failed to upload to Supabase Storage'
+
+        try {
+          if (contentType.includes('application/json')) {
+            const errorData = await response.json()
+            errorMessage = errorData?.message || errorData?.error || errorMessage
+          } else {
+            const textError = await response.text()
+            errorMessage = textError?.slice(0, 400) || errorMessage
+          }
+        } catch {
+          // Keep default message if parsing fails
+        }
+
+        throw new Error(errorMessage)
+      }
+
+      const result = await response.json()
+      setStoryblokUploadResult(result)
+
+      // Update podcast history with Storyblok upload
+      if (currentPodcastId && result.success) {
+        await fetch('/api/admin/podcast-history', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: currentPodcastId,
+            audio: {
+              audioUrl: result.asset?.url
+            },
+            storyblok: {
+              assetId: result.asset?.id,
+              storyId: result.storyUpdate?.storyId,
+              assetUrl: result.asset?.url
+            },
+            metadata: {
+              uploadedToStoryblokAt: new Date().toISOString(),
+              generatedBy: 'admin-ui'
+            }
+          }),
+        })
+      }
+    } catch (error) {
+      console.error('Storyblok upload error:', error)
+      setStoryblokUploadResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to upload to Storyblok'
+      })
+    } finally {
+      setIsUploadingToStoryblok(false)
+    }
+  }
+
+  // Publish audio to Podbean
+  const handlePublishToPodbean = async () => {
+    if (!audioResult || !generatedContent) return
+    setIsPublishingToPodbean(true)
+    setPodbeanPublishResult(null)
+
+    try {
+      const fileName = `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`
+      const title = `Sound Refinery: ${generatedContent.title}`
+
+      const response = await fetch('/api/podcast/publish-to-podbean', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          audioData: audioResult.data,
+          audioMimeType: audioResult.mimeType,
+          fileName: fileName,
+          title: title,
+          description: generatedContent.content,
+          storyId: publishResult?.storyId,
+          episodeType: 'public',
+          status: 'draft' // Start as draft
+        }),
+      })
+
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type') || ''
+        let errorMessage = 'Failed to publish to Podbean'
+
+        try {
+          if (contentType.includes('application/json')) {
+            const errorData = await response.json()
+            errorMessage = errorData?.message || errorData?.error || errorMessage
+          } else {
+            const textError = await response.text()
+            errorMessage = textError?.slice(0, 400) || errorMessage
+          }
+        } catch {
+          // Keep default message if parsing fails
+        }
+
+        throw new Error(errorMessage)
+      }
+
+      const result = await response.json()
+      setPodbeanPublishResult(result)
+
+      // Update podcast history with Podbean publication
+      if (currentPodcastId && result.success) {
+        await fetch('/api/admin/podcast-history', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: currentPodcastId,
+            podbean_episode_url: result.episode.url,
+            podbean_episode_id: result.episode.id,
+            podbean_status: result.episode.status,
+            status: 'published_to_podbean'
+          }),
+        })
+      }
+
+    } catch (error: any) {
+      console.error('Podbean publish error:', error)
+      setPodbeanPublishResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to publish to Podbean'
+      })
+    } finally {
+      setIsPublishingToPodbean(false)
+    }
+  }
+
 
   return (
     <div className="space-y-6">
@@ -358,6 +674,10 @@ export default function ContentGenerationPage() {
           <TabsTrigger value="images" disabled={!generatedContent}>
             <Image className="w-4 h-4 mr-2" />
             Images
+          </TabsTrigger>
+          <TabsTrigger value="podcast" disabled={!generatedContent || request.type !== 'deep-dive'}>
+            <Volume2 className="w-4 h-4 mr-2" />
+            Generate Podcast
           </TabsTrigger>
           <TabsTrigger value="history">
             <FileText className="w-4 h-4 mr-2" />
@@ -625,11 +945,71 @@ export default function ContentGenerationPage() {
                       ))}
                     </div>
 
-                    <CitationDisplay
-                      content={generatedContent.content}
-                      searchResults={generatedContent.searchResults}
-                      className="prose max-w-none"
-                    />
+                    {/* Citation Display Controls */}
+                    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-medium text-gray-700">Citation Display Settings</h3>
+                        <div className="flex items-center gap-4">
+                          <Select value={citationDisplayMode} onValueChange={(value: 'classic' | 'enhanced') => setCitationDisplayMode(value)}>
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="classic">Classic</SelectItem>
+                              <SelectItem value="enhanced">Enhanced</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {citationDisplayMode === 'enhanced' && (
+                            <Select value={enhancedCitationMode} onValueChange={(value: 'full' | 'compact' | 'minimal' | 'grid') => setEnhancedCitationMode(value)}>
+                              <SelectTrigger className="w-24">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="full">Full</SelectItem>
+                                <SelectItem value="compact">Compact</SelectItem>
+                                <SelectItem value="minimal">Minimal</SelectItem>
+                                <SelectItem value="grid">Grid</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {citationDisplayMode === 'enhanced' && (
+                          <>
+                            <strong>{enhancedCitationMode}:</strong> {
+                              enhancedCitationMode === 'full' ? 'Best for academic/research content with detailed source info' :
+                              enhancedCitationMode === 'compact' ? 'Ideal for blog posts and articles with moderate detail' :
+                              enhancedCitationMode === 'minimal' ? 'Perfect for social media and mobile-first content' :
+                              'Great for visual browsing and resource collections'
+                            }
+                          </>
+                        )}
+                        {citationDisplayMode === 'classic' && (
+                          <>
+                            <strong>Classic:</strong> Original design with simple numbered references
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Citation Display */}
+                    {citationDisplayMode === 'classic' ? (
+                      <CitationDisplay
+                        content={generatedContent.content}
+                        searchResults={generatedContent.searchResults}
+                        className="prose max-w-none"
+                      />
+                    ) : (
+                      <EnhancedCitationDisplay
+                        content={generatedContent.content}
+                        searchResults={generatedContent.searchResults}
+                        displayMode={enhancedCitationMode}
+                        maxVisible={5}
+                        autoCollapse={true}
+                        className="prose max-w-none"
+                      />
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -708,27 +1088,6 @@ export default function ContentGenerationPage() {
                     </>
                   )}
                 </Button>
-
-                {request.type === 'deep-dive' && (
-                  <Button
-                    onClick={handleGeneratePodcast}
-                    disabled={isGeneratingPodcast}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    {isGeneratingPodcast ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Generating Podcast...
-                      </>
-                    ) : (
-                      <>
-                        <Mic className="w-4 h-4 mr-2" />
-                        Generate Podcast
-                      </>
-                    )}
-                  </Button>
-                )}
               </div>
 
               {publishResult && (
@@ -759,58 +1118,6 @@ export default function ContentGenerationPage() {
                 </Card>
               )}
 
-              {podcastResult && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Mic className="w-5 h-5 mr-2" />
-                      Podcast Generation Result
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {podcastResult.success ? (
-                      <div className="space-y-4">
-                        <div className="p-4 bg-green-50 rounded-lg">
-                          <p className="font-medium text-green-900">Podcast generated successfully!</p>
-                          {podcastResult.podcast && (
-                            <div className="mt-2 text-sm text-green-700">
-                              <p>Audio size: {(podcastResult.podcast.audioSize / 1024 / 1024).toFixed(2)} MB</p>
-                              <p>Estimated duration: ~{podcastResult.podcast.duration} minutes</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {podcastResult.storyblok && (
-                          <div className="p-4 bg-blue-50 rounded-lg">
-                            <p className="font-medium text-blue-900">Storyblok Integration:</p>
-                            <div className="mt-1 text-sm text-blue-700">
-                              <p>Audio uploaded: {podcastResult.storyblok.audioUploaded ? '✅ Yes' : '❌ No'}</p>
-                              <p>Story updated: {podcastResult.storyblok.storyUpdated ? '✅ Yes' : '❌ No'}</p>
-                              {podcastResult.storyblok.error && (
-                                <p className="text-red-600">Error: {podcastResult.storyblok.error}</p>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {podcastResult.podcast?.script && (
-                          <div>
-                            <Label>Generated Podcast Script:</Label>
-                            <div className="mt-2 p-4 bg-gray-50 rounded-lg">
-                              <p className="text-sm whitespace-pre-wrap">{podcastResult.podcast.script}</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="p-4 bg-red-50 rounded-lg">
-                        <p className="font-medium text-red-900">Failed to generate podcast</p>
-                        <p className="text-sm text-red-700">{podcastResult.error}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
             </>
           )}
         </TabsContent>
@@ -823,6 +1130,363 @@ export default function ContentGenerationPage() {
               contentType={request.type}
               selectedImage={selectedImage}
             />
+          )}
+        </TabsContent>
+
+        <TabsContent value="podcast" className="space-y-4">
+          {generatedContent && request.type === 'deep-dive' && (
+            <div className="space-y-6">
+              {/* Sound Refinery Header */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg">
+                      <Volume2 className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-2xl">Sound Refinery Podcast Generator</CardTitle>
+                      <CardDescription>
+                        Convert your deep-dive article into a BBC/NPR-style conversational podcast with Samara and Carl
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+
+              {/* Step 1: Generate Script */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <span className="flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-600 rounded-full text-sm font-bold">1</span>
+                    Generate Conversational Script
+                  </CardTitle>
+                  <CardDescription>
+                    Create a natural dialogue between Samara and Carl based on your article content
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button
+                    onClick={handleGenerateScript}
+                    disabled={isGeneratingScript}
+                    className="w-full"
+                  >
+                    {isGeneratingScript ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating Script with Perplexity...
+                      </>
+                    ) : (
+                      <>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Generate Podcast Script
+                      </>
+                    )}
+                  </Button>
+
+                  {scriptGenerationError && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-red-900 font-medium">Script Generation Error</p>
+                      <p className="text-red-700 text-sm">{scriptGenerationError}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Step 2: Review & Edit Script */}
+              {podcastScript && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-6 h-6 bg-green-100 text-green-600 rounded-full text-sm font-bold">2</span>
+                          Review & Edit Script
+                        </CardTitle>
+                        <CardDescription>
+                          {podcastScript.length} dialogue exchanges • Est. {Math.round(podcastScript.length * 0.8)} minutes
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isEditingScript ? (
+                          <Button onClick={handleSaveScript} size="sm">
+                            <Save className="w-4 h-4 mr-2" />
+                            Save
+                          </Button>
+                        ) : (
+                          <Button onClick={() => setIsEditingScript(true)} variant="outline" size="sm">
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="max-h-96 overflow-y-auto space-y-3 p-4 bg-gray-50 rounded-lg border">
+                      {podcastScript.map((line, index) => (
+                        <div key={index} className="flex gap-3">
+                          <div className={`w-16 text-xs font-medium px-2 py-1 rounded ${
+                            line.speaker === 'Samara'
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'bg-blue-100 text-blue-700'
+                          }`}>
+                            {line.speaker}
+                          </div>
+                          {isEditingScript ? (
+                            <Textarea
+                              value={line.text}
+                              onChange={(e) => {
+                                const newScript = [...podcastScript]
+                                newScript[index].text = e.target.value
+                                setPodcastScript(newScript)
+                              }}
+                              className="flex-1 min-h-[60px]"
+                            />
+                          ) : (
+                            <p className="flex-1 text-sm leading-relaxed">{line.text}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Step 3: Generate Audio */}
+              {podcastScript && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <span className="flex items-center justify-center w-6 h-6 bg-orange-100 text-orange-600 rounded-full text-sm font-bold">3</span>
+                      Generate Audio with ElevenLabs
+                    </CardTitle>
+                    <CardDescription>
+                      Create high-quality audio using Samara and Carl's voices
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Button
+                      onClick={handleGenerateAudio}
+                      disabled={isGeneratingAudio}
+                      className="w-full"
+                    >
+                      {isGeneratingAudio ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Generating Audio...
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="w-4 h-4 mr-2" />
+                          Generate Audio
+                        </>
+                      )}
+                    </Button>
+
+                    {audioGenerationError && (
+                      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-red-900 font-medium">Audio Generation Error</p>
+                        <p className="text-red-700 text-sm">{audioGenerationError}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Step 4: Download & Use */}
+              {audioResult && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <span className="flex items-center justify-center w-6 h-6 bg-green-100 text-green-600 rounded-full text-sm font-bold">✓</span>
+                      Podcast Ready!
+                    </CardTitle>
+                    <CardDescription>
+                      Your Sound Refinery podcast has been generated successfully
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-green-900">Audio Generated Successfully</p>
+                          <div className="text-sm text-green-700 mt-1">
+                            <p>Size: {(audioResult.size / 1024 / 1024).toFixed(2)} MB</p>
+                            <p>Duration: ~{audioResult.duration} minutes</p>
+                            <p>Format: {audioResult.mimeType}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button onClick={handleDownloadAudio} size="sm" variant="outline">
+                            <Download className="w-4 h-4 mr-2" />
+                            Download MP3
+                          </Button>
+                          <Button
+                            onClick={handleUploadToSupabase}
+                            size="sm"
+                            disabled={isUploadingToStoryblok}
+                          >
+                            {isUploadingToStoryblok ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="w-4 h-4 mr-2" />
+                                Upload to Cloud Storage
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            onClick={handlePublishToPodbean}
+                            size="sm"
+                            disabled={isPublishingToPodbean}
+                            variant="secondary"
+                          >
+                            {isPublishingToPodbean ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Publishing...
+                              </>
+                            ) : (
+                              <>
+                                <Mic className="w-4 h-4 mr-2" />
+                                Publish to Podbean
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Audio Preview */}
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <Label className="text-sm font-medium text-blue-900">Audio Preview</Label>
+                      <audio
+                        controls
+                        className="w-full mt-2"
+                        src={`data:${audioResult.mimeType};base64,${audioResult.data}`}
+                      >
+                        Your browser does not support the audio element.
+                      </audio>
+                    </div>
+
+                    {/* Cloud Storage Upload Results */}
+                    {storyblokUploadResult && (
+                      <div className={`p-4 rounded-lg border ${
+                        storyblokUploadResult.success
+                          ? 'bg-green-50 border-green-200'
+                          : 'bg-red-50 border-red-200'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className={`font-medium ${
+                              storyblokUploadResult.success ? 'text-green-900' : 'text-red-900'
+                            }`}>
+                              {storyblokUploadResult.success
+                                ? 'Audio Uploaded to Cloud Storage Successfully!'
+                                : 'Cloud Storage Upload Failed'
+                              }
+                            </p>
+                            {storyblokUploadResult.success ? (
+                              <div className="text-sm text-green-700 mt-1">
+                                <p>Storage: {storyblokUploadResult.audio?.storage || 'Supabase'}</p>
+                                <p>File: {storyblokUploadResult.audio?.fileName}</p>
+                                {storyblokUploadResult.storyUpdate && (
+                                  <p>✅ Deep-dive article updated with podcast audio URL</p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-red-700 mt-1">
+                                {storyblokUploadResult.error}
+                              </p>
+                            )}
+                          </div>
+                          {storyblokUploadResult.success && storyblokUploadResult.audio?.url && (
+                            <Button size="sm" variant="outline" asChild>
+                              <a href={storyblokUploadResult.audio.url} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                Listen
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Podbean Publish Results */}
+                    {podbeanPublishResult && (
+                      <div className={`p-4 rounded-lg border ${
+                        podbeanPublishResult.success
+                          ? 'bg-purple-50 border-purple-200'
+                          : 'bg-red-50 border-red-200'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className={`font-medium ${
+                              podbeanPublishResult.success ? 'text-purple-900' : 'text-red-900'
+                            }`}>
+                              {podbeanPublishResult.success
+                                ? 'Episode Published to Podbean Successfully!'
+                                : 'Podbean Publication Failed'
+                              }
+                            </p>
+                            {podbeanPublishResult.success ? (
+                              <div className="text-sm text-purple-700 mt-1">
+                                <p>Platform: {podbeanPublishResult.episode?.platform || 'Podbean'}</p>
+                                <p>Episode ID: {String(podbeanPublishResult.episode?.id || 'N/A')}</p>
+                                <p>Status: {String(podbeanPublishResult.episode?.status || 'Unknown')}</p>
+                                {podbeanPublishResult.storyUpdate && (
+                                  <p>✅ Deep-dive article updated with Podbean episode details</p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-red-700 mt-1">
+                                {String(podbeanPublishResult.error || 'Unknown error occurred')}
+                              </p>
+                            )}
+                          </div>
+                          {podbeanPublishResult.success && podbeanPublishResult.episode?.url && (
+                            <Button size="sm" variant="outline" asChild>
+                              <a href={podbeanPublishResult.episode.url} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                View Episode
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Next Steps */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card className="p-4">
+                        <div className="text-center">
+                          <Upload className="w-6 h-6 mx-auto mb-2 text-blue-600" />
+                          <p className="text-sm font-medium">Upload to Cloud</p>
+                          <p className="text-xs text-muted-foreground">Store in Supabase & link to article</p>
+                        </div>
+                      </Card>
+                      <Card className="p-4">
+                        <div className="text-center">
+                          <Mic className="w-6 h-6 mx-auto mb-2 text-purple-600" />
+                          <p className="text-sm font-medium">Publish to Podbean</p>
+                          <p className="text-xs text-muted-foreground">Create podcast episode</p>
+                        </div>
+                      </Card>
+                      <Card className="p-4">
+                        <div className="text-center">
+                          <Play className="w-6 h-6 mx-auto mb-2 text-green-600" />
+                          <p className="text-sm font-medium">Add Play Button</p>
+                          <p className="text-xs text-muted-foreground">Embed in article</p>
+                        </div>
+                      </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           )}
         </TabsContent>
 

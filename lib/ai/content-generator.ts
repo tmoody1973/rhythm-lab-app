@@ -408,17 +408,24 @@ export async function generateContent(request: ContentRequest): Promise<Generate
   // Extract source metadata from Perplexity's search_results field
   const searchResults = completion.search_results || []
 
-  // Convert markdown from Perplexity to Storyblok rich text format
-  const richTextContent = markdownToStoryblokRichtext(text)
+  // Parse SEO metadata first
+  const parsedSEO = extractSEOMetadata(text)
+  const cleanedText = cleanSEOMetadataFromContent(text)
 
-  // Extract title from content or generate one
-  const title = extractTitle(text) || generateTitle(request.topic, request.type)
+  // Convert cleaned markdown from Perplexity to Storyblok rich text format
+  const richTextContent = markdownToStoryblokRichtext(cleanedText)
+
+  // Extract title and metadata from parsed SEO or fallback to content extraction
+  const title = parsedSEO.title || extractTitle(cleanedText) || generateTitle(request.topic, request.type)
+  const metaDescription = parsedSEO.metaDescription
 
   // Generate tags based on content
-  const tags = generateTags(text, request.type)
+  const tags = generateTags(cleanedText, request.type)
 
-  // Generate enhanced SEO data with nestable block structure
-  const seoData = await generateEnhancedSEOData(text, title, request.type)
+  // Generate enhanced SEO data with nestable block structure (only if not already provided)
+  const seoData = metaDescription
+    ? { seoTitle: title, metaDescription, seoBlock: createSEOBlock(title, metaDescription) }
+    : await generateEnhancedSEOData(text, title, request.type)
 
   return {
     title,
@@ -431,7 +438,7 @@ export async function generateContent(request: ContentRequest): Promise<Generate
     metadata: {
       generatedAt: new Date().toISOString(),
       contentType: request.type,
-      wordCount: text.split(' ').length
+      wordCount: cleanedText.split(' ').length
     },
     seoBlock: seoData.seoBlock,
     // Include source metadata from Perplexity's search_results field
@@ -568,4 +575,37 @@ Use ElevenLabs v3 audio formatting throughout. Minimum 250 characters required.`
 
   const completion = await response.json()
   return completion.choices[0]?.message?.content || ""
+}
+
+// Extract SEO metadata from AI response (for deep-dive content)
+function extractSEOMetadata(text: string): { title?: string; metaDescription?: string } {
+  const seoTitleMatch = text.match(/SEO_TITLE:\s*(.+)/i)
+  const metaDescMatch = text.match(/META_DESCRIPTION:\s*(.+)/i)
+
+  return {
+    title: seoTitleMatch?.[1]?.trim(),
+    metaDescription: metaDescMatch?.[1]?.trim()
+  }
+}
+
+// Remove SEO metadata lines from content
+function cleanSEOMetadataFromContent(text: string): string {
+  return text
+    .replace(/SEO_TITLE:\s*.+/i, '')
+    .replace(/META_DESCRIPTION:\s*.+/i, '')
+    .replace(/^\s*\n+/g, '') // Remove leading empty lines
+    .trim()
+}
+
+// Create SEO block structure
+function createSEOBlock(title: string, description: string): GeneratedContent['seoBlock'] {
+  return {
+    component: 'seo',
+    title,
+    description,
+    og_title: title,
+    og_description: description,
+    twitter_title: title,
+    twitter_description: description
+  }
 }

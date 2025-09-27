@@ -27,13 +27,20 @@ export async function POST(request: NextRequest) {
     // Convert rich text content back to plain text for preview
     const plainTextContent = extractPlainTextFromRichText(generatedContent.richTextContent)
 
+    // Ensure plainTextContent is always a string
+    const contentString = typeof plainTextContent === 'string'
+      ? plainTextContent
+      : (typeof plainTextContent === 'object' && plainTextContent !== null && 'content' in plainTextContent)
+        ? String((plainTextContent as any).content)
+        : String(plainTextContent || '')
+
     const response = {
       content: {
         title: generatedContent.title,
         seoTitle: generatedContent.seoTitle,
         subtitle: generatedContent.subtitle,
         metaDescription: generatedContent.metaDescription,
-        content: plainTextContent,
+        content: contentString,
         tags: generatedContent.tags,
         category: generatedContent.category,
         wordCount: generatedContent.metadata.wordCount,

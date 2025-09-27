@@ -4,7 +4,9 @@ import { Inter, Outfit } from "next/font/google"
 import { Suspense } from "react"
 import "./globals.css"
 import { PersistentAudioPlayer } from "@/components/persistent-audio-player"
+import { UnifiedPersistentPlayer } from "@/components/unified-persistent-player"
 import { RadioProvider } from "@/lib/radio/context"
+import { UnifiedPlayerProvider } from "@/lib/audio/unified-player-context"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ClerkAuthProvider } from "@/contexts/clerk-auth-context"
 
@@ -36,8 +38,11 @@ export default function RootLayout({
       <body className={`font-sans ${inter.variable} ${outfit.variable} antialiased`}>
         <ClerkAuthProvider>
           <RadioProvider>
-            <Suspense fallback={null}>{children}</Suspense>
-            <PersistentAudioPlayer />
+            <UnifiedPlayerProvider>
+              <Suspense fallback={null}>{children}</Suspense>
+              <PersistentAudioPlayer />
+              <UnifiedPersistentPlayer />
+            </UnifiedPlayerProvider>
           </RadioProvider>
         </ClerkAuthProvider>
       </body>

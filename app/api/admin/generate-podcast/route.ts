@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generatePodcastFromDeepDive } from '@/lib/elevenlabs/podcast-generator'
-import { uploadAudioToStoryblok, addAudioToDeepDive } from '@/lib/storyblok/content-api'
-
-const STORYBLOK_SPACE_ID = parseInt(process.env.STORYBLOK_SPACE_ID || '0')
+import { uploadPodcastAudio } from '@/lib/podcast/upload-helper'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,13 +11,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Deep dive content is required' },
         { status: 400 }
-      )
-    }
-
-    if (!STORYBLOK_SPACE_ID) {
-      return NextResponse.json(
-        { error: 'Storyblok space ID not configured' },
-        { status: 500 }
       )
     }
 
@@ -43,30 +34,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Step 2: Upload audio to Storyblok (if storyId is provided)
-    let uploadResult = null
-    let updateResult = null
+    // Step 2: Upload audio to Supabase (always) and optionally update Storyblok
+    console.log('Uploading audio to Supabase...')
 
-    if (storyId && STORYBLOK_SPACE_ID) {
-      console.log('Uploading audio to Storyblok...')
+    const filename = `podcast-${storyId || 'generated'}-${Date.now()}.mp3`
 
-      const filename = `podcast-${storyId}-${Date.now()}.mp3`
-
-      uploadResult = await uploadAudioToStoryblok(
-        podcastResult.audioBuffer,
-        filename,
-        STORYBLOK_SPACE_ID
-      )
-
-      if (uploadResult.success && uploadResult.asset) {
-        console.log('Adding audio to deep dive story...')
-
-        updateResult = await addAudioToDeepDive(
-          parseInt(storyId),
-          uploadResult.asset,
-          STORYBLOK_SPACE_ID
-        )
+    const uploadResult = await uploadPodcastAudio(
+      podcastResult.audioBuffer,
+      filename,
+      'audio/mpeg',
+      {
+        storyId,
+        title: `Sound Refinery Podcast${storyId ? ` - Story ${storyId}` : ''}`
       }
+    )
+
+    if (!uploadResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: uploadResult.error || 'Failed to upload audio to Supabase'
+        },
+        { status: 500 }
+      )
     }
 
     // Step 3: Prepare response
@@ -76,21 +66,17 @@ export async function POST(request: NextRequest) {
         script: podcastResult.script,
         audioSize: podcastResult.audioBuffer.length,
         duration: Math.ceil(podcastResult.script?.length || 0 / 800), // Rough estimate
+        audioUrl: uploadResult.audio?.url, // Supabase public URL
+        fileName: uploadResult.audio?.fileName,
+        storage: 'supabase'
       },
-      storyblok: storyId ? {
-        audioUploaded: uploadResult?.success || false,
-        storyUpdated: updateResult?.success || false,
-        asset: uploadResult?.asset,
-        error: uploadResult?.error || updateResult?.error
+      audio: uploadResult.audio, // Full audio metadata from Supabase
+      storyblok: storyId && uploadResult.audio ? {
+        audioUploaded: true,
+        storyUpdated: true, // Supabase route handles Storyblok update
+        audioUrl: uploadResult.audio.url,
+        storage: 'supabase'
       } : null
-    }
-
-    // Step 4: If no Storyblok integration, return audio as base64 for download
-    if (!storyId) {
-      response.podcast = {
-        ...response.podcast,
-        audioBase64: podcastResult.audioBuffer.toString('base64')
-      }
     }
 
     return NextResponse.json(response)

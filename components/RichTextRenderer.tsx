@@ -5,7 +5,20 @@ import { processShortcodes } from '@/lib/shortcodes';
 
 // Component to render rich text content from Storyblok
 export function RichTextRenderer({ content }: { content: any }) {
-  if (!content || !content.content) {
+  // If content is a string, render it directly
+  if (typeof content === 'string') {
+    return <div className="prose max-w-none">{content}</div>;
+  }
+
+  // If content is an object with type and content properties but content is a string,
+  // it's likely a malformed object that shouldn't be rendered directly
+  if (content && typeof content === 'object' && content.type && typeof content.content === 'string') {
+    console.warn('RichTextRenderer received malformed content object:', content);
+    return <div className="prose max-w-none">{String(content.content)}</div>;
+  }
+
+  // Check if content has the expected structure for rich text
+  if (!content || !content.content || !Array.isArray(content.content)) {
     return null;
   }
 
@@ -122,8 +135,17 @@ export function RichTextRenderer({ content }: { content: any }) {
 
       default:
         // Fallback for unknown node types
-        if (node.content) {
-          return node.content.map((child: any, childIndex: number) => renderNode(child, childIndex));
+        if (node.content && Array.isArray(node.content)) {
+          return (
+            <React.Fragment key={index}>
+              {node.content.map((child: any, childIndex: number) => renderNode(child, childIndex))}
+            </React.Fragment>
+          );
+        }
+        // If node is an object with type and content but we don't recognize the type,
+        // try to render it as text if it has a text property, otherwise return null
+        if (node.text) {
+          return <span key={index}>{node.text}</span>;
         }
         return null;
     }

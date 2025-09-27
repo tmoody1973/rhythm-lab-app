@@ -14,7 +14,7 @@ The AI Content Generator creates high-quality content for artist profiles, deep 
 - **SEO-optimized titles and meta descriptions** for all content types
 
 ✅ **AI Integration**
-- OpenAI GPT-5 with reasoning/thinking mode
+- Perplexity API with reasoning/thinking mode
 - Web search tool for current information
 - Advanced prompt engineering templates
 - Content optimization for each type
