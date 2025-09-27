@@ -19,6 +19,7 @@ import { ImportByUrl } from './import-by-url'
 import { ArchiveImport } from './archive-import'
 import { UploadNewShow } from './upload-new-show'
 import { MixcloudConnectionStatus } from './mixcloud-connection-status'
+import { TrackEnhancementInterface } from './track-enhancement-interface'
 
 export function MixcloudAdminInterface() {
   const [activeTab, setActiveTab] = useState('archive')
@@ -72,36 +73,7 @@ export function MixcloudAdminInterface() {
 
         {/* Track Enrichment Tab */}
         <TabsContent value="enrichment" className="space-y-6 mt-6">
-          <Card className="border border-amber-200/50 shadow-md bg-white/70 backdrop-blur-sm">
-            <CardHeader className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-t-lg border-b border-teal-100">
-              <CardTitle className="flex items-center gap-2 text-teal-900">
-                <Activity className="h-5 w-5 text-teal-600" />
-                Track Enrichment
-              </CardTitle>
-              <CardDescription className="text-teal-700">
-                Monitor and manage background jobs that enrich track data with Spotify, YouTube, and Discogs links.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-gradient-to-br from-teal-50 to-cyan-100 rounded-lg p-6 text-center border border-teal-200/30">
-                <Activity className="h-12 w-12 text-teal-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2 text-teal-900">Track Enrichment Dashboard</h3>
-                <p className="text-teal-700 mb-4">
-                  This section will allow you to:
-                </p>
-                <ul className="text-sm text-teal-700 space-y-1 text-left max-w-md mx-auto">
-                  <li>• View enrichment job progress</li>
-                  <li>• See success/failure statistics</li>
-                  <li>• Retry failed lookups</li>
-                  <li>• Monitor Spotify/YouTube/Discogs APIs</li>
-                  <li>• Real-time updates via WebSocket</li>
-                </ul>
-                <Badge variant="outline" className="mt-4 border-teal-300 text-teal-700 bg-teal-50">
-                  Coming Soon - Implement enrichment system first
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+          <TrackEnhancementInterface />
         </TabsContent>
         {/* Parser Test Tab */}
         <TabsContent value="test" className="space-y-6 mt-6">

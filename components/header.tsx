@@ -26,11 +26,11 @@ export function Header() {
             <div className="flex items-center">
               <Link href="/" className="flex items-center">
                 <Image
-                  src="/images/rlr_logo.png"
+                  src="/images/rlr-selector-logo.png"
                   alt="Rhythm Lab Radio"
-                  width={120}
-                  height={40}
-                  className="h-8 w-auto sm:h-10"
+                  width={192}
+                  height={64}
+                  className="h-12 w-auto sm:h-16"
                   priority
                 />
               </Link>

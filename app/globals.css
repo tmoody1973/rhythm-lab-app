@@ -8,6 +8,21 @@ body {
   padding-bottom: 80px; /* Space for persistent audio player */
 }
 
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 :root {
   /* Updated to light beige theme with warm tones */
   --background: 30 100% 90%; /* Custom #ffebcc background */

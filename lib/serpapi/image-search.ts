@@ -94,9 +94,22 @@ export async function searchImages(options: ImageSearchOptions): Promise<ImageSe
 
     const data = await response.json()
 
-    // Handle SerpAPI errors
-    if (data.error) {
+    // Handle SerpAPI errors - but allow empty results
+    if (data.error && !data.error.includes("hasn't returned any results")) {
       throw new Error(data.error)
+    }
+
+    // Handle case where no images are returned
+    if (!data.images_results || data.images_results.length === 0) {
+      return {
+        success: true,
+        images: [],
+        searchInfo: {
+          query,
+          totalResults: 0,
+          page
+        }
+      }
     }
 
     const images: ImageResult[] = (data.images_results || []).map((img: any) => ({

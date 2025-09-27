@@ -63,6 +63,7 @@ export function UploadNewShow() {
 
   const [playlistPreview, setPlaylistPreview] = useState<any>(null)
   const [tagInput, setTagInput] = useState('')
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
 
   // Audio file dropzone
   const onAudioDrop = useCallback((acceptedFiles: File[]) => {
@@ -137,6 +138,13 @@ export function UploadNewShow() {
       return
     }
 
+    if (!formData.showTitle.trim()) {
+      alert('Please enter a show title first')
+      return
+    }
+
+    setIsGeneratingDescription(true)
+
     try {
       const response = await fetch('/api/ai/generate-description', {
         method: 'POST',
@@ -150,9 +158,14 @@ export function UploadNewShow() {
       const data = await response.json()
       if (data.success) {
         setFormData(prev => ({ ...prev, showDescription: data.description }))
+      } else {
+        alert(`Failed to generate description: ${data.error}`)
       }
     } catch (error) {
       console.error('Failed to generate AI description:', error)
+      alert('Failed to generate description. Please try again.')
+    } finally {
+      setIsGeneratingDescription(false)
     }
   }
 
@@ -222,31 +235,24 @@ export function UploadNewShow() {
       })
 
       // Step 4: Create show record and sync to Storyblok
-      // Extract cover image URL from Mixcloud response
-      let coverImageUrl = ''
-      if (uploadResult.details) {
-        // Check various possible locations for the cover image in Mixcloud response
-        coverImageUrl = uploadResult.details.pictures?.large ||
-                       uploadResult.details.pictures?.medium ||
-                       uploadResult.details.pictures?.small ||
-                       uploadResult.details.result?.pictures?.large ||
-                       uploadResult.details.cloudcast?.pictures?.large ||
-                       ''
+      // Use the cover image file that was uploaded (same one sent to Mixcloud)
+      let coverImageFile = formData.coverImage || null
+
+      // Create FormData to send the cover image file
+      const formDataPayload = new FormData()
+      formDataPayload.append('title', formData.showTitle)
+      formDataPayload.append('description', formData.showDescription || '')
+      formDataPayload.append('mixcloud_url', uploadResult.url)
+      formDataPayload.append('published_date', formData.publishDate)
+      formDataPayload.append('playlist_text', formData.playlistText || '')
+
+      if (coverImageFile) {
+        formDataPayload.append('cover_image', coverImageFile)
       }
 
       const syncResponse = await fetch('/api/mixcloud/create-show', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          title: formData.showTitle,
-          description: formData.showDescription,
-          mixcloud_url: uploadResult.url,
-          published_date: formData.publishDate,
-          playlist_text: formData.playlistText,
-          cover_image_url: coverImageUrl
-        })
+        body: formDataPayload // Remove Content-Type header to let browser set multipart/form-data
       })
 
       const syncResult = await syncResponse.json()
@@ -327,25 +333,82 @@ export function UploadNewShow() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="showDescription">Description</Label>
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="showDescription">Description</Label>
+                  <div className="text-sm text-muted-foreground">
+                    <span className={`${
+                      formData.showDescription.length >= 500 && formData.showDescription.length <= 600
+                        ? 'text-green-600'
+                        : formData.showDescription.length > 600
+                        ? 'text-red-600'
+                        : 'text-gray-500'
+                    }`}>
+                      {formData.showDescription.length}
+                    </span>
+                    <span className="text-gray-400">/500-600 chars</span>
+                  </div>
+                </div>
                 <Textarea
                   id="showDescription"
                   value={formData.showDescription}
                   onChange={(e) => setFormData(prev => ({ ...prev, showDescription: e.target.value }))}
-                  placeholder="Enter show description"
+                  placeholder="Enter show description (500-600 characters optimal for Mixcloud)"
                   rows={4}
+                  className={`${
+                    formData.showDescription.length >= 500 && formData.showDescription.length <= 600
+                      ? 'border-green-300 focus:border-green-500'
+                      : formData.showDescription.length > 600
+                      ? 'border-red-300 focus:border-red-500'
+                      : ''
+                  }`}
                 />
-                {playlistPreview && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={generateAIDescription}
-                    className="mt-2"
-                  >
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Generate AI Description
-                  </Button>
+
+                {/* AI Generate Button - Enhanced */}
+                {playlistPreview && playlistPreview.tracks.length > 0 && (
+                  <div className="flex gap-2 items-center">
+                    <Button
+                      type="button"
+                      variant={formData.showDescription ? "outline" : "default"}
+                      size="sm"
+                      onClick={generateAIDescription}
+                      disabled={isGeneratingDescription || !formData.showTitle.trim()}
+                      className={`${
+                        !formData.showDescription
+                          ? "bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0"
+                          : ""
+                      }`}
+                    >
+                      {isGeneratingDescription ? (
+                        <>
+                          <div className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          {formData.showDescription ? 'Regenerate' : 'Generate'} AI Description
+                        </>
+                      )}
+                    </Button>
+                    {!formData.showTitle.trim() && (
+                      <p className="text-sm text-amber-600">Enter show title first</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Character count guidance */}
+                {formData.showDescription.length > 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    {formData.showDescription.length < 500 && (
+                      <span className="text-amber-600">📏 Add {500 - formData.showDescription.length} more characters for optimal Mixcloud length</span>
+                    )}
+                    {formData.showDescription.length >= 500 && formData.showDescription.length <= 600 && (
+                      <span className="text-green-600">✅ Perfect length for Mixcloud!</span>
+                    )}
+                    {formData.showDescription.length > 600 && (
+                      <span className="text-red-600">⚠️ Too long for Mixcloud - consider shortening by {formData.showDescription.length - 600} characters</span>
+                    )}
+                  </div>
                 )}
               </div>
 

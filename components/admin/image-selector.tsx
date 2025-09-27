@@ -79,6 +79,11 @@ export function ImageSelector({
       if (result.success) {
         setSearchResults(result.images)
         setActiveTab('results')
+
+        // Show a message if no results found
+        if (result.images.length === 0) {
+          alert('No images found for this search. Try different keywords.')
+        }
       } else {
         throw new Error(result.error || 'Search failed')
       }

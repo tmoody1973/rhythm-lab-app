@@ -12,7 +12,7 @@ export default function SignInPage() {
           {/* Logo Section */}
           <div className="flex flex-col items-center text-center mb-8">
             <Image
-              src="/images/rlr_logo.png"
+              src="/images/rlr-selector-logo.png"
               alt="Rhythm Lab Logo"
               width={280}
               height={92}

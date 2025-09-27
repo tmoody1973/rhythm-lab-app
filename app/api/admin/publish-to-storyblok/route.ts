@@ -3,6 +3,7 @@ import { createStoryblokStory } from '@/lib/storyblok/content-api'
 import { GeneratedContent, ContentType } from '@/lib/ai/content-generator'
 import { markdownToStoryblokRichtext } from '@storyblok/richtext/markdown-parser'
 import { formatContentWithCitations } from '@/lib/utils/citation-formatter'
+import { addContentHistoryEntry } from '@/lib/content-history'
 
 // You'll need to set these environment variables
 const STORYBLOK_SPACE_ID = parseInt(process.env.STORYBLOK_SPACE_ID || '0')
@@ -17,9 +18,17 @@ const STORYBLOK_FOLDERS = {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { content, contentType, selectedImage } = body
+    const { content, contentType, selectedImage, discography, selectedArtist } = body
+
+    console.log('Publishing to Storyblok - Request body:', {
+      contentTitle: content?.title,
+      contentType,
+      hasDiscography: !!discography,
+      discographyLength: discography?.length || 0
+    })
 
     if (!content || !contentType) {
+      console.error('Missing content or contentType:', { content: !!content, contentType })
       return NextResponse.json(
         { error: 'Content and content type are required' },
         { status: 400 }
@@ -27,6 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!STORYBLOK_SPACE_ID) {
+      console.error('Storyblok space ID not configured')
       return NextResponse.json(
         { error: 'Storyblok space ID not configured' },
         { status: 500 }
@@ -36,7 +46,8 @@ export async function POST(request: NextRequest) {
     console.log('Publishing to Storyblok:', {
       title: content.title,
       type: contentType,
-      spaceId: STORYBLOK_SPACE_ID
+      spaceId: STORYBLOK_SPACE_ID,
+      hasDiscography: !!discography
     })
 
     // Format content with styled citations using search results metadata
@@ -84,13 +95,47 @@ export async function POST(request: NextRequest) {
     // Get the appropriate folder ID based on content type
     const folderId = STORYBLOK_FOLDERS[contentType as ContentType]
 
+    console.log('Calling createStoryblokStory with:', {
+      title: generatedContent.title,
+      folderId,
+      contentType,
+      hasDiscography: contentType === 'artist-profile' && !!discography,
+      discographyCount: contentType === 'artist-profile' ? discography?.length : 0
+    })
+
     const result = await createStoryblokStory(
       generatedContent,
       STORYBLOK_SPACE_ID,
-      folderId || undefined
+      folderId || undefined,
+      contentType === 'artist-profile' ? discography : undefined,
+      selectedArtist // Pass selected artist data for discogs_id and discogs_url
     )
 
+    console.log('createStoryblokStory result:', { success: result.success, error: result.error })
+
     if (result.success) {
+      // Log successful content creation to history
+      try {
+        await addContentHistoryEntry({
+          title: content.title,
+          contentType: contentType as ContentType,
+          status: 'published',
+          storyblokId: result.story?.id?.toString(),
+          storyblokUrl: `https://app.storyblok.com/#/me/spaces/${STORYBLOK_SPACE_ID}/stories/0/0/${result.story?.id}`,
+          liveUrl: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://your-site.com'}/${contentType === 'artist-profile' ? 'profiles' : contentType === 'blog-post' ? 'blog' : 'content'}/${result.story?.slug || result.story?.id}`,
+          metadata: {
+            generatedBy: 'AI',
+            wordCount: content.content?.length || 0,
+            hasDiscography: contentType === 'artist-profile' && !!discography,
+            discographyCount: discography?.length || 0,
+            hasImages: !!selectedImage
+          }
+        })
+      } catch (historyError) {
+        console.warn('Failed to log content history:', historyError)
+        // Don't fail the whole request for history logging issues
+      }
+
       return NextResponse.json({
         success: true,
         storyId: result.story?.id,
@@ -98,6 +143,25 @@ export async function POST(request: NextRequest) {
         message: 'Content successfully published to Storyblok'
       })
     } else {
+      // Log failed content creation to history
+      try {
+        await addContentHistoryEntry({
+          title: content.title,
+          contentType: contentType as ContentType,
+          status: 'error',
+          errorMessage: result.error,
+          metadata: {
+            generatedBy: 'AI',
+            wordCount: content.content?.length || 0,
+            hasDiscography: contentType === 'artist-profile' && !!discography,
+            discographyCount: discography?.length || 0,
+            hasImages: !!selectedImage
+          }
+        })
+      } catch (historyError) {
+        console.warn('Failed to log content history:', historyError)
+      }
+
       return NextResponse.json(
         { success: false, error: result.error },
         { status: 500 }
@@ -105,7 +169,12 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error: any) {
-    console.error('Storyblok publish error:', error)
+    console.error('Storyblok publish error:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      error: error
+    })
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to publish to Storyblok' },
       { status: 500 }

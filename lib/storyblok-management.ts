@@ -3,7 +3,7 @@
  * Handles creation and updates of Storyblok stories via Management API
  */
 
-import { getMixcloudCoverImage, uploadImageUrlToStoryblok } from './mixcloud/cover-image'
+import { getMixcloudCoverImage, uploadImageFileToStoryblok } from './mixcloud/cover-image'
 
 interface StoryblokStoryContent {
   component: string
@@ -123,7 +123,7 @@ export async function createMixcloudShowStory({
   mixcloudUrl,
   publishedDate,
   tracklist,
-  coverImageUrl,
+  coverImageFile,
   showId
 }: {
   title: string
@@ -131,7 +131,7 @@ export async function createMixcloudShowStory({
   mixcloudUrl: string
   publishedDate: Date
   tracklist?: any[] // Already formatted for Storyblok
-  coverImageUrl?: string
+  coverImageFile?: File
   showId: string
 }): Promise<StoryblokApiResponse> {
   // Generate embed code from Mixcloud URL
@@ -145,21 +145,48 @@ export async function createMixcloudShowStory({
     .replace(/-+/g, '-') // Replace multiple hyphens with single
     .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
 
-  // Handle cover image - get from Mixcloud if not provided and upload to Storyblok
-  let storyblokImageAsset = ''
-  const imageUrl = coverImageUrl || await getMixcloudCoverImage(mixcloudUrl)
+  // Handle cover image - upload file or get from Mixcloud if not provided
+  let storyblokImageAsset: any = null
+  let imageUrl: string | null = null
 
-  if (imageUrl) {
-    try {
-      const assetData = await uploadImageUrlToStoryblok(imageUrl, slug)
-      if (assetData) {
-        // For Storyblok asset fields, we can use either the full URL or just the path
-        storyblokImageAsset = assetData.public_url
+  if (coverImageFile) {
+    // Upload the provided file to Storyblok as asset
+    const uploadResult = await uploadImageFileToStoryblok(coverImageFile, `${slug}-cover`)
+    if (uploadResult) {
+      storyblokImageAsset = {
+        alt: `${title} cover image`,
+        name: uploadResult.filename,
+        focus: "",
+        title: title,
+        filename: uploadResult.filename,
+        copyright: "",
+        fieldtype: "asset",
+        meta_data: {},
+        id: uploadResult.id
       }
-    } catch (error) {
-      console.warn('Failed to upload cover image to Storyblok:', error)
-      // Fallback to original URL if Storyblok upload fails
-      storyblokImageAsset = imageUrl
+    }
+  } else {
+    // Fallback to Mixcloud cover image
+    imageUrl = await getMixcloudCoverImage(mixcloudUrl)
+
+    if (imageUrl) {
+      console.log('Found cover image URL:', imageUrl)
+      // Format for Storyblok asset field with external URL
+      storyblokImageAsset = {
+        alt: `${title} cover image`,
+        name: `${slug}-cover`,
+        focus: "",
+        title: title,
+        source: "url",
+        copyright: "",
+        fieldtype: "asset",
+        meta_data: {},
+        is_external_url: true,
+        external_url: imageUrl
+      }
+    } else {
+      console.warn('No cover image found for Mixcloud URL:', mixcloudUrl)
+      storyblokImageAsset = null
     }
   }
 

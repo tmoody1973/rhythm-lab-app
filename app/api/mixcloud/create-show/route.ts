@@ -10,7 +10,7 @@ interface CreateShowRequest {
   mixcloud_url: string
   published_date?: string // ISO date string
   playlist_text?: string
-  cover_image_url?: string
+  cover_image?: File
 }
 
 interface CreateShowResponse {
@@ -30,7 +30,23 @@ interface CreateShowResponse {
  */
 const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextResponse> => {
   try {
-    const body: CreateShowRequest = await request.json()
+    // Parse FormData (for file uploads) or JSON
+    let body: CreateShowRequest
+    const contentType = request.headers.get('content-type')
+
+    if (contentType?.includes('multipart/form-data')) {
+      const formData = await request.formData()
+      body = {
+        title: formData.get('title') as string,
+        description: formData.get('description') as string || undefined,
+        mixcloud_url: formData.get('mixcloud_url') as string,
+        published_date: formData.get('published_date') as string || undefined,
+        playlist_text: formData.get('playlist_text') as string || undefined,
+        cover_image: formData.get('cover_image') as File || undefined
+      }
+    } else {
+      body = await request.json()
+    }
 
     // Validate required fields
     if (!body.title || !body.mixcloud_url) {
@@ -80,7 +96,7 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       description: body.description || '',
       mixcloud_url: body.mixcloud_url,
       mixcloud_embed: generateMixcloudEmbed(body.mixcloud_url),
-      mixcloud_picture: body.cover_image_url || '',
+      mixcloud_picture: '', // Will be updated after Storyblok upload
       published_date: publishedDate.toISOString(),
       status: 'published' as const,
       created_at: new Date().toISOString(),
@@ -137,7 +153,7 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
         mixcloudUrl: body.mixcloud_url,
         publishedDate,
         tracklist: storyblokTracklist,
-        coverImageUrl: body.cover_image_url,
+        coverImageFile: body.cover_image,
         showId: showId
       })
 

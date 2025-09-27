@@ -1,0 +1,934 @@
+[
+  {
+    "name": "artist_profile",
+    "display_name": null,
+    "description": "Artist Profile",
+    "created_at": "2025-09-16T04:42:08.909Z",
+    "updated_at": "2025-09-20T17:10:38.667Z",
+    "id": 91374096017165,
+    "schema": {
+      "artist_name": {
+        "type": "text",
+        "pos": 0,
+        "required": true,
+        "max_length": 300,
+        "id": "K99uB5xDTAaF-A06ROm9eA"
+      },
+      "genre": {
+        "type": "options",
+        "pos": 2,
+        "required": true,
+        "exclude_empty_option": false,
+        "options": [
+          {
+            "_uid": "af1e6e32-67a9-4813-be0d-2d439b666514",
+            "name": "Jazz",
+            "value": "jazz"
+          },
+          {
+            "_uid": "938675aa-bad5-44be-8fa3-67af8d22ed42",
+            "value": "electronic",
+            "name": "Electronic"
+          },
+          {
+            "_uid": "758f8280-6d6d-44dc-a230-b27f685212e5",
+            "value": "hip_hop",
+            "name": "Hip-Hop"
+          },
+          {
+            "_uid": "7e251427-39ac-4ca8-94ec-0011d23becc5",
+            "value": "r_b",
+            "name": "R&B"
+          },
+          {
+            "_uid": "67c2b104-987f-4723-8202-a247bfa6ad05",
+            "value": "world",
+            "name": "World"
+          },
+          {
+            "_uid": "bf970b20-401c-4970-9883-feb83a096c16",
+            "value": "house",
+            "name": "House"
+          },
+          {
+            "_uid": "4b0e5656-af59-49c5-8648-6b880bf4fd8c",
+            "value": "indie",
+            "name": "Indie"
+          },
+          {
+            "_uid": "bae31e6b-b73e-43c2-be42-6df6e7383e1d",
+            "value": "experimental",
+            "name": "Experimental"
+          }
+        ],
+        "id": "GQB6mN-CTSqbR7tbEE7g4g"
+      },
+      "artist_photo": {
+        "type": "asset",
+        "pos": 3,
+        "allow_external_url": true,
+        "required": true,
+        "filetypes": [
+          "images"
+        ],
+        "id": "oOeYQLX5Q3-1V3WdO80VvQ"
+      },
+      "gallery": {
+        "type": "multiasset",
+        "pos": 4,
+        "filetypes": [
+          "images"
+        ],
+        "allow_external_url": true,
+        "id": "beuBZjkASE6vdpYbARsf0Q"
+      },
+      "short_bio": {
+        "type": "textarea",
+        "pos": 5,
+        "required": false,
+        "max_length": 250,
+        "id": "xp4hkJtFSQyIi7qyreSlgg",
+        "description": "Brief description for cards"
+      },
+      "full_biography": {
+        "type": "richtext",
+        "pos": 6,
+        "required": true,
+        "allow_target_blank": true,
+        "allow_custom_attributes": true,
+        "id": "wrKOrtQpQiu_ugMHizNnmw",
+        "restrict_type": "",
+        "restrict_components": true,
+        "component_whitelist": [
+          "youtube"
+        ]
+      },
+      "spotify_url": {
+        "type": "text",
+        "pos": 7,
+        "id": "GRxtLxGISEiejJP9cojg-w",
+        "regex": "^(https?:\\/\\/)?([\\w\\-]+(\\.[\\w\\-]+)+)([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])?$"
+      },
+      "soundcloud_url": {
+        "type": "text",
+        "pos": 8,
+        "id": "mg_YIDdgRJioyX_8liAvMw",
+        "regex": "^(https?:\\/\\/)?([\\w\\-]+(\\.[\\w\\-]+)+)([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])?$"
+      },
+      "youtube_url": {
+        "type": "text",
+        "pos": 9,
+        "regex": "^(https?:\\/\\/)?([\\w\\-]+(\\.[\\w\\-]+)+)([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])?$",
+        "id": "IyeO9YCCRyu3oDVEbZgz2w"
+      },
+      "bandcamp_url": {
+        "type": "text",
+        "pos": 10,
+        "id": "ssArKrmXSjyGUytJVpV-Bw",
+        "regex": "^(https?:\\/\\/)?([\\w\\-]+(\\.[\\w\\-]+)+)([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])?$"
+      },
+      "discogs_url": {
+        "type": "text",
+        "pos": 11,
+        "id": "wIRcObANTnKmpoAQPtMf0w",
+        "regex": "^(https?:\\/\\/)?([\\w\\-]+(\\.[\\w\\-]+)+)([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])?$"
+      },
+      "website_url": {
+        "type": "text",
+        "pos": 12,
+        "id": "iVlnlGhWTwyBrHvseMSPoQ",
+        "regex": "^(https?:\\/\\/)?([\\w\\-]+(\\.[\\w\\-]+)+)([\\w.,@?^=%&:\\/~+#-]*[\\w@?^=%&\\/~+#-])?$"
+      },
+      "instagram_handle": {
+        "type": "text",
+        "pos": 13,
+        "display_name": "",
+        "description": "Without @ symbol",
+        "id": "KlhEMn2GS92QbpYUswAKiA"
+      },
+      "origin_city": {
+        "type": "text",
+        "pos": 14,
+        "id": "JVr25zL4SPyVyVzJy1yDog"
+      },
+      "origin_country": {
+        "type": "text",
+        "pos": 15,
+        "id": "SbT176KnTBGaPCOmrY_jYg"
+      },
+      "featured": {
+        "type": "boolean",
+        "pos": 16,
+        "description": "Show in featured section",
+        "id": "MUB_IDFIQvCU8n8G_ciGwg"
+      },
+      "featured_on_show": {
+        "type": "boolean",
+        "pos": 17,
+        "id": "gGuGSxLuSDqv0uY3BQat-w"
+      },
+      "seo": {
+        "type": "bloks",
+        "pos": 17,
+        "restrict_type": "",
+        "restrict_components": true,
+        "component_whitelist": [
+          "SEO"
+        ],
+        "id": "0hXq5DoNTs2HPAX-YdX8Aw"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": null,
+    "is_nestable": false,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "artist_profile",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": "artist_photo",
+    "metadata": {}
+  },
+  {
+    "name": "blog_post",
+    "display_name": null,
+    "description": "Blog Post",
+    "created_at": "2025-09-16T04:26:37.685Z",
+    "updated_at": "2025-09-17T13:45:01.464Z",
+    "id": 91370281723659,
+    "schema": {
+      "Title": {
+        "type": "text",
+        "pos": 0,
+        "required": true,
+        "max_length": 126,
+        "id": "9Qzst_dcRUKuSryKkNsGRw",
+        "display_name": "Title"
+      },
+      "Excerpt": {
+        "type": "textarea",
+        "pos": 2,
+        "required": true,
+        "display_name": "",
+        "description": "Short description for previews",
+        "max_length": 297,
+        "id": "jdXe__saQFGwByiZHcK_Zg"
+      },
+      "featured_image": {
+        "type": "asset",
+        "pos": 3,
+        "filetypes": [
+          "images"
+        ],
+        "required": true,
+        "allow_external_url": true,
+        "id": "mkejEJI2Slm5okiteQsyew"
+      },
+      "content": {
+        "type": "richtext",
+        "pos": 4,
+        "required": true,
+        "allow_target_blank": true,
+        "allow_custom_attributes": true,
+        "id": "R___05AbQqaEMWKC8QfnbA",
+        "restrict_type": "",
+        "restrict_components": true,
+        "component_whitelist": [
+          "youtube"
+        ]
+      },
+      "published_date": {
+        "type": "datetime",
+        "pos": 5,
+        "required": true,
+        "id": "KscYeGn7S3CZWZI_s5t3Sg"
+      },
+      "author": {
+        "type": "text",
+        "pos": 6,
+        "default_value": "Rhythm Lab Radio",
+        "id": "49Ji4ci6QQOGRodKqOvvbg"
+      },
+      "categories": {
+        "type": "options",
+        "pos": 7,
+        "required": true,
+        "options": [
+          {
+            "_uid": "732c29dc-6d8c-4041-97d9-eb3f08a14854",
+            "name": "News",
+            "value": "News"
+          },
+          {
+            "_uid": "8fa08a27-180e-44d0-bd55-3d5eac19eb07",
+            "value": "Reviews",
+            "name": "Reviews"
+          },
+          {
+            "_uid": "e2354209-f55f-471f-a62e-554a34325db3",
+            "value": "Features",
+            "name": "Features"
+          },
+          {
+            "_uid": "6c04c017-cc21-4430-90ec-4eec1a689786",
+            "value": "Events",
+            "name": "Events"
+          },
+          {
+            "_uid": "f10e6f6c-31de-409f-b1f0-efbd14da95a4",
+            "value": "New Releases",
+            "name": "New Releases"
+          }
+        ],
+        "id": "Tdr20m-xQB28lsUsKr7XWA"
+      },
+      "tags": {
+        "type": "text",
+        "pos": 8,
+        "description": "Comma-separated tags",
+        "id": "olD5_13sTnuMyqzqH8crZA"
+      },
+      "featured": {
+        "type": "boolean",
+        "pos": 9,
+        "description": "Show in featured section",
+        "id": "DSsLBzz3QfGuEScF3Cr1Gg"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": null,
+    "is_nestable": false,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "blog_post",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "deep_dive",
+    "display_name": null,
+    "description": "",
+    "created_at": "2025-09-16T05:09:03.706Z",
+    "updated_at": "2025-09-21T19:12:09.256Z",
+    "id": 91380710225681,
+    "schema": {
+      "title": {
+        "type": "text",
+        "pos": 0,
+        "required": true,
+        "description": "Compelling title for the deep dive",
+        "max_length": 300,
+        "id": "ynRjc4QGQBitH9wgrPE7IA"
+      },
+      "content": {
+        "type": "richtext",
+        "pos": 2,
+        "required": true,
+        "allow_target_blank": true,
+        "id": "Lzy9hkkSSx6K0BGlnNQWKA",
+        "restrict_type": "",
+        "restrict_components": true,
+        "component_whitelist": [
+          "youtube"
+        ]
+      },
+      "featured_image": {
+        "type": "asset",
+        "pos": 3,
+        "allow_external_url": true,
+        "filetypes": [
+          "images"
+        ],
+        "required": true,
+        "id": "4xWe0Wg3TzKWwsFCo5WVqg"
+      },
+      "subject_type": {
+        "type": "options",
+        "pos": 4,
+        "required": true,
+        "options": [
+          {
+            "_uid": "2c2b9ded-6b01-43ad-a5b5-93cf94139f2a",
+            "name": "artist",
+            "value": "artist"
+          },
+          {
+            "_uid": "92dc66e0-105b-4b72-8960-59e4d72d86a7",
+            "value": "genre",
+            "name": "genre"
+          },
+          {
+            "_uid": "40165ca8-e448-4afb-9ca6-b4a91dfbefbd",
+            "value": "album",
+            "name": "album"
+          },
+          {
+            "_uid": "035dbacc-2042-489b-be2c-ec02f3f2cdce",
+            "value": "movement",
+            "name": "movement"
+          },
+          {
+            "_uid": "5155f1a4-c96e-424b-be33-dec4b908ba9d",
+            "value": "technique",
+            "name": "technique"
+          },
+          {
+            "_uid": "b0ebea15-b003-492e-b3d7-d3e0315008ff",
+            "value": "",
+            "name": ""
+          }
+        ],
+        "id": "n7bF-ajFQ96laJGROOiCfg"
+      },
+      "subject_name": {
+        "type": "text",
+        "pos": 5,
+        "id": "b5jBjjTsQreG9TVndQZIHA"
+      },
+      "tags": {
+        "type": "options",
+        "pos": 6,
+        "options": [
+          {
+            "_uid": "3314e69d-2a54-42c6-b9c2-a2e33fd78a32",
+            "name": "hip-hop",
+            "value": "hip-hop"
+          },
+          {
+            "_uid": "4c3db775-ad43-4ec4-a763-5c18afdab00d",
+            "value": "jazz",
+            "name": "jazz"
+          },
+          {
+            "_uid": "0389b201-6260-4c7d-aac7-ecc971cb5c5b",
+            "value": "electronic",
+            "name": "electronic"
+          },
+          {
+            "_uid": "795deb6b-cf2e-446b-b257-4f4912249dae",
+            "value": "r&b",
+            "name": "r&b"
+          },
+          {
+            "_uid": "ea6c2da0-40dc-45e9-b17a-e4f72c86dda1",
+            "value": "world",
+            "name": "world"
+          }
+        ],
+        "id": "E7xayq6zS8WohVAryqFsJA"
+      },
+      "is_featured": {
+        "type": "boolean",
+        "pos": 7,
+        "id": "NEBdSo5CQeyzlxbolh2CUQ"
+      },
+      "estimated_read_time": {
+        "type": "number",
+        "pos": 8,
+        "id": "O2k0BcGGRjiFRHhWIduAyA"
+      },
+      "author_name": {
+        "type": "text",
+        "pos": 9,
+        "id": "ZdB1U95KTpmIKxxV6Il-ug"
+      },
+      "published_date": {
+        "type": "datetime",
+        "pos": 10,
+        "id": "xOfITguYSKuttwXgMubZpg"
+      },
+      "audio_url": {
+        "type": "text",
+        "pos": 11,
+        "id": "c53oeNBCRPa2Eb1FC95DPg"
+      },
+      "podcast_thumbnail": {
+        "type": "asset",
+        "pos": 11,
+        "allow_external_url": true,
+        "filetypes": [
+          "images"
+        ],
+        "id": "Qr3GsxLTSuWffXsZFEBHWw"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": null,
+    "is_nestable": false,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "deep_dive",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "feature",
+    "display_name": null,
+    "description": null,
+    "created_at": "2025-09-16T04:17:24.899Z",
+    "updated_at": "2025-09-16T04:17:24.899Z",
+    "id": 91368017508039,
+    "schema": {
+      "name": {
+        "type": "text",
+        "id": "-dfaKxtVS1muAMqR3gghpA"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": null,
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "feature",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "grid",
+    "display_name": null,
+    "description": null,
+    "created_at": "2025-09-16T04:17:24.889Z",
+    "updated_at": "2025-09-16T04:17:24.889Z",
+    "id": 91368017471174,
+    "schema": {
+      "columns": {
+        "type": "bloks",
+        "id": "y7PbE5MaT9Wk3aQI0X71Qg"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": null,
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "grid",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "mixcloud_show",
+    "display_name": null,
+    "description": "Content from Rhythm Lab's Mixcloud",
+    "created_at": "2025-09-18T09:37:59.466Z",
+    "updated_at": "2025-09-24T21:47:16.563Z",
+    "id": 92154591109586,
+    "schema": {
+      "title": {
+        "type": "text",
+        "pos": 0,
+        "required": true,
+        "id": "pUvqntiPT_qdEjLOa2dB_g"
+      },
+      "description": {
+        "type": "richtext",
+        "pos": 2,
+        "required": true,
+        "id": "rWCHm8FCRMyFwpObLlKnTA"
+      },
+      "mixcloud_url": {
+        "type": "text",
+        "pos": 3,
+        "required": true,
+        "id": "TZQ6LhxoTOCQIjjLqGFbkQ"
+      },
+      "mixcloud_embed": {
+        "type": "textarea",
+        "pos": 4,
+        "id": "WMN6vURoTZGlcZrRsWpvjQ"
+      },
+      "mixcloud_picture": {
+        "type": "asset",
+        "pos": 5,
+        "required": true,
+        "filetypes": [
+          "images"
+        ],
+        "id": "A3iPIY_SRBGcRg0qjfKbUA",
+        "allow_external_url": true
+      },
+      "published_date": {
+        "type": "datetime",
+        "pos": 6,
+        "required": false,
+        "id": "a3cToOpPQzucQ9QJHFOv0A"
+      },
+      "tracklist": {
+        "type": "bloks",
+        "pos": 7,
+        "id": "JqnV6PmpQheEG7lOZDXJ8g",
+        "restrict_type": "",
+        "restrict_components": true,
+        "component_whitelist": [
+          "track"
+        ],
+        "required": false,
+        "description": ""
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": null,
+    "is_nestable": false,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "mixcloud_show",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "page",
+    "display_name": null,
+    "description": null,
+    "created_at": "2025-09-16T04:17:24.869Z",
+    "updated_at": "2025-09-17T13:40:53.104Z",
+    "id": 91368017385156,
+    "schema": {
+      "title": {
+        "type": "text",
+        "pos": 0,
+        "id": "BF8a_6cVSJCwN7dvEmXrrA"
+      },
+      "body": {
+        "type": "bloks",
+        "id": "9njbDeEgSti2d8cQDnhRLw",
+        "pos": 1
+      },
+      "youtube": {
+        "type": "text",
+        "pos": 2,
+        "id": "NWoej8ldQCqYFUz7nU2_PA"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": null,
+    "is_nestable": false,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "page",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "playlist",
+    "display_name": null,
+    "description": "",
+    "created_at": "2025-09-17T11:59:30.135Z",
+    "updated_at": "2025-09-17T11:59:30.135Z",
+    "id": 91835474484543,
+    "schema": {},
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": null,
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "playlist",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "seo",
+    "display_name": null,
+    "description": null,
+    "created_at": "2025-09-21T21:18:09.605Z",
+    "updated_at": "2025-09-21T21:18:36.468Z",
+    "id": 93388347826544,
+    "schema": {
+      "twitter_image": {
+        "type": "asset",
+        "id": "YkMxmhB7TLaj47cDe1lm3A"
+      },
+      "og_image": {
+        "type": "asset",
+        "id": "XSb2A7IoRJOeUDXyq8dZ2g"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": null,
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "seo",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "SEO",
+    "display_name": null,
+    "description": "",
+    "created_at": "2025-09-20T16:11:17.386Z",
+    "updated_at": "2025-09-20T17:08:29.441Z",
+    "id": 92959036979744,
+    "schema": {
+      "title": {
+        "type": "text",
+        "pos": 0,
+        "id": "EQ9kBwFXQCOtV031R7pUCQ"
+      },
+      "description": {
+        "type": "textarea",
+        "pos": 1,
+        "id": "yY4NE6v0SomG2ezta1TBGw"
+      },
+      "og_title": {
+        "type": "text",
+        "pos": 2,
+        "id": "YhY77pmIRxKhcl_-DASDzw"
+      },
+      "og_description": {
+        "type": "textarea",
+        "pos": 3,
+        "id": "p5pZWllCRFyi8MUseGNbuw"
+      },
+      "og_image": {
+        "type": "asset",
+        "pos": 4,
+        "allow_external_url": true,
+        "filetypes": [
+          "images"
+        ],
+        "id": "FGBF9OFKQKyGLkNanfhaxw"
+      },
+      "twitter_title": {
+        "type": "text",
+        "pos": 5,
+        "id": "A5bAUC9lTG2RDKcuZ0duuA"
+      },
+      "twitter_description": {
+        "type": "text",
+        "pos": 6,
+        "id": "d965XasHSNS_GqplcxDUbQ"
+      },
+      "twitter_image": {
+        "type": "asset",
+        "pos": 7,
+        "allow_external_url": true,
+        "filetypes": [
+          "images"
+        ],
+        "id": "vDDUM73SRFi3V1X8U_SAdQ"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": null,
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "SEO",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "slug",
+    "display_name": null,
+    "description": "",
+    "created_at": "2025-09-16T22:42:49.490Z",
+    "updated_at": "2025-09-16T22:42:49.490Z",
+    "id": 91639683038658,
+    "schema": {},
+    "image": null,
+    "preview_field": null,
+    "is_root": true,
+    "preview_tmpl": null,
+    "is_nestable": false,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "slug",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "teaser",
+    "display_name": null,
+    "description": null,
+    "created_at": "2025-09-16T04:17:24.879Z",
+    "updated_at": "2025-09-16T04:17:24.879Z",
+    "id": 91368017434309,
+    "schema": {
+      "headline": {
+        "type": "text",
+        "id": "I_W7QFl9SbaWidBzAUnYwA"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": null,
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "teaser",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "track",
+    "display_name": null,
+    "description": "",
+    "created_at": "2025-09-18T09:43:14.296Z",
+    "updated_at": "2025-09-18T09:44:48.024Z",
+    "id": 92155880645079,
+    "schema": {
+      "position": {
+        "type": "number",
+        "pos": 0,
+        "required": true,
+        "id": "1h9XSKITSBmiv95e1O-Wfw"
+      },
+      "hour": {
+        "type": "number",
+        "pos": 1,
+        "required": true,
+        "id": "crTn1qBmRk2iakn9PzNldw"
+      },
+      "artist": {
+        "type": "text",
+        "pos": 2,
+        "required": true,
+        "id": "3E27P0xPQtqD_UNmXng_Xg"
+      },
+      "track": {
+        "type": "text",
+        "pos": 3,
+        "required": true,
+        "id": "XLrVHjhZR5-WD4xyDJuzOQ"
+      },
+      "spotify_url": {
+        "type": "text",
+        "pos": 4,
+        "id": "EKTFCECgQqKUZxDuX7usNg"
+      },
+      "youtube_url": {
+        "type": "text",
+        "pos": 5,
+        "id": "RPnlTM9hTCqqLGL9MIRepQ"
+      },
+      "discogs_url": {
+        "type": "text",
+        "pos": 6,
+        "id": "07_jdQqsQNi9g5xfpDAn7Q"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": null,
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "track",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  },
+  {
+    "name": "youtube",
+    "display_name": null,
+    "description": "youtube embed",
+    "created_at": "2025-09-17T13:44:26.652Z",
+    "updated_at": "2025-09-17T13:52:47.932Z",
+    "id": 91861265010802,
+    "schema": {
+      "youtube_url": {
+        "type": "text",
+        "pos": 0,
+        "id": "2UcsrKc4Ro2HeU4aqshAjg"
+      }
+    },
+    "image": null,
+    "preview_field": null,
+    "is_root": false,
+    "preview_tmpl": null,
+    "is_nestable": true,
+    "all_presets": [],
+    "preset_id": null,
+    "real_name": "youtube",
+    "component_group_uuid": null,
+    "color": null,
+    "icon": null,
+    "internal_tags_list": [],
+    "internal_tag_ids": [],
+    "content_type_asset_preview": null,
+    "metadata": {}
+  }
+]

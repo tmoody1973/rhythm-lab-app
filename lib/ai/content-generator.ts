@@ -3,7 +3,7 @@ import path from 'path'
 import { markdownToStoryblokRichtext } from '@storyblok/richtext/markdown-parser'
 
 // Content types
-export type ContentType = 'artist-profile' | 'deep-dive' | 'blog-post'
+export type ContentType = 'artist-profile' | 'deep-dive' | 'blog-post' | 'show-description'
 
 // Content generation request
 export interface ContentRequest {
@@ -148,6 +148,55 @@ REQUIREMENTS:
 - Write comprehensive, well-researched content without embedded citations
 
 Write in a conversational yet informed tone suitable for music blog readers.`
+  },
+
+  'show-description': {
+    system: `You are a music journalist and radio programmer writing in the style of NPR Music. Your show descriptions should embody:
+
+- Professional, journalistic tone with cultural depth
+- Thoughtful analysis of musical selections and flow
+- Contextual storytelling that elevates the listening experience
+- Sophisticated language that respects both music and audience
+- NPR's signature blend of accessibility and intelligence
+
+Write descriptions that inform, inspire, and invite deeper musical exploration, treating each show as a curated cultural experience worthy of thoughtful consideration.`,
+
+    user: (topic: string, context?: string) => `
+Craft a professional show description in the style of NPR Music for: ${topic}
+
+Tracklist information: ${context}
+
+CRITICAL REQUIREMENTS:
+- Exactly 500-600 characters (including spaces)
+- NPR Music editorial style: intelligent, journalistic, culturally aware
+- Focus on musical narrative and artistic context
+- Highlight key artists and their significance
+- Treat the show as curated cultural programming
+
+RESEARCH REQUIREMENTS:
+- Use web search to gather current context about featured artists
+- Look up recent releases, cultural significance, and career highlights
+- Research any musical movements or trends represented
+- Find connections between artists that inform the curatorial narrative
+- Verify current spelling of artist names and track titles
+
+Structure your description to include:
+1. Contextual opening that frames the musical journey
+2. Key artists presented with cultural/artistic significance (informed by research)
+3. Musical themes, genres, or curatorial thread
+4. What makes this selection meaningful for contemporary listeners
+
+Writing Guidelines:
+- Use sophisticated, journalistic language informed by research
+- Provide cultural context discovered through web search
+- Reference recent developments in artists' careers when relevant
+- Describe musical connections and flow thoughtfully
+- Write for culturally curious, music-loving audience
+- Stay within 500-600 character limit (strictly enforced)
+- Avoid promotional language, focus on editorial insight
+- Reference musical movements, influences, or innovations found in research
+
+Create a description that positions this show as thoughtful cultural programming, worthy of the NPR Music brand, enhanced by current knowledge of the featured artists.`
   }
 }
 
@@ -296,7 +345,13 @@ export async function generateContent(request: ContentRequest): Promise<Generate
       .replace('${targetLength}', request.targetLength)
   } else {
     // Fall back to default templates
+    console.log(`[AI Generation] Looking for template: ${request.type}`)
+    console.log(`[AI Generation] Available templates: ${Object.keys(PROMPT_TEMPLATES).join(', ')}`)
     const template = PROMPT_TEMPLATES[request.type]
+    console.log(`[AI Generation] Template found: ${template ? 'yes' : 'no'}`)
+    if (!template) {
+      throw new Error(`No template found for content type: ${request.type}`)
+    }
     systemPrompt = template.system
     userPrompt = template.user(request.topic, request.additionalContext)
   }
@@ -309,7 +364,7 @@ export async function generateContent(request: ContentRequest): Promise<Generate
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: "sonar-pro", // Perplexity's pro model with enhanced web search
+      model: "sonar", // Perplexity's standard model
       messages: [
         {
           role: "system",
@@ -333,7 +388,22 @@ export async function generateContent(request: ContentRequest): Promise<Generate
 
   const completion = await response.json()
 
-  const text = completion.choices[0]?.message?.content || ""
+  // Debug the exact response structure
+  console.log(`[AI Generation] Full Perplexity Response:`, JSON.stringify(completion, null, 2))
+
+  const text = completion.choices?.[0]?.message?.content || completion.content || ""
+
+  if (!text) {
+    console.log(`[AI Generation] ERROR: No content found in any expected location!`)
+    console.log(`[AI Generation] Available keys:`, Object.keys(completion))
+    if (completion.choices?.[0]) {
+      console.log(`[AI Generation] Choice[0] keys:`, Object.keys(completion.choices[0]))
+      if (completion.choices[0].message) {
+        console.log(`[AI Generation] Message keys:`, Object.keys(completion.choices[0].message))
+      }
+    }
+    throw new Error('No content received from Perplexity API - check response structure')
+  }
 
   // Extract source metadata from Perplexity's search_results field
   const searchResults = completion.search_results || []
@@ -407,7 +477,8 @@ function generateTitle(topic: string, type: ContentType): string {
   const typeLabels = {
     'artist-profile': 'Artist Profile',
     'deep-dive': 'Deep Dive',
-    'blog-post': 'Blog Post'
+    'blog-post': 'Blog Post',
+    'show-description': 'Show Description'
   }
   return `${typeLabels[type]}: ${topic}`
 }
@@ -416,7 +487,8 @@ function generateTags(text: string, type: ContentType): string[] {
   const baseTags = {
     'artist-profile': ['artist', 'profile', 'music'],
     'deep-dive': ['analysis', 'deep-dive', 'music-history'],
-    'blog-post': ['blog', 'music', 'culture']
+    'blog-post': ['blog', 'music', 'culture'],
+    'show-description': ['radio-show', 'mixcloud', 'music-discovery']
   }
 
   // Add content-specific tags (could be enhanced with AI analysis)
@@ -433,7 +505,8 @@ function getCategoryForType(type: ContentType): string {
   const categories = {
     'artist-profile': 'Artist Profiles',
     'deep-dive': 'Deep Dives',
-    'blog-post': 'Blog Posts'
+    'blog-post': 'Blog Posts',
+    'show-description': 'Show Descriptions'
   }
   return categories[type]
 }

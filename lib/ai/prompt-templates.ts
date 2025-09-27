@@ -115,6 +115,56 @@ Requirements:
 Make it feel like a conversation with a knowledgeable friend who's passionate about music.`,
 
     notes: "Blog posts should feel current and conversational. Great for driving engagement and social media sharing."
+  },
+
+  'show-description': {
+    system: `You are a music journalist and radio programmer writing in the style of NPR Music. Your show descriptions should embody:
+
+- Professional, journalistic tone with cultural depth
+- Thoughtful analysis of musical selections and flow
+- Contextual storytelling that elevates the listening experience
+- Sophisticated language that respects both music and audience
+- NPR's signature blend of accessibility and intelligence
+
+Write descriptions that inform, inspire, and invite deeper musical exploration, treating each show as a curated cultural experience worthy of thoughtful consideration.`,
+
+    prompt: (topic: string, additionalContext: string, targetLength: string) => `Craft a professional show description in the style of NPR Music for: ${topic}
+
+Tracklist information: ${additionalContext}
+
+CRITICAL REQUIREMENTS:
+- Exactly 500-600 characters (including spaces)
+- NPR Music editorial style: intelligent, journalistic, culturally aware
+- Focus on musical narrative and artistic context
+- Highlight key artists and their significance
+- Treat the show as curated cultural programming
+
+RESEARCH REQUIREMENTS:
+- Use web search to gather current context about featured artists
+- Look up recent releases, cultural significance, and career highlights
+- Research any musical movements or trends represented
+- Find connections between artists that inform the curatorial narrative
+- Verify current spelling of artist names and track titles
+
+Structure your description to include:
+1. Contextual opening that frames the musical journey
+2. Key artists presented with cultural/artistic significance (informed by research)
+3. Musical themes, genres, or curatorial thread
+4. What makes this selection meaningful for contemporary listeners
+
+Writing Guidelines:
+- Use sophisticated, journalistic language informed by research
+- Provide cultural context discovered through web search
+- Reference recent developments in artists' careers when relevant
+- Describe musical connections and flow thoughtfully
+- Write for culturally curious, music-loving audience
+- Stay within 500-600 character limit (strictly enforced)
+- Avoid promotional language, focus on editorial insight
+- Reference musical movements, influences, or innovations found in research
+
+Create a description that positions this show as thoughtful cultural programming, worthy of the NPR Music brand, enhanced by current knowledge of the featured artists.`,
+
+    notes: "NPR Music style: Professional, culturally aware, journalistic. 500-600 characters for Mixcloud. Treat shows as curated cultural experiences, not just playlists."
   }
 } as const
 

@@ -1,4 +1,5 @@
 import { GeneratedContent, ContentType } from '../ai/content-generator'
+import { StoryblokReleaseItem } from '../external-apis/discogs'
 
 // Function to make direct API calls to Storyblok Management API
 async function callStoryblokAPI(endpoint: string, method: string = 'GET', data?: any) {
@@ -72,7 +73,9 @@ export interface StoryblokStory {
 export async function createStoryblokStory(
   content: GeneratedContent,
   spaceId: number,
-  folderId?: number
+  folderId?: number,
+  discography?: StoryblokReleaseItem[],
+  selectedArtist?: { id: number; name: string; uri: string; resource_url: string; [key: string]: any }
 ): Promise<{ success: boolean; story?: any; error?: string }> {
   try {
     const slug = generateSlug(content.title)
@@ -97,6 +100,18 @@ export async function createStoryblokStory(
       // Add artist photo if available (from SEO block or direct upload)
       if (content.seoBlock?.og_image) {
         storyContent.artist_photo = content.seoBlock.og_image
+      }
+      // Add discography if provided
+      if (discography && discography.length > 0) {
+        storyContent.releases = discography
+        console.log(`[Storyblok] Adding ${discography.length} releases to artist profile`)
+      }
+
+      // Add Discogs artist info if provided
+      if (selectedArtist) {
+        storyContent.discogs_id = selectedArtist.id.toString()
+        storyContent.discogs_url = `https://www.discogs.com${selectedArtist.uri}`
+        console.log(`[Storyblok] Adding Discogs info: ID ${selectedArtist.id}, URL ${storyContent.discogs_url}`)
       }
     } else {
       storyContent.title = content.title

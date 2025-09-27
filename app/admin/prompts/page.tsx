@@ -20,6 +20,7 @@ interface PromptTemplates {
   'artist-profile': PromptTemplate
   'deep-dive': PromptTemplate
   'blog-post': PromptTemplate
+  'show-description': PromptTemplate
 }
 
 export default function PromptManagementPage() {
@@ -105,7 +106,8 @@ export default function PromptManagementPage() {
     const labels = {
       'artist-profile': 'Artist Profiles',
       'deep-dive': 'Deep Dives',
-      'blog-post': 'Blog Posts'
+      'blog-post': 'Blog Posts',
+      'show-description': 'Show Descriptions'
     }
     return labels[type]
   }
@@ -183,7 +185,7 @@ export default function PromptManagementPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as keyof PromptTemplates)}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           {Object.keys(editingTemplates || {}).map((type) => (
             <TabsTrigger key={type} value={type}>
               {getContentTypeLabel(type as keyof PromptTemplates)}
@@ -221,7 +223,7 @@ export default function PromptManagementPage() {
                 <div className="space-y-2">
                   <Label htmlFor={`${type}-prompt`}>User Prompt Template</Label>
                   <p className="text-sm text-muted-foreground">
-                    Template for the user prompt. Uses variables: topic, additionalContext, targetLength.
+                    Template for the user prompt. Uses variables: {type === 'show-description' ? 'topic (show title), additionalContext (tracklist)' : 'topic, additionalContext, targetLength'}.
                   </p>
                   <Textarea
                     id={`${type}-prompt`}

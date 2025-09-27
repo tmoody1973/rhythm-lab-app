@@ -43,6 +43,55 @@ export async function getMixcloudCoverImage(mixcloudUrl: string): Promise<string
 }
 
 /**
+ * Upload image file directly to Storyblok as asset
+ */
+export async function uploadImageFileToStoryblok(
+  imageFile: File,
+  filename: string
+): Promise<{ id: number; filename: string; public_url: string } | null> {
+  try {
+    const storyblokToken = process.env.STORYBLOK_MANAGEMENT_TOKEN
+    const spaceId = process.env.STORYBLOK_SPACE_ID
+
+    if (!storyblokToken || !spaceId) {
+      console.warn('Storyblok credentials not configured for asset upload')
+      return null
+    }
+
+    // Determine file extension from file name or type
+    const extension = imageFile.name.includes('.')
+      ? `.${imageFile.name.split('.').pop()}`
+      : '.jpg'
+
+    // Upload to Storyblok
+    const formData = new FormData()
+    formData.append('file', imageFile, `${filename}${extension}`)
+
+    const uploadResponse = await fetch(`https://mapi.storyblok.com/v1/spaces/${spaceId}/assets/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': storyblokToken
+      },
+      body: formData
+    })
+
+    if (!uploadResponse.ok) {
+      const error = await uploadResponse.text()
+      throw new Error(`Storyblok asset upload failed (${uploadResponse.status}): ${error}`)
+    }
+
+    const assetData = await uploadResponse.json()
+    console.log('Successfully uploaded cover image file to Storyblok:', assetData.public_url)
+
+    return assetData
+
+  } catch (error) {
+    console.error('Error uploading image file to Storyblok:', error)
+    return null
+  }
+}
+
+/**
  * Download image from URL and upload to Storyblok as asset
  */
 export async function uploadImageUrlToStoryblok(

@@ -38,6 +38,45 @@ async function loadPrompts() {
         system: PROMPT_TEMPLATES['blog-post'].system,
         prompt: PROMPT_TEMPLATES['blog-post'].prompt('${topic}', '${additionalContext}', '${targetLength}'),
         notes: PROMPT_TEMPLATES['blog-post'].notes
+      },
+      'show-description': {
+        system: `You are a radio show curator and music discovery expert who creates compelling show descriptions for Mixcloud. Your descriptions should be:
+
+- Engaging and enticing to potential listeners
+- Focused on the musical journey and flow
+- Highlight key artists and genres
+- Perfect for music discovery platforms
+- Optimized for Mixcloud's audience
+
+Create descriptions that make listeners excited to press play and discover new music through expertly curated tracklists.`,
+        prompt: `Create a compelling show description for: \${topic}
+
+Tracklist information: \${additionalContext}
+
+CRITICAL REQUIREMENTS:
+- Exactly 500-600 characters (including spaces)
+- Perfect for Mixcloud audience
+- Focus on musical journey and discovery
+- Highlight key artists from the tracklist
+- Mention genres and musical flow
+- Create excitement and anticipation
+
+Structure your description to include:
+1. Opening hook that captures the show's essence
+2. Key artists/tracks that define the journey
+3. Musical themes, genres, or story arc
+4. What makes this show special for discovery
+
+REQUIREMENTS:
+- Analyze the provided tracklist to identify standout artists and genres
+- Create a narrative about the musical journey
+- Use language that appeals to music discovery enthusiasts
+- Stay within 500-600 character limit (strictly enforced)
+- Focus on what makes listeners want to hit play
+- Avoid generic phrases, be specific to this tracklist
+
+Make every character count - this description determines whether someone discovers your carefully curated music.`,
+        notes: 'Show descriptions must be 500-600 characters for Mixcloud optimization. Focus on musical discovery and track highlights.'
       }
     }
   }
@@ -84,7 +123,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate template structure
-    const requiredContentTypes = ['artist-profile', 'deep-dive', 'blog-post']
+    const requiredContentTypes = ['artist-profile', 'deep-dive', 'blog-post', 'show-description']
     const requiredFields = ['system', 'prompt', 'notes']
 
     for (const contentType of requiredContentTypes) {
@@ -149,6 +188,45 @@ export async function PUT() {
         system: PROMPT_TEMPLATES['blog-post'].system,
         prompt: PROMPT_TEMPLATES['blog-post'].prompt('${topic}', '${additionalContext}', '${targetLength}'),
         notes: PROMPT_TEMPLATES['blog-post'].notes
+      },
+      'show-description': {
+        system: `You are a radio show curator and music discovery expert who creates compelling show descriptions for Mixcloud. Your descriptions should be:
+
+- Engaging and enticing to potential listeners
+- Focused on the musical journey and flow
+- Highlight key artists and genres
+- Perfect for music discovery platforms
+- Optimized for Mixcloud's audience
+
+Create descriptions that make listeners excited to press play and discover new music through expertly curated tracklists.`,
+        prompt: `Create a compelling show description for: \${topic}
+
+Tracklist information: \${additionalContext}
+
+CRITICAL REQUIREMENTS:
+- Exactly 500-600 characters (including spaces)
+- Perfect for Mixcloud audience
+- Focus on musical journey and discovery
+- Highlight key artists from the tracklist
+- Mention genres and musical flow
+- Create excitement and anticipation
+
+Structure your description to include:
+1. Opening hook that captures the show's essence
+2. Key artists/tracks that define the journey
+3. Musical themes, genres, or story arc
+4. What makes this show special for discovery
+
+REQUIREMENTS:
+- Analyze the provided tracklist to identify standout artists and genres
+- Create a narrative about the musical journey
+- Use language that appeals to music discovery enthusiasts
+- Stay within 500-600 character limit (strictly enforced)
+- Focus on what makes listeners want to hit play
+- Avoid generic phrases, be specific to this tracklist
+
+Make every character count - this description determines whether someone discovers your carefully curated music.`,
+        notes: 'Show descriptions must be 500-600 characters for Mixcloud optimization. Focus on musical discovery and track highlights.'
       },
       _metadata: {
         lastUpdated: new Date().toISOString(),

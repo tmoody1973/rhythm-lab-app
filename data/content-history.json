@@ -1,0 +1,19 @@
+[
+  {
+    "title": "Artist Profile: Miles Davis",
+    "contentType": "artist-profile",
+    "status": "published",
+    "storyblokId": "95368898952143",
+    "storyblokUrl": "https://app.storyblok.com/#/me/spaces/287185477794349/stories/0/0/95368898952143",
+    "liveUrl": "https://your-site.com/profiles/artist-profile-miles-davis-1758973022218",
+    "metadata": {
+      "generatedBy": "AI",
+      "wordCount": 5109,
+      "hasDiscography": true,
+      "discographyCount": 15,
+      "hasImages": false
+    },
+    "id": "content_1758973023290_4dwd4xr4u",
+    "createdAt": "2025-09-27T11:37:03.290Z"
+  }
+]
