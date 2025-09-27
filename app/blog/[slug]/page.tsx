@@ -6,6 +6,7 @@ import { sb, getStoryblokOptions } from "@/src/lib/storyblok"
 import Link from "next/link"
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
+import { safeRenderText } from '@/lib/utils/rich-text'
 
 interface BlogPostPageProps {
   params: Promise<{
@@ -33,10 +34,10 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
     return {
       title: story.name + ' | Rhythm Lab Radio Blog',
-      description: story.content?.intro || story.content?.description || 'Read the latest from Rhythm Lab Radio',
+      description: safeRenderText(story.content?.intro) || safeRenderText(story.content?.description) || 'Read the latest from Rhythm Lab Radio',
       openGraph: {
         title: story.name,
-        description: story.content?.intro || story.content?.description,
+        description: safeRenderText(story.content?.intro) || safeRenderText(story.content?.description),
         images: story.content?.featured_image?.filename ? [story.content.featured_image.filename] : [],
       },
     };
@@ -123,7 +124,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {/* Intro */}
               {content?.intro && (
                 <div className="text-xl text-muted-foreground mb-8 leading-relaxed font-medium">
-                  {content.intro}
+                  {safeRenderText(content.intro)}
                 </div>
               )}
 

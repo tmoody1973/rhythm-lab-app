@@ -6,6 +6,7 @@ import { FavoriteButton } from "@/components/favorite-button"
 import { sb } from "@/src/lib/storyblok"
 import Link from "next/link"
 import { Metadata } from 'next'
+import { safeRenderText } from '@/lib/utils/rich-text'
 
 // Generate metadata for the deep dives page
 export const metadata: Metadata = {
@@ -250,20 +251,20 @@ export default async function DeepDivesPage() {
                     </Link>
                     <p className="text-muted-foreground text-base mb-4 leading-relaxed">
                       {hasDeepDives
-                        ? (dive.content?.intro || dive.content?.description || 'Discover in-depth explorations of music, artists, and culture.')
+                        ? (safeRenderText(dive.content?.intro) || safeRenderText(dive.content?.description) || 'Discover in-depth explorations of music, artists, and culture.')
                         : dive.description
                       }
                     </p>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {hasDeepDives ? (
-                        (dive.content?.tags || []).slice(0, 3).map((tag: string, index: number) => (
+                        (dive.content?.tags || []).slice(0, 3).map((tag: any, index: number) => (
                           <Badge
                             key={index}
                             variant="outline"
                             className="text-xs px-3 py-1 rounded-full font-medium"
                             style={{ borderColor: diveColor, color: diveColor }}
                           >
-                            {String(tag).toUpperCase()}
+                            {safeRenderText(tag).toUpperCase()}
                           </Badge>
                         ))
                       ) : (
@@ -283,7 +284,7 @@ export default async function DeepDivesPage() {
                       <div className="flex items-center gap-3">
                         <span>
                           {hasDeepDives
-                            ? `${dive.content?.duration || '45m'} • ${dive.content?.plays || dive.content?.play_count || '1.2k'} plays`
+                            ? `${safeRenderText(dive.content?.duration) || '45m'} • ${safeRenderText(dive.content?.plays) || safeRenderText(dive.content?.play_count) || '1.2k'} plays`
                             : `${dive.duration} • ${dive.plays} plays`
                           }
                         </span>
@@ -294,7 +295,7 @@ export default async function DeepDivesPage() {
                               title: dive.name,
                               type: 'deep_dive',
                               image: dive.content?.featured_image?.filename,
-                              description: dive.content?.intro || dive.content?.description
+                              description: safeRenderText(dive.content?.intro) || safeRenderText(dive.content?.description)
                             }}
                             size="sm"
                           />
@@ -375,24 +376,24 @@ export default async function DeepDivesPage() {
                         {hasDeepDives ? dive.name : dive.title}
                       </h3>
                     </Link>
-                    {(hasDeepDives ? (dive.content?.intro || dive.content?.description) : dive.description) && (
+                    {(hasDeepDives ? (safeRenderText(dive.content?.intro) || safeRenderText(dive.content?.description)) : dive.description) && (
                       <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-3">
                         {hasDeepDives
-                          ? (dive.content?.intro || dive.content?.description)
+                          ? (safeRenderText(dive.content?.intro) || safeRenderText(dive.content?.description))
                           : dive.description
                         }
                       </p>
                     )}
                     <div className="flex flex-wrap gap-1 mb-3">
                       {hasDeepDives ? (
-                        (dive.content?.tags || []).slice(0, 2).map((tag: string, index: number) => (
+                        (dive.content?.tags || []).slice(0, 2).map((tag: any, index: number) => (
                           <Badge
                             key={index}
                             variant="outline"
                             className="text-xs px-2 py-1 rounded-full font-medium"
                             style={{ borderColor: diveColor, color: diveColor }}
                           >
-                            {String(tag).toUpperCase()}
+                            {safeRenderText(tag).toUpperCase()}
                           </Badge>
                         ))
                       ) : (
@@ -411,7 +412,7 @@ export default async function DeepDivesPage() {
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span className="text-xs">
                         {hasDeepDives
-                          ? `${dive.content?.duration || '45m'} • ${dive.content?.plays || dive.content?.play_count || '1.2k'} plays`
+                          ? `${safeRenderText(dive.content?.duration) || '45m'} • ${safeRenderText(dive.content?.plays) || safeRenderText(dive.content?.play_count) || '1.2k'} plays`
                           : `${dive.duration} • ${dive.plays} plays`
                         }
                       </span>

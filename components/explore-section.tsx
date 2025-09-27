@@ -401,36 +401,89 @@ export function ExploreSection() {
                   </Link>
 
                   {/* Description */}
-                  {(item.content?.intro || item.content?.description) && (
-                    <p className="text-muted-foreground text-xs mb-3 leading-relaxed line-clamp-2">
-                      {item.content.intro || item.content.description}
-                    </p>
-                  )}
+                  {(() => {
+                    const description = item.content?.intro || item.content?.description;
+                    if (!description) return null;
+
+                    // Helper function to extract text from Storyblok rich text
+                    const extractTextFromRichText = (obj: any): string => {
+                      if (typeof obj === 'string') return obj;
+                      if (!obj) return '';
+
+                      // Handle Storyblok rich text structure
+                      if (obj.type && obj.content && Array.isArray(obj.content)) {
+                        // This is a rich text node
+                        return obj.content
+                          .map((node: any) => extractTextFromRichText(node))
+                          .filter(Boolean)
+                          .join(' ');
+                      }
+
+                      // Handle text nodes
+                      if (obj.text) return obj.text;
+
+                      // Handle other object properties
+                      if (obj.content) return extractTextFromRichText(obj.content);
+                      if (obj.value) return String(obj.value);
+
+                      // Fallback
+                      return '';
+                    };
+
+                    const descriptionText = extractTextFromRichText(description);
+
+                    if (!descriptionText) return null;
+
+                    return (
+                      <p className="text-muted-foreground text-xs mb-3 leading-relaxed line-clamp-2">
+                        {descriptionText}
+                      </p>
+                    );
+                  })()}
 
                   {/* Tags */}
                   <div className="flex flex-wrap gap-1 mb-3">
                     {(() => {
                       // Extract genre tags from content, excluding generic tags
                       const contentTags = item.content?.tags || item.content?.genres || [];
-                      const genreTags = contentTags.filter((tag: string) =>
-                        !['artist', 'profile', 'music'].includes(tag.toLowerCase())
-                      );
+
+                      // Safely convert tags to strings and filter
+                      const genreTags = contentTags
+                        .map((tag: any) => {
+                          // Convert objects to strings safely
+                          if (typeof tag === 'object' && tag !== null) {
+                            return tag.content || tag.name || tag.text || tag.value || '';
+                          }
+                          return String(tag || '');
+                        })
+                        .filter((tag: string) => {
+                          const tagLower = tag.toLowerCase();
+                          return tag.length > 0 && !['artist', 'profile', 'music'].includes(tagLower);
+                        });
 
                       // If no genre tags found, create meaningful ones based on content
                       const displayTags = genreTags.length > 0 ? genreTags :
                         extractGenreTagsFromContent(item.content, item.name);
 
-                      return displayTags.slice(0, 3).map((tag: string, index: number) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="text-xs px-2 py-0.5 rounded-full"
-                          style={{ borderColor: itemColor + '50', color: itemColor }}
-                          title={`Genre tag: ${tag} (from ${genreTags.length > 0 ? 'content' : 'extraction'})`}
-                        >
-                          {String(tag).toUpperCase()}
-                        </Badge>
-                      ));
+                      return displayTags.slice(0, 3).map((tag: string, index: number) => {
+                        // Ensure tag is a valid string
+                        const tagString = String(tag || '').trim();
+
+                        // Skip empty tags
+                        if (!tagString) return null;
+
+                        return (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs px-2 py-0.5 rounded-full"
+                            style={{ borderColor: itemColor + '50', color: itemColor }}
+                            title={`Genre tag: ${tagString} (from ${genreTags.length > 0 ? 'content' : 'extraction'})`}
+                          >
+                            {tagString.toUpperCase()}
+                          </Badge>
+                        );
+                      }).filter(Boolean);
                     })()}
                   </div>
 
@@ -438,8 +491,36 @@ export function ExploreSection() {
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-3">
                       <span>
-                        {item.content?.duration || item.content?.read_time || '5 min read'}
-                        {item.content?.plays && ` • ${item.content.plays} plays`}
+                        {(() => {
+                          // Helper function to extract text from potential rich text
+                          const extractText = (obj: any): string => {
+                            if (typeof obj === 'string') return obj;
+                            if (!obj) return '';
+
+                            // Handle Storyblok rich text structure
+                            if (obj.type && obj.content && Array.isArray(obj.content)) {
+                              return obj.content
+                                .map((node: any) => extractText(node))
+                                .filter(Boolean)
+                                .join(' ');
+                            }
+
+                            // Handle text nodes
+                            if (obj.text) return obj.text;
+                            if (obj.content) return extractText(obj.content);
+                            if (obj.value) return String(obj.value);
+
+                            return '';
+                          };
+
+                          const duration = item.content?.duration || item.content?.read_time || '5 min read';
+                          const durationText = extractText(duration) || '5 min read';
+
+                          const plays = item.content?.plays;
+                          const playsText = plays ? ` • ${String(plays)} plays` : '';
+
+                          return durationText + playsText;
+                        })()}
                       </span>
                       <FavoriteButton
                         content={{

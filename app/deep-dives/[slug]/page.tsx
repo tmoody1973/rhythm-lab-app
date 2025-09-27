@@ -6,6 +6,7 @@ import { sb } from "@/src/lib/storyblok"
 import Link from "next/link"
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
+import { extractTextFromRichText, safeRenderText } from '@/lib/utils/rich-text'
 
 interface DeepDivePageProps {
   params: Promise<{
@@ -45,12 +46,14 @@ export async function generateMetadata({ params }: DeepDivePageProps): Promise<M
 
     const story = response.data.story;
 
+    const description = safeRenderText(story.content?.intro) || safeRenderText(story.content?.description) || 'In-depth exploration from Rhythm Lab Radio';
+
     return {
       title: story.name + ' | Rhythm Lab Radio Deep Dives',
-      description: story.content?.intro || story.content?.description || 'In-depth exploration from Rhythm Lab Radio',
+      description: description,
       openGraph: {
         title: story.name,
-        description: story.content?.intro || story.content?.description,
+        description: description,
         images: story.content?.featured_image?.filename ? [story.content.featured_image.filename] : [],
       },
     };
@@ -95,6 +98,16 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
     const content = story.content;
     const postColor = getPostColor(story.id);
 
+    // Debug: Log the content structure to identify problematic fields
+    if (typeof window === 'undefined') {
+      console.log('Deep Dive Content Fields:', Object.keys(content || {}));
+      Object.entries(content || {}).forEach(([key, value]) => {
+        if (typeof value === 'object' && value !== null && 'type' in value && 'content' in value) {
+          console.warn(`Field "${key}" contains rich text object:`, value);
+        }
+      });
+    }
+
     return (
       <div className="min-h-screen bg-background text-foreground">
         <Header />
@@ -125,7 +138,7 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
                   className="text-white text-sm px-4 py-2 rounded-full font-medium"
                   style={{ backgroundColor: postColor }}
                 >
-                  {content?.category || 'DEEP DIVE'}
+                  {safeRenderText(content?.category, 'DEEP DIVE')}
                 </Badge>
                 <span className="text-sm text-muted-foreground">
                   {new Date(story.published_at || story.created_at).toLocaleDateString('en-US', {
@@ -142,7 +155,7 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
 
               {content?.intro && (
                 <div className="text-xl text-muted-foreground mb-8 leading-relaxed font-medium">
-                  {content.intro}
+                  {safeRenderText(content.intro)}
                 </div>
               )}
 
@@ -158,8 +171,10 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
                         ▶ Play Deep Dive
                       </Button>
                       <div className="text-sm text-muted-foreground">
-                        <div className="font-medium">{content.duration}</div>
-                        <div>{content.plays || content.play_count || '1.2k'} plays</div>
+                        <div className="font-medium">
+                          {safeRenderText(content.duration)}
+                        </div>
+                        <div>{safeRenderText(content.plays) || safeRenderText(content.play_count) || '1.2k'} plays</div>
                       </div>
                     </div>
                   </div>
@@ -168,16 +183,21 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
 
               {(content?.tags || story.tag_list) && (
                 <div className="flex flex-wrap gap-2 mb-8">
-                  {(content.tags || story.tag_list || []).map((tag: string, index: number) => (
-                    <Badge
-                      key={index}
-                      variant="outline"
-                      className="text-sm px-3 py-1 rounded-full"
-                      style={{ borderColor: postColor, color: postColor }}
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
+                  {(content.tags || story.tag_list || []).map((tag: any, index: number) => {
+                    const tagText = safeRenderText(tag);
+                    if (!tagText) return null;
+
+                    return (
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="text-sm px-3 py-1 rounded-full"
+                        style={{ borderColor: postColor, color: postColor }}
+                      >
+                        {tagText}
+                      </Badge>
+                    );
+                  }).filter(Boolean)}
                 </div>
               )}
             </header>
@@ -209,7 +229,9 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
                   {content?.read_time && (
                     <>
                       <span className="mx-2">•</span>
-                      <span>{content.read_time}</span>
+                      <span>
+                        {safeRenderText(content.read_time)}
+                      </span>
                     </>
                   )}
                 </div>

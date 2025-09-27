@@ -7,6 +7,7 @@ import { sb } from "@/src/lib/storyblok"
 import Link from "next/link"
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
+import { safeRenderText } from '@/lib/utils/rich-text'
 
 interface ArtistProfilePageProps {
   params: Promise<{
@@ -36,10 +37,10 @@ export async function generateMetadata({ params }: ArtistProfilePageProps): Prom
 
     return {
       title: story.name + ' | Rhythm Lab Radio',
-      description: story.content?.short_bio || story.content?.bio || story.content?.description || 'Discover this artist on Rhythm Lab Radio',
+      description: safeRenderText(story.content?.short_bio) || safeRenderText(story.content?.bio) || safeRenderText(story.content?.description) || 'Discover this artist on Rhythm Lab Radio',
       openGraph: {
         title: story.name,
-        description: story.content?.short_bio || story.content?.bio || story.content?.description,
+        description: safeRenderText(story.content?.short_bio) || safeRenderText(story.content?.bio) || safeRenderText(story.content?.description),
         images: story.content?.artist_photo?.filename ? [story.content.artist_photo.filename] : [],
       },
     };

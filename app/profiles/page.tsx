@@ -6,6 +6,7 @@ import { FavoriteButton } from "@/components/favorite-button"
 import { sb } from "@/src/lib/storyblok"
 import Link from "next/link"
 import { Metadata } from 'next'
+import { safeRenderText } from '@/lib/utils/rich-text'
 
 // Generate metadata for the profiles page
 export const metadata: Metadata = {
@@ -386,7 +387,7 @@ export default async function ProfilesPage() {
                     </Link>
                     <p className="text-muted-foreground text-base mb-4 leading-relaxed">
                       {hasProfiles
-                        ? (profile.content?.subtitle || profile.content?.intro || profile.content?.description || 'Discover in-depth conversations with music\'s most innovative creators.')
+                        ? (safeRenderText(profile.content?.subtitle) || safeRenderText(profile.content?.intro) || safeRenderText(profile.content?.description) || 'Discover in-depth conversations with music\'s most innovative creators.')
                         : profile.description
                       }
                     </p>
@@ -432,7 +433,7 @@ export default async function ProfilesPage() {
                       <div className="flex items-center gap-3">
                         <span>
                           {hasProfiles
-                            ? `${profile.content?.duration || '45m'} • ${profile.content?.plays || profile.content?.play_count || '1.2k'} plays`
+                            ? `${safeRenderText(profile.content?.duration) || '45m'} • ${safeRenderText(profile.content?.plays) || safeRenderText(profile.content?.play_count) || '1.2k'} plays`
                             : `${profile.duration} • ${profile.plays} plays`
                           }
                         </span>
@@ -443,7 +444,7 @@ export default async function ProfilesPage() {
                               title: profile.name,
                               type: 'artist_profile',
                               image: profile.content?.artist_photo?.filename,
-                              description: profile.content?.intro || profile.content?.description
+                              description: safeRenderText(profile.content?.intro) || safeRenderText(profile.content?.description)
                             }}
                             size="sm"
                           />
@@ -535,10 +536,10 @@ export default async function ProfilesPage() {
                         {hasProfiles ? profile.name : profile.title}
                       </h3>
                     </Link>
-                    {(hasProfiles ? (profile.content?.subtitle || profile.content?.intro || profile.content?.description) : profile.description) && (
+                    {(hasProfiles ? (safeRenderText(profile.content?.subtitle) || safeRenderText(profile.content?.intro) || safeRenderText(profile.content?.description)) : profile.description) && (
                       <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-3">
                         {hasProfiles
-                          ? (profile.content?.subtitle || profile.content?.intro || profile.content?.description)
+                          ? (safeRenderText(profile.content?.subtitle) || safeRenderText(profile.content?.intro) || safeRenderText(profile.content?.description))
                           : profile.description
                         }
                       </p>
@@ -567,7 +568,7 @@ export default async function ProfilesPage() {
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span className="text-xs">
                         {hasProfiles
-                          ? `${profile.content?.duration || '45m'} • ${profile.content?.plays || profile.content?.play_count || '1.2k'} plays`
+                          ? `${safeRenderText(profile.content?.duration) || '45m'} • ${safeRenderText(profile.content?.plays) || safeRenderText(profile.content?.play_count) || '1.2k'} plays`
                           : `${profile.duration} • ${profile.plays} plays`
                         }
                       </span>

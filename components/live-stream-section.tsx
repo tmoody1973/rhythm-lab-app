@@ -189,16 +189,22 @@ export function LiveStreamSection() {
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-muted border-2 border-border/50 overflow-hidden flex-shrink-0 rounded">
                 <img
-                  src={currentSong?.image || "/images/ALBUM-DEFAULT.png"}
+                  src={mounted && currentSong?.image ? currentSong.image : "/images/ALBUM-DEFAULT.png"}
                   alt="Album artwork"
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-lg truncate">{currentSong?.artist?.toUpperCase() || 'UNKNOWN ARTIST'}</h3>
-                <p className="text-base font-medium text-foreground/90 truncate">{currentSong?.song || 'Unknown Track'}</p>
+                <h3 className="font-bold text-lg truncate">
+                  {mounted ? (currentSong?.artist?.toUpperCase() || 'UNKNOWN ARTIST') : 'UNKNOWN ARTIST'}
+                </h3>
+                <p className="text-base font-medium text-foreground/90 truncate">
+                  {mounted ? (currentSong?.song || 'Unknown Track') : 'Unknown Track'}
+                </p>
                 <p className="text-sm font-medium uppercase tracking-widest text-muted-foreground truncate">
-                  {currentSong?.release ? `${currentSong.release}${currentSong.label ? ` • ${currentSong.label}` : ''}` : 'RHYTHM LAB RADIO'}
+                  {mounted && currentSong?.release
+                    ? `${currentSong.release}${currentSong.label ? ` • ${currentSong.label}` : ''}`
+                    : 'RHYTHM LAB RADIO'}
                 </p>
               </div>
             </div>
@@ -217,8 +223,8 @@ export function LiveStreamSection() {
           )}
         </div>
         <div className="space-y-3">
-          {loading ? (
-            // Loading skeleton
+          {loading || !mounted ? (
+            // Loading skeleton - show this on server and while loading
             Array.from({ length: 4 }).map((_, index) => (
               <div key={index} className="flex items-center justify-between py-3 border-b-2 border-border/30">
                 <div className="flex-1 min-w-0">

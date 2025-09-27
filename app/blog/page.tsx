@@ -6,6 +6,7 @@ import { FavoriteButton } from "@/components/favorite-button"
 import { sb } from "@/src/lib/storyblok"
 import Link from "next/link"
 import { Metadata } from 'next'
+import { safeRenderText } from '@/lib/utils/rich-text'
 
 // Generate metadata for the blog page
 export const metadata: Metadata = {
@@ -164,7 +165,7 @@ export default async function BlogPage() {
                         </Link>
                         {post.content?.intro ? (
                           <p className="text-muted-foreground text-base mb-4 leading-relaxed">
-                            {post.content.intro}
+                            {safeRenderText(post.content.intro)}
                           </p>
                         ) : (
                           <p className="text-muted-foreground text-base mb-4 leading-relaxed">
@@ -205,7 +206,7 @@ export default async function BlogPage() {
                                 title: post.name,
                                 type: 'blog_post',
                                 image: post.content?.featured_image?.filename,
-                                description: post.content?.intro
+                                description: safeRenderText(post.content?.intro)
                               }}
                               size="sm"
                             />
@@ -276,7 +277,7 @@ export default async function BlogPage() {
                           </Link>
                           {post.content?.intro && (
                             <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-3">
-                              {post.content.intro}
+                              {safeRenderText(post.content.intro)}
                             </p>
                           )}
                           <div className="flex flex-wrap gap-1 mb-3">
@@ -313,7 +314,7 @@ export default async function BlogPage() {
                                   title: post.name,
                                   type: 'blog_post',
                                   image: post.content?.featured_image?.filename,
-                                  description: post.content?.intro
+                                  description: safeRenderText(post.content?.intro)
                                 }}
                                 size="sm"
                               />
