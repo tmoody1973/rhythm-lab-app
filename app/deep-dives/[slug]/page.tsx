@@ -2,6 +2,7 @@ import { Header } from "@/components/header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { EnhancedContentRenderer } from "@/components/enhanced-content-renderer"
+import { PodcastPlayButton } from "@/components/podcast-play-button"
 import { sb } from "@/src/lib/storyblok"
 import Link from "next/link"
 import { notFound } from 'next/navigation'
@@ -201,6 +202,23 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
                 </div>
               )}
             </header>
+
+            {/* Podcast Play Button */}
+            {content?.podcast_audio_url && (
+              <div className="mb-8">
+                <PodcastPlayButton
+                  episode={{
+                    id: story.uuid || story.id.toString(),
+                    title: safeRenderText(content.podcast_audio_title) || story.name,
+                    audioUrl: content.podcast_audio_url,
+                    description: undefined,
+                    imageUrl: content?.featured_image?.filename
+                  }}
+                  variant="full"
+                  className="w-full"
+                />
+              </div>
+            )}
 
             <div className="mb-12">
               {content?.content && (
