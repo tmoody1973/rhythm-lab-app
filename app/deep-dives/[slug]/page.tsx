@@ -1,7 +1,7 @@
 import { Header } from "@/components/header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { RichTextRenderer } from "@/components/RichTextRenderer"
+import { EnhancedContentRenderer } from "@/components/enhanced-content-renderer"
 import { sb } from "@/src/lib/storyblok"
 import Link from "next/link"
 import { notFound } from 'next/navigation'
@@ -202,13 +202,27 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
               )}
             </header>
 
-            <div className="prose prose-lg max-w-none mb-12">
+            <div className="mb-12">
               {content?.content && (
-                <RichTextRenderer content={content.content} />
+                <EnhancedContentRenderer
+                  content={content.content}
+                  sourcesReferences={content?.sources_references || content?.sources_refernces}
+                  displayMode="compact"
+                  maxVisible={6}
+                  autoCollapse={true}
+                  className=""
+                />
               )}
 
               {content?.body && (
-                <RichTextRenderer content={content.body} />
+                <EnhancedContentRenderer
+                  content={content.body}
+                  sourcesReferences={content?.sources_references || content?.sources_refernces}
+                  displayMode="compact"
+                  maxVisible={6}
+                  autoCollapse={true}
+                  className=""
+                />
               )}
 
               {content && !content.content && !content.body && (

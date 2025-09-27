@@ -1,7 +1,7 @@
 import { Header } from "@/components/header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { RichTextRenderer } from "@/components/RichTextRenderer"
+import { EnhancedContentRenderer } from "@/components/enhanced-content-renderer"
 import { ExpandableReleaseCard } from "@/components/expandable-release-card"
 import { sb } from "@/src/lib/storyblok"
 import Link from "next/link"
@@ -157,19 +157,40 @@ export default async function ArtistProfilePage({ params }: ArtistProfilePagePro
 
 
             {/* Profile Content */}
-            <div className="prose prose-lg max-w-none mb-12">
+            <div className="mb-12">
               {/* Full Biography Rich Text */}
               {content?.full_biography && (
-                <RichTextRenderer content={content.full_biography} />
+                <EnhancedContentRenderer
+                  content={content.full_biography}
+                  sourcesReferences={content?.sources_references || content?.sources_refernces}
+                  displayMode="compact"
+                  maxVisible={5}
+                  autoCollapse={true}
+                  className=""
+                />
               )}
 
               {/* Fallback to other content fields */}
               {!content?.full_biography && content?.content && (
-                <RichTextRenderer content={content.content} />
+                <EnhancedContentRenderer
+                  content={content.content}
+                  sourcesReferences={content?.sources_references || content?.sources_refernces}
+                  displayMode="compact"
+                  maxVisible={5}
+                  autoCollapse={true}
+                  className=""
+                />
               )}
 
               {!content?.full_biography && !content?.content && content?.body && (
-                <RichTextRenderer content={content.body} />
+                <EnhancedContentRenderer
+                  content={content.body}
+                  sourcesReferences={content?.sources_references || content?.sources_refernces}
+                  displayMode="compact"
+                  maxVisible={5}
+                  autoCollapse={true}
+                  className=""
+                />
               )}
             </div>
 
