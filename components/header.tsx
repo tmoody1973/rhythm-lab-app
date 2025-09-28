@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { SearchModal } from "@/components/search-modal"
 import { NewsTicker } from "@/components/news-ticker"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import Image from "next/image"
 import { useUser, SignOutButton } from "@clerk/nextjs"
 
@@ -163,86 +163,66 @@ export function Header() {
               <div className="md:hidden">
                 <Sheet>
                   <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="hover:bg-transparent">
-                      <span className="text-lg">☰</span>
+                    <Button variant="ghost" size="icon" className="hover:bg-gray-100 transition-colors">
+                      <span className="text-xl">☰</span>
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="right" className="bg-white border-border">
-                    <nav className="flex flex-col gap-6 mt-8">
-                      <Link href="/" >
-                        <Button
-                          variant="ghost"
-                          className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
-                          style={{ color: "#000000" }}
-                        >
-                          HOME
-                        </Button>
-                      </Link>
-                      <Link href="/live" >
-                        <Button
-                          variant="ghost"
-                          className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
-                          style={{ color: "#000000" }}
-                        >
-                          LIVE
-                        </Button>
-                      </Link>
-                      <Link href="/blog" >
-                        <Button
-                          variant="ghost"
-                          className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
-                          style={{ color: "#000000" }}
-                        >
-                          BLOG
-                        </Button>
-                      </Link>
-                      <Link href="/deep-dives" >
-                        <Button
-                          variant="ghost"
-                          className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
-                          style={{ color: "#000000" }}
-                        >
-                          DEEP DIVES
-                        </Button>
-                      </Link>
-                      <Link href="/profiles" >
-                        <Button
-                          variant="ghost"
-                          className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
-                          style={{ color: "#000000" }}
-                        >
-                          PROFILES
-                        </Button>
-                      </Link>
-                      <Link href="/archive" >
-                        <Button
-                          variant="ghost"
-                          className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
-                          style={{ color: "#000000" }}
-                        >
-                          WEEKLY SHOW
-                        </Button>
-                      </Link>
-                      <Button
-                        variant="ghost"
-                        className="nts-text-caps text-sm font-bold hover:bg-transparent justify-start px-0 text-black"
-                        style={{ color: "#000000" }}
-                        onClick={() => setSearchModalOpen(true)}
-                      >
-                        SEARCH
-                      </Button>
+                  <SheetContent side="right" className="bg-white border-l border-border/20 shadow-2xl w-80 p-0">
+                    <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                    <div className="flex flex-col h-full">
+                      {/* Header */}
+                      <div className="p-6 border-b border-border/20">
+                        <h2 className="text-lg font-bold text-foreground tracking-wide">NAVIGATION</h2>
+                      </div>
 
-                      {/* Auth buttons for mobile */}
-                      <div className="border-t border-border/30 pt-6 mt-6">
-                        <div className="flex flex-col gap-3">
+                      {/* Navigation Links */}
+                      <nav className="flex-1 px-4 py-6 space-y-2">
+                        <Link href="/" className="block p-4 rounded-xl transition-all duration-200 hover:bg-gray-50 active:scale-95 group">
+                          <span className="nts-text-caps text-base font-bold text-foreground group-hover:text-gray-700">HOME</span>
+                        </Link>
+
+                        <Link href="/live" className="block p-4 rounded-xl transition-all duration-200 hover:bg-gray-50 active:scale-95 group">
+                          <span className="nts-text-caps text-base font-bold text-foreground group-hover:text-gray-700">LIVE</span>
+                        </Link>
+
+                        <Link href="/blog" className="block p-4 rounded-xl transition-all duration-200 hover:bg-gray-50 active:scale-95 group">
+                          <span className="nts-text-caps text-base font-bold text-foreground group-hover:text-gray-700">BLOG</span>
+                        </Link>
+
+                        <Link href="/deep-dives" className="block p-4 rounded-xl transition-all duration-200 hover:bg-gray-50 active:scale-95 group">
+                          <span className="nts-text-caps text-base font-bold text-foreground group-hover:text-gray-700">DEEP DIVES</span>
+                        </Link>
+
+                        <Link href="/profiles" className="block p-4 rounded-xl transition-all duration-200 hover:bg-gray-50 active:scale-95 group">
+                          <span className="nts-text-caps text-base font-bold text-foreground group-hover:text-gray-700">PROFILES</span>
+                        </Link>
+
+                        <Link href="/archive" className="block p-4 rounded-xl transition-all duration-200 hover:bg-gray-50 active:scale-95 group">
+                          <span className="nts-text-caps text-base font-bold text-foreground group-hover:text-gray-700">WEEKLY SHOW</span>
+                        </Link>
+
+                        <button
+                          onClick={() => setSearchModalOpen(true)}
+                          className="block p-4 rounded-xl transition-all duration-200 hover:bg-gray-50 active:scale-95 group w-full text-left"
+                        >
+                          <span className="nts-text-caps text-base font-bold text-foreground group-hover:text-gray-700">SEARCH</span>
+                        </button>
+                      </nav>
+
+                      {/* Auth Section */}
+                      <div className="border-t border-border/20 p-6 bg-gray-50/50">
+                        <div className="space-y-3">
                           {!mounted || !isLoaded ? (
-                            <div className="text-sm text-muted-foreground text-center">Loading...</div>
+                            <div className="text-center py-4">
+                              <div className="text-sm text-muted-foreground">Loading...</div>
+                            </div>
                           ) : user ? (
                             <>
-                              <Link href="/profile">
+                              <Link href="/profile" className="block">
                                 <Button
                                   variant="outline"
-                                  className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background w-full"
+                                  size="lg"
+                                  className="w-full h-12 text-base font-medium border-2 border-foreground/20 text-foreground hover:bg-foreground hover:text-background transition-all duration-200"
                                 >
                                   Profile
                                 </Button>
@@ -250,7 +230,8 @@ export function Header() {
                               <SignOutButton>
                                 <Button
                                   variant="ghost"
-                                  className="text-foreground hover:bg-foreground/10 w-full"
+                                  size="lg"
+                                  className="w-full h-12 text-base font-medium text-foreground hover:bg-red-50 hover:text-red-600 transition-all duration-200"
                                 >
                                   Sign Out
                                 </Button>
@@ -258,26 +239,28 @@ export function Header() {
                             </>
                           ) : (
                             <>
-                              <Link href="/sign-in">
+                              <Link href="/sign-in" className="block">
                                 <Button
                                   variant="outline"
-                                  className="border-foreground/20 text-foreground hover:bg-foreground hover:text-background w-full"
+                                  size="lg"
+                                  className="w-full h-12 text-base font-medium border-2 border-foreground/20 text-foreground hover:bg-foreground hover:text-background transition-all duration-200"
                                 >
-                                  Log In
+                                  LOG IN
                                 </Button>
                               </Link>
-                              <Link href="/signup">
+                              <Link href="/signup" className="block">
                                 <Button
-                                  className="bg-foreground text-background hover:bg-foreground/90 w-full"
+                                  size="lg"
+                                  className="w-full h-12 text-base font-medium bg-[#b12e2e] hover:bg-[#8e2424] text-white transition-all duration-200"
                                 >
-                                  Sign Up
+                                  SIGN UP
                                 </Button>
                               </Link>
                             </>
                           )}
                         </div>
                       </div>
-                    </nav>
+                    </div>
                   </SheetContent>
                 </Sheet>
               </div>
