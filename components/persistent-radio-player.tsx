@@ -51,7 +51,7 @@ export function PersistentRadioPlayer({ currentSong, isLive }: PersistentRadioPl
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card border-t-2 border-border/50 shadow-lg backdrop-blur-sm z-50">
+    <div className="fixed lg:bottom-0 top-0 left-0 right-0 bg-card border-b-2 lg:border-t-2 lg:border-b-0 border-border/50 backdrop-blur-sm z-40 shadow-lg">
       <audio
         ref={audioRef}
         src={streamUrl}

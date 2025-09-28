@@ -189,7 +189,7 @@ export function LiveStreamSection() {
           {/* Main album artwork with crossfade effect */}
           <div className="relative w-full h-full">
             <img
-              src={currentSong?.image || "/images/ALBUM-DEFAULT.png"}
+              src={mounted && currentSong?.image ? currentSong.image : "/images/ALBUM-DEFAULT.png"}
               alt="Current show"
               className={`absolute inset-0 w-full h-full object-cover transition-all duration-1500 ease-in-out transform ${songChangeAnimation ? 'scale-105 opacity-90' : 'scale-100 opacity-100'}`}
               key={currentSong?.id}

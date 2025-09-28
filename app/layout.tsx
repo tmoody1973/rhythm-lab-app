@@ -5,6 +5,7 @@ import { Suspense } from "react"
 import "./globals.css"
 import { PersistentAudioPlayer } from "@/components/persistent-audio-player"
 import { UnifiedPersistentPlayer } from "@/components/unified-persistent-player"
+import MobileNavigationWrapper from "@/components/mobile-navigation-wrapper"
 import { RadioProvider } from "@/lib/radio/context"
 import { UnifiedPlayerProvider } from "@/lib/audio/unified-player-context"
 import { AuthProvider } from "@/contexts/auth-context"
@@ -42,6 +43,7 @@ export default function RootLayout({
               <Suspense fallback={null}>{children}</Suspense>
               <PersistentAudioPlayer />
               <UnifiedPersistentPlayer />
+              <MobileNavigationWrapper />
             </UnifiedPlayerProvider>
           </RadioProvider>
         </ClerkAuthProvider>

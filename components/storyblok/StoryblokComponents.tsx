@@ -5,6 +5,19 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import Image from "next/image"
+import { usePathname } from 'next/navigation'
+import {
+  Home,
+  MessageCircle,
+  Camera,
+  User,
+  Search,
+  Music,
+  Radio,
+  Headphones,
+  PlayCircle,
+  Heart
+} from 'lucide-react'
 
 // Helper function to render rich text
 const renderRichText = (content: any) => {
@@ -394,6 +407,87 @@ export const FooterCTASection = ({ blok }: { blok: any }) => (
   </section>
 )
 
+// Helper function to get icon component
+const getIconComponent = (iconData: any) => {
+  // If iconData is a string, use the old logic
+  if (typeof iconData === 'string') {
+    const iconMap: { [key: string]: any } = {
+      home: Home,
+      chat: MessageCircle,
+      message: MessageCircle,
+      camera: Camera,
+      profile: User,
+      user: User,
+      search: Search,
+      music: Music,
+      radio: Radio,
+      headphones: Headphones,
+      play: PlayCircle,
+      heart: Heart,
+    }
+    return iconMap[iconData.toLowerCase()] || Home
+  }
+
+  // If iconData is a Storyblok asset object, extract the filename and map to icons
+  if (iconData && iconData.filename) {
+    const filename = iconData.filename.toLowerCase()
+
+    if (filename.includes('home')) return Home
+    if (filename.includes('show') || filename.includes('music') || filename.includes('radio')) return Music
+    if (filename.includes('profile') || filename.includes('user') || filename.includes('artist')) return User
+    if (filename.includes('deep') || filename.includes('dive')) return Search
+    if (filename.includes('blog') || filename.includes('message') || filename.includes('chat')) return MessageCircle
+    if (filename.includes('heart') || filename.includes('favorite')) return Heart
+    if (filename.includes('play')) return PlayCircle
+  }
+
+  // Default fallback
+  return Home
+}
+
+// Menu Item Component (for mobile navigation)
+export const MenuItem = ({ blok }: { blok: any }) => {
+  const pathname = usePathname()
+  const isActive = pathname === blok.menu_link?.cached_url || pathname === blok.menu_link?.url
+  const IconComponent = getIconComponent(blok.menu_icon || 'home')
+
+  return (
+    <Link
+      href={blok.menu_link?.cached_url || blok.menu_link?.url || '#'}
+      className={`flex flex-col items-center justify-center py-3 px-1 min-w-0 flex-1 transition-all duration-200 active:scale-95 ${
+        isActive
+          ? 'text-[#b12e2e]'
+          : 'text-muted-foreground hover:text-foreground active:text-foreground'
+      }`}
+      {...storyblokEditable(blok)}
+    >
+      <IconComponent className={`w-6 h-6 mb-1 transition-transform ${isActive ? 'scale-110' : ''}`} />
+      <span className={`text-xs font-medium text-center leading-tight ${isActive ? 'font-semibold' : ''}`}>
+        {blok.menu_label}
+      </span>
+    </Link>
+  )
+}
+
+// Mobile Navigation Component
+export const MobileNavigation = ({ blok }: { blok: any }) => {
+  console.log('MobileNavigation component rendering with blok:', blok)
+  console.log('Menu items found:', blok.menu_items?.length || 0)
+
+  return (
+    <nav
+      className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-300 lg:hidden z-30 shadow-lg"
+      {...storyblokEditable(blok)}
+    >
+      <div className="flex items-center justify-center gap-4 px-2 py-3">
+        {blok.menu_items?.map((item: any) => (
+          <MenuItem key={item._uid} blok={item} />
+        ))}
+      </div>
+    </nav>
+  )
+}
+
 // Component mapping for Storyblok
 export const storyblokComponents = {
   hero_section: HeroSection,
@@ -409,5 +503,7 @@ export const storyblokComponents = {
   service_card: ServiceCard,
   community_card: CommunityCard,
   contact_item: ContactItem,
-  cta_button: CTAButton
+  cta_button: CTAButton,
+  mobile_navigation: MobileNavigation,
+  menu_item: MenuItem
 }
