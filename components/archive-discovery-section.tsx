@@ -117,7 +117,7 @@ export function ArchiveDiscoverySection() {
     const fetchLatestShows = async () => {
       try {
         const params = new URLSearchParams({
-          limit: '5',
+          limit: '4',
           offset: '0',
           status: 'published'
         })

@@ -40,7 +40,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1', 10)
-    const perPage = parseInt(searchParams.get('per_page') || '20', 10)
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!, 10) : null
+    const perPage = parseInt(searchParams.get('per_page') || '50', 10) // Fetch more stories to ensure we have enough mixcloud_show stories
     const search = searchParams.get('search') || ''
 
     const storyblokToken = process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN
@@ -88,7 +89,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // Filter for mixcloud_show components and transform to our format
     const mixcloudStories = data.stories?.filter(story => story.content?.component === 'mixcloud_show') || []
 
-    const transformedShows = mixcloudStories.map(story => {
+    // Apply the limit after filtering (since we fetched more stories to ensure we have enough mixcloud_show stories)
+    const limitedMixcloudStories = limit ? mixcloudStories.slice(0, limit) : mixcloudStories
+
+    const transformedShows = limitedMixcloudStories.map(story => {
       // Parse tracklist - handle both old (JSON string) and new (Blocks array) formats
       let tracks = []
       let trackCount = 0

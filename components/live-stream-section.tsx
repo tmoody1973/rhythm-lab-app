@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { NowPlaying } from "@/components/now-playing"
 import { FavoriteButton } from "@/components/favorite-button"
 import { useRadio } from "@/lib/radio/context"
+import { sb } from "@/src/lib/storyblok"
+import { safeRenderText, renderRichText } from '@/lib/utils/rich-text'
 import type { Song } from "@/lib/database/types"
 
 interface LiveStreamStatus {
@@ -18,10 +20,16 @@ interface LiveStreamStatus {
   updated_at: string
 }
 
+interface CurrentShowContent {
+  title?: string
+  description?: string
+}
+
 export function LiveStreamSection() {
   const { currentSong, isLive, isLoading: radioLoading } = useRadio()
   const [recentSongs, setRecentSongs] = useState<Song[]>([])
   const [liveStream, setLiveStream] = useState<LiveStreamStatus | null>(null)
+  const [currentShowContent, setCurrentShowContent] = useState<CurrentShowContent | null>(null)
   const [loading, setLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
   const [songChangeAnimation, setSongChangeAnimation] = useState(false)
@@ -29,6 +37,55 @@ export function LiveStreamSection() {
 
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  // Fetch current show content from Storyblok
+  useEffect(() => {
+    const fetchCurrentShowContent = async () => {
+      try {
+        const storyblokApi = sb()
+        let response
+
+        // Try multiple possible paths for the story
+        const possiblePaths = [
+          'cdn/stories/about-rhythm-lab-selector',
+          'cdn/stories/current-show-section',
+          'cdn/stories/current_show_section',
+          'cdn/stories/home/current-show-section',
+          'cdn/stories/homepage/current-show-section'
+        ]
+
+        for (const path of possiblePaths) {
+          try {
+            console.log(`Trying to fetch from: ${path}`)
+            response = await storyblokApi.get(path, {
+              version: 'published'
+            })
+
+            if (response.data?.story?.content) {
+              console.log('Successfully fetched current show content:', response.data.story.content)
+              setCurrentShowContent(response.data.story.content)
+              return
+            }
+          } catch (pathError) {
+            console.log(`Path ${path} failed:`, pathError)
+            continue
+          }
+        }
+
+        throw new Error('No valid story found at any path')
+
+      } catch (error) {
+        console.error('Failed to fetch current show content from all paths:', error)
+        // Set fallback content
+        setCurrentShowContent({
+          title: 'RHYTHM LAB RADIO',
+          description: 'Live electronic music featuring deep house, ambient, jazz fusion, and experimental sounds from around the world.'
+        })
+      }
+    }
+
+    fetchCurrentShowContent()
   }, [])
 
   useEffect(() => {
@@ -225,7 +282,7 @@ export function LiveStreamSection() {
         <div className="space-y-3">
           {loading || !mounted ? (
             // Loading skeleton - show this on server and while loading
-            Array.from({ length: 4 }).map((_, index) => (
+            Array.from({ length: 10 }).map((_, index) => (
               <div key={index} className="flex items-center justify-between py-3 border-b-2 border-border/30">
                 <div className="flex-1 min-w-0">
                   <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
@@ -234,7 +291,7 @@ export function LiveStreamSection() {
                 <div className="h-3 bg-gray-200 rounded w-12 ml-4 animate-pulse"></div>
               </div>
             ))
-          ) : recentSongs.slice(0, 4).map((track, index) => (
+          ) : recentSongs.slice(0, 10).map((track, index) => (
             <div
               key={track.id}
               className="flex items-center gap-3 py-3 border-b-2 border-border/30 hover:bg-muted/30 cursor-pointer transition-all duration-500 ease-in-out transform opacity-100 animate-in slide-in-from-top-2"
@@ -283,29 +340,17 @@ export function LiveStreamSection() {
       </div>
 
       <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-4 space-y-3">
-        <h3 className="text-sm font-medium uppercase tracking-widest text-foreground mb-4">CURRENT SHOW</h3>
         <div className="space-y-3">
           <div>
-            <h4 className="font-bold text-lg mb-1">
-              {liveStream?.current_show_title || currentSong?.episode_title || 'Rhythm Lab Radio'}
-            </h4>
-            <p className="text-sm font-medium uppercase tracking-widest text-muted-foreground mb-2">
-              LIVE RADIO STREAM
-            </p>
+            <h3 className="font-bold text-lg mb-2">
+              {currentShowContent?.title || 'RHYTHM LAB RADIO'}
+            </h3>
           </div>
-          <p className="text-base leading-relaxed text-foreground/90">
-            {liveStream?.is_live
-              ? 'Live electronic music featuring deep house, ambient, jazz fusion, and experimental sounds from around the world.'
-              : 'Currently offline. Check back soon for live music programming.'
+          <div className="text-base leading-relaxed text-foreground/90 [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_li]:mb-1 [&_p]:mb-2 [&_strong]:font-bold [&_em]:italic">
+            {currentShowContent?.description
+              ? renderRichText(currentShowContent.description)
+              : 'Live electronic music featuring deep house, ambient, jazz fusion, and experimental sounds from around the world.'
             }
-          </p>
-          <div className="flex justify-between pt-2 border-t-2 border-border/30">
-            <span className="text-sm font-medium uppercase tracking-widest text-muted-foreground">
-              {liveStream?.is_live ? '🔴 LIVE' : '⭕ OFFLINE'}
-            </span>
-            <span className="text-sm font-medium uppercase tracking-widest text-muted-foreground">
-              👥 {liveStream?.listeners_count || 0} LISTENERS
-            </span>
           </div>
         </div>
       </div>

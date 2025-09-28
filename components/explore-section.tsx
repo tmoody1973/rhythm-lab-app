@@ -334,7 +334,7 @@ export function ExploreSection() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredContent.slice(0, 12).map((item) => {
+          {filteredContent.slice(0, 4).map((item) => {
             const itemColor = getContentColor(item.id)
             const routePrefix = getRoutePrefix(item.type)
 
