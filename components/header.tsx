@@ -82,6 +82,15 @@ export function Header() {
                   PROFILES
                 </Button>
               </Link>
+              <Link href="/about" >
+                <Button
+                  variant="ghost"
+                  className="nts-text-caps text-sm font-bold hover:bg-transparent hover:text-gray-700 px-0 text-black"
+                  style={{ color: "#000000" }}
+                >
+                  ABOUT
+                </Button>
+              </Link>
               <Link href="/archive" >
                 <Button
                   variant="ghost"
@@ -195,6 +204,10 @@ export function Header() {
 
                         <Link href="/profiles" className="block p-4 rounded-xl transition-all duration-200 hover:bg-gray-50 active:scale-95 group">
                           <span className="nts-text-caps text-base font-bold text-foreground group-hover:text-gray-700">PROFILES</span>
+                        </Link>
+
+                        <Link href="/about" className="block p-4 rounded-xl transition-all duration-200 hover:bg-gray-50 active:scale-95 group">
+                          <span className="nts-text-caps text-base font-bold text-foreground group-hover:text-gray-700">ABOUT</span>
                         </Link>
 
                         <Link href="/archive" className="block p-4 rounded-xl transition-all duration-200 hover:bg-gray-50 active:scale-95 group">
