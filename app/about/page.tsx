@@ -155,7 +155,7 @@ export default function AboutPage() {
         <section className="py-12">
           <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-8 space-y-6">
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-foreground uppercase tracking-wide">OUR PHILOSOPHY</h2>
+              <h2 className="text-xl font-bold text-foreground uppercase tracking-wide">ABOUT RHYTHM LAB SELECTOR</h2>
             </div>
             <div className="space-y-4 text-base leading-relaxed text-foreground/90">
               <p>
