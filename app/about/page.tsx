@@ -23,10 +23,10 @@ export default function AboutPage() {
         {/* Hero Section */}
         <section className="py-12 md:py-16">
           <div className="text-center space-y-6">
-            <h1 className="text-3xl md:text-5xl font-bold text-foreground uppercase tracking-wide">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-foreground uppercase tracking-tight">
               ABOUT RHYTHM LAB RADIO
             </h1>
-            <p className="text-lg md:text-xl text-foreground/90 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-foreground max-w-4xl mx-auto leading-relaxed font-medium">
               A global platform for urban music discovery, featuring the spectrum of Hip Hop, Jazz, Electronic, R&B
               and beyond from artists around the world.
             </p>
@@ -35,12 +35,12 @@ export default function AboutPage() {
 
         {/* Large Hero Image */}
         <section className="py-12">
-          <div className="aspect-[21/9] bg-gradient-to-r from-purple-900/80 to-blue-900/80 relative overflow-hidden rounded-xl">
+          <div className="aspect-[21/9] bg-gradient-to-r from-purple-900/80 to-blue-900/80 relative overflow-hidden">
             <div className="absolute inset-0 bg-black/50"></div>
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-white">
-                <h2 className="text-2xl md:text-4xl font-bold uppercase tracking-wide mb-4">ELECTRONIC MUSIC DISCOVERY</h2>
-                <p className="text-lg md:text-xl max-w-2xl mx-auto">Connecting underground scenes with global audiences</p>
+                <h2 className="text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight mb-4">URBAN MUSIC DISCOVERY</h2>
+                <p className="text-xl md:text-2xl max-w-2xl mx-auto font-medium">Connecting underground scenes with global audiences</p>
               </div>
             </div>
             {/* Placeholder for actual image */}
@@ -50,11 +50,11 @@ export default function AboutPage() {
 
         {/* Mission Section */}
         <section className="py-12">
-          <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-8 space-y-6">
+          <div className="bg-card border border-border p-8 space-y-6">
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-foreground uppercase tracking-wide">OUR MISSION</h2>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-foreground uppercase tracking-tight">OUR MISSION</h2>
             </div>
-            <div className="space-y-4 text-base leading-relaxed text-foreground/90">
+            <div className="space-y-4 text-lg leading-relaxed text-foreground">
               <p>
                 Rhythm Lab Radio exists to bridge the gap between underground urban music scenes
                 and global audiences seeking authentic, cutting-edge sounds.
@@ -69,15 +69,15 @@ export default function AboutPage() {
 
         {/* Host Section */}
         <section className="py-12">
-          <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-8 space-y-6">
+          <div className="bg-card border border-border p-8 space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-xl font-bold text-foreground uppercase tracking-wide mb-4">ABOUT THE HOST</h2>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-foreground uppercase tracking-tight mb-4">ABOUT THE HOST</h2>
             </div>
 
             <div className="grid lg:grid-cols-3 gap-8 items-center">
               {/* Host Photo */}
               <div className="lg:col-span-1">
-                <div className="aspect-square bg-muted/20 border-2 border-border/30 rounded-xl flex items-center justify-center p-8 hover:bg-muted/30 transition-colors">
+                <div className="aspect-square bg-muted/20 border border-border flex items-center justify-center p-8">
                   <div className="text-center">
                     <div className="text-lg font-bold text-muted-foreground">TARIK MOODY</div>
                     <div className="text-sm text-muted-foreground">HOST PHOTO</div>
@@ -88,13 +88,13 @@ export default function AboutPage() {
               {/* Host Bio */}
               <div className="lg:col-span-2 space-y-6">
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground mb-2">Tarik Moody</h3>
+                  <h3 className="text-3xl md:text-4xl font-black text-foreground mb-2">Tarik Moody</h3>
                   <div className="mb-4">
-                    <span className="text-sm text-muted-foreground font-medium">Rhythm Lab Radio from 88Nine Radio Milwaukee</span>
+                    <span className="text-base text-foreground font-bold">Rhythm Lab Radio from 88Nine Radio Milwaukee</span>
                   </div>
                 </div>
 
-                <div className="space-y-4 text-base leading-relaxed text-foreground/90">
+                <div className="space-y-4 text-lg leading-relaxed text-foreground">
                   <p>
                     Tarik Moody, a graduate of Howard University in Washington D.C., got his first taste of the music industry back in the mid 90s as an intern for cable access music video show, "Sonic Ignition" in Washington D.C. He met and talked to artists such as Chuck D from Public Enemy, Republica and Cypress Hill.
                   </p>
@@ -113,38 +113,38 @@ export default function AboutPage() {
         {/* What We Do Section */}
         <section className="py-12 space-y-6">
           <div className="text-center mb-8">
-            <h2 className="text-xl font-bold text-foreground uppercase tracking-wide mb-4">WHAT WE DO</h2>
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-foreground uppercase tracking-tight mb-4">WHAT WE DO</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-6 space-y-4">
+            <div className="bg-card border border-border p-6 space-y-4">
               <div className="mb-4">
-                <h3 className="text-sm font-medium uppercase tracking-widest text-foreground">LIVE RADIO</h3>
+                <h3 className="text-base font-black uppercase tracking-tight text-foreground">LIVE RADIO</h3>
               </div>
-              <p className="text-base leading-relaxed text-foreground/90">
+              <p className="text-base leading-relaxed text-foreground">
                 Continuous live streaming featuring carefully curated urban music from emerging and established artists worldwide - Hip Hop, Jazz, Electronic, R&B and beyond.
               </p>
             </div>
-            <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-6 space-y-4">
+            <div className="bg-card border border-border p-6 space-y-4">
               <div className="mb-4">
-                <h3 className="text-sm font-medium uppercase tracking-widest text-foreground">DEEP DIVES</h3>
+                <h3 className="text-base font-black uppercase tracking-tight text-foreground">DEEP DIVES</h3>
               </div>
-              <p className="text-base leading-relaxed text-foreground/90">
+              <p className="text-base leading-relaxed text-foreground">
                 In-depth explorations of genres, artists, and movements that shape the urban music landscape - Hip Hop, Jazz, Electronic, R&B and beyond.
               </p>
             </div>
-            <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-6 space-y-4">
+            <div className="bg-card border border-border p-6 space-y-4">
               <div className="mb-4">
-                <h3 className="text-sm font-medium uppercase tracking-widest text-foreground">ARTIST PROFILES</h3>
+                <h3 className="text-base font-black uppercase tracking-tight text-foreground">ARTIST PROFILES</h3>
               </div>
-              <p className="text-base leading-relaxed text-foreground/90">
+              <p className="text-base leading-relaxed text-foreground">
                 Showcasing the stories and sounds of urban music innovators from every corner of the globe - Hip Hop, Jazz, Electronic, R&B and beyond.
               </p>
             </div>
-            <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-6 space-y-4">
+            <div className="bg-card border border-border p-6 space-y-4">
               <div className="mb-4">
-                <h3 className="text-sm font-medium uppercase tracking-widest text-foreground">WEEKLY SHOW</h3>
+                <h3 className="text-base font-black uppercase tracking-tight text-foreground">WEEKLY SHOW</h3>
               </div>
-              <p className="text-base leading-relaxed text-foreground/90">
+              <p className="text-base leading-relaxed text-foreground">
                 Weekly curated episodes featuring the best in urban music - Hip Hop, Jazz, Electronic, R&B and beyond, available for on-demand listening.
               </p>
             </div>
@@ -153,11 +153,11 @@ export default function AboutPage() {
 
         {/* Philosophy Section */}
         <section className="py-12">
-          <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-8 space-y-6">
+          <div className="bg-card border border-border p-8 space-y-6">
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-foreground uppercase tracking-wide">ABOUT RHYTHM LAB SELECTOR</h2>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-foreground uppercase tracking-tight">ABOUT RHYTHM LAB SELECTOR</h2>
             </div>
-            <div className="space-y-4 text-base leading-relaxed text-foreground/90">
+            <div className="space-y-4 text-lg leading-relaxed text-foreground">
               <p>
                 Music has no borders. Our programming celebrates this fundamental truth by showcasing
                 urban music that transcends geographical and cultural boundaries.
@@ -176,12 +176,12 @@ export default function AboutPage() {
 
         {/* Large Community Image */}
         <section className="py-12">
-          <div className="aspect-[21/9] bg-gradient-to-r from-orange-900/80 to-red-900/80 relative overflow-hidden rounded-xl">
+          <div className="aspect-[21/9] bg-gradient-to-r from-orange-900/80 to-red-900/80 relative overflow-hidden">
             <div className="absolute inset-0 bg-black/40"></div>
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-white">
-                <h2 className="text-2xl md:text-4xl font-bold uppercase tracking-wide mb-4">GLOBAL COMMUNITY</h2>
-                <p className="text-lg md:text-xl max-w-2xl mx-auto">Artists and listeners united by electronic music</p>
+                <h2 className="text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight mb-4">GLOBAL COMMUNITY</h2>
+                <p className="text-xl md:text-2xl max-w-2xl mx-auto font-medium">Artists and listeners united by urban music</p>
               </div>
             </div>
             {/* Placeholder for actual image */}
@@ -192,15 +192,15 @@ export default function AboutPage() {
         {/* Community Section */}
         <section className="py-12 space-y-6">
           <div className="text-center mb-8">
-            <h2 className="text-xl font-bold text-foreground uppercase tracking-wide mb-4">JOIN OUR COMMUNITY</h2>
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-foreground uppercase tracking-tight mb-4">JOIN OUR COMMUNITY</h2>
             <p className="text-base text-foreground/90 max-w-2xl mx-auto">
               Rhythm Lab Radio is more than a radio station—it's a global community of urban music enthusiasts connected by Hip Hop, Jazz, Electronic, R&B and beyond.
             </p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-6 space-y-4">
+            <div className="bg-card border border-border p-6 space-y-4">
               <div className="mb-4">
-                <h3 className="text-sm font-medium uppercase tracking-widest text-foreground">LISTEN & DISCOVER</h3>
+                <h3 className="text-base font-black uppercase tracking-tight text-foreground">LISTEN & DISCOVER</h3>
               </div>
               <p className="text-base leading-relaxed text-foreground/90 mb-4">
                 Tune in to our 24/7 live stream and discover your next favorite track. Every listen supports independent urban music.
@@ -211,9 +211,9 @@ export default function AboutPage() {
                 </Button>
               </Link>
             </div>
-            <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-6 space-y-4">
+            <div className="bg-card border border-border p-6 space-y-4">
               <div className="mb-4">
-                <h3 className="text-sm font-medium uppercase tracking-widest text-foreground">STAY CONNECTED</h3>
+                <h3 className="text-base font-black uppercase tracking-tight text-foreground">STAY CONNECTED</h3>
               </div>
               <p className="text-base leading-relaxed text-foreground/90 mb-4">
                 Subscribe to our newsletter for exclusive content, artist interviews, and first access to new shows.
@@ -227,9 +227,9 @@ export default function AboutPage() {
 
         {/* Partner Stations Section */}
         <section className="py-12">
-          <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-8 space-y-6">
+          <div className="bg-card border border-border p-8 space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-xl font-bold text-foreground uppercase tracking-wide mb-4">OUR PARTNER STATIONS</h2>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-foreground uppercase tracking-tight mb-4">OUR PARTNER STATIONS</h2>
               <p className="text-base text-foreground/90 max-w-2xl mx-auto">
                 Rhythm Lab Radio's weekly show airs on these amazing radio stations around the world
               </p>
@@ -238,37 +238,37 @@ export default function AboutPage() {
             {/* Station Logos Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center">
               {/* Placeholder for station logos - replace with actual logos */}
-              <div className="aspect-square bg-muted/20 border border-border/30 rounded-lg flex items-center justify-center p-4 hover:bg-muted/30 transition-colors">
+              <div className="aspect-square bg-muted/20 border border-border flex items-center justify-center p-4">
                 <div className="text-center">
                   <div className="text-sm font-bold text-muted-foreground">STATION</div>
                   <div className="text-xs text-muted-foreground">LOGO</div>
                 </div>
               </div>
-              <div className="aspect-square bg-muted/20 border border-border/30 rounded-lg flex items-center justify-center p-4 hover:bg-muted/30 transition-colors">
+              <div className="aspect-square bg-muted/20 border border-border flex items-center justify-center p-4">
                 <div className="text-center">
                   <div className="text-sm font-bold text-muted-foreground">STATION</div>
                   <div className="text-xs text-muted-foreground">LOGO</div>
                 </div>
               </div>
-              <div className="aspect-square bg-muted/20 border border-border/30 rounded-lg flex items-center justify-center p-4 hover:bg-muted/30 transition-colors">
+              <div className="aspect-square bg-muted/20 border border-border flex items-center justify-center p-4">
                 <div className="text-center">
                   <div className="text-sm font-bold text-muted-foreground">STATION</div>
                   <div className="text-xs text-muted-foreground">LOGO</div>
                 </div>
               </div>
-              <div className="aspect-square bg-muted/20 border border-border/30 rounded-lg flex items-center justify-center p-4 hover:bg-muted/30 transition-colors">
+              <div className="aspect-square bg-muted/20 border border-border flex items-center justify-center p-4">
                 <div className="text-center">
                   <div className="text-sm font-bold text-muted-foreground">STATION</div>
                   <div className="text-xs text-muted-foreground">LOGO</div>
                 </div>
               </div>
-              <div className="aspect-square bg-muted/20 border border-border/30 rounded-lg flex items-center justify-center p-4 hover:bg-muted/30 transition-colors">
+              <div className="aspect-square bg-muted/20 border border-border flex items-center justify-center p-4">
                 <div className="text-center">
                   <div className="text-sm font-bold text-muted-foreground">STATION</div>
                   <div className="text-xs text-muted-foreground">LOGO</div>
                 </div>
               </div>
-              <div className="aspect-square bg-muted/20 border border-border/30 rounded-lg flex items-center justify-center p-4 hover:bg-muted/30 transition-colors">
+              <div className="aspect-square bg-muted/20 border border-border flex items-center justify-center p-4">
                 <div className="text-center">
                   <div className="text-sm font-bold text-muted-foreground">STATION</div>
                   <div className="text-xs text-muted-foreground">LOGO</div>
@@ -289,9 +289,9 @@ export default function AboutPage() {
 
         {/* Contact Section */}
         <section className="py-12">
-          <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-8 space-y-6">
+          <div className="bg-card border border-border p-8 space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-xl font-bold text-foreground uppercase tracking-wide mb-4">GET IN TOUCH</h2>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-foreground uppercase tracking-tight mb-4">GET IN TOUCH</h2>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center space-y-3">
@@ -327,8 +327,8 @@ export default function AboutPage() {
 
         {/* Footer CTA */}
         <section className="py-12 pb-24">
-          <div className="bg-card border-2 border-border/50 transition-all duration-300 hover:border-foreground/30 hover:shadow-sm p-8 text-center space-y-6">
-            <h2 className="text-xl font-bold text-foreground uppercase tracking-wide">
+          <div className="bg-card border border-border p-8 text-center space-y-6">
+            <h2 className="text-2xl md:text-3xl font-black text-foreground uppercase tracking-tight">
               Ready to explore?
             </h2>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
