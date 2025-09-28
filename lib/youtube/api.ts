@@ -252,6 +252,217 @@ function formatViewCount(viewCount: string): string {
 }
 
 /**
+ * TRACK-SPECIFIC SEARCH: Search for individual tracks/songs
+ *
+ * This is specifically designed for our track enhancement system.
+ * Unlike the album search above, this focuses on finding individual songs.
+ */
+export async function searchYouTubeTrackVideo(
+  artist: string,
+  track: string
+): Promise<YouTubeVideo | null> {
+  try {
+    if (!process.env.YOUTUBE_API_KEY) {
+      console.log('YouTube API key not configured')
+      return null
+    }
+
+    // Create optimized search queries for individual tracks
+    const queries = [
+      `"${artist}" "${track}" official music video`,    // Most specific
+      `"${artist}" "${track}" official video`,          // Slightly broader
+      `"${artist}" "${track}" music video`,             // Broader
+      `${artist} ${track}`,                             // Fallback
+    ]
+
+    console.log(`🎵 YouTube: Searching for "${artist} - ${track}"`)
+
+    // Try each query until we find a good match
+    for (let i = 0; i < queries.length; i++) {
+      const query = queries[i]
+      console.log(`   Trying query ${i + 1}: "${query}"`)
+
+      const searchUrl = new URL('https://www.googleapis.com/youtube/v3/search')
+      searchUrl.searchParams.set('part', 'snippet')
+      searchUrl.searchParams.set('q', query)
+      searchUrl.searchParams.set('type', 'video')
+      searchUrl.searchParams.set('maxResults', '10')
+      searchUrl.searchParams.set('order', 'relevance')
+      searchUrl.searchParams.set('videoEmbeddable', 'true')
+      searchUrl.searchParams.set('videoCategoryId', '10') // Music category
+      searchUrl.searchParams.set('key', process.env.YOUTUBE_API_KEY)
+
+      try {
+        const response = await fetch(searchUrl.toString())
+
+        if (!response.ok) {
+          console.log(`   Query ${i + 1} failed: ${response.status}`)
+          continue
+        }
+
+        const data = await response.json()
+
+        if (data.error || !data.items?.length) {
+          console.log(`   Query ${i + 1}: No results`)
+          continue
+        }
+
+        // Find best match using our track-specific scoring
+        const bestMatch = findBestTrackVideoMatch(data.items, artist, track)
+
+        if (bestMatch) {
+          // Get detailed statistics for the best match
+          const details = await getVideoDetailsById(bestMatch.id.videoId)
+
+          const result: YouTubeVideo = {
+            id: bestMatch.id.videoId,
+            title: bestMatch.snippet.title,
+            description: bestMatch.snippet.description,
+            thumbnail: bestMatch.snippet.thumbnails.high?.url || bestMatch.snippet.thumbnails.medium?.url,
+            channelTitle: bestMatch.snippet.channelTitle,
+            publishedAt: bestMatch.snippet.publishedAt,
+            embedUrl: `https://www.youtube.com/embed/${bestMatch.id.videoId}`,
+            watchUrl: `https://www.youtube.com/watch?v=${bestMatch.id.videoId}`,
+            duration: details?.duration,
+            viewCount: details?.viewCount
+          }
+
+          console.log(`✅ YouTube: Found "${result.title}" by ${result.channelTitle}`)
+          return result
+        }
+      } catch (error) {
+        console.log(`   Query ${i + 1} error:`, error)
+        continue
+      }
+    }
+
+    console.log('❌ YouTube: No suitable tracks found')
+    return null
+
+  } catch (error) {
+    console.error('YouTube track search error:', error)
+    return null
+  }
+}
+
+/**
+ * Enhanced track-specific video matching
+ *
+ * This uses more sophisticated logic than the album search
+ * to find the best individual track match.
+ */
+function findBestTrackVideoMatch(items: any[], targetArtist: string, targetTrack: string): any | null {
+  if (!items?.length) return null
+
+  console.log(`   Analyzing ${items.length} results...`)
+
+  const scored = items.map(item => {
+    let score = 0
+    const title = item.snippet.title.toLowerCase()
+    const channel = item.snippet.channelTitle.toLowerCase()
+    const description = item.snippet.description.toLowerCase()
+    const artistLower = targetArtist.toLowerCase()
+    const trackLower = targetTrack.toLowerCase()
+
+    // CORE MATCHING: Artist and track in title
+    const hasArtist = title.includes(artistLower)
+    const hasTrack = title.includes(trackLower)
+
+    if (hasArtist && hasTrack) {
+      score += 100 // Perfect match
+    } else if (hasArtist || hasTrack) {
+      score += 40  // Partial match
+    } else {
+      score -= 20  // Poor match
+    }
+
+    // CHANNEL CREDIBILITY
+    if (channel.includes('vevo')) score += 30           // Vevo = official
+    if (channel.includes('official')) score += 25       // Official channels
+    if (channel.includes(artistLower)) score += 20      // Artist's channel
+    if (channel.includes('records')) score += 15        // Record labels
+
+    // VIDEO TYPE PREFERENCES
+    if (title.includes('official music video')) score += 25
+    if (title.includes('official video')) score += 20
+    if (title.includes('music video')) score += 15
+    if (title.includes('official')) score += 10
+
+    // AVOID UNWANTED CONTENT
+    if (title.includes('cover')) score -= 25
+    if (title.includes('remix')) score -= 20
+    if (title.includes('karaoke')) score -= 30
+    if (title.includes('instrumental')) score -= 20
+    if (title.includes('reaction')) score -= 40
+    if (title.includes('review')) score -= 35
+    if (title.includes('lyrics only')) score -= 15
+
+    console.log(`     "${item.snippet.title}" (${item.snippet.channelTitle}) = ${score} points`)
+    return { item, score }
+  })
+
+  // Return best match if it's good enough
+  const best = scored.sort((a, b) => b.score - a.score)[0]
+  return best.score > 40 ? best.item : null
+}
+
+/**
+ * Get detailed video information by ID
+ */
+async function getVideoDetailsById(videoId: string): Promise<{duration: string, viewCount: string} | null> {
+  try {
+    const detailsUrl = new URL('https://www.googleapis.com/youtube/v3/videos')
+    detailsUrl.searchParams.set('part', 'contentDetails,statistics')
+    detailsUrl.searchParams.set('id', videoId)
+    detailsUrl.searchParams.set('key', process.env.YOUTUBE_API_KEY!)
+
+    const response = await fetch(detailsUrl.toString())
+
+    if (!response.ok) return null
+
+    const data = await response.json()
+    const video = data.items?.[0]
+
+    if (!video) return null
+
+    return {
+      duration: formatDuration(video.contentDetails.duration),
+      viewCount: formatViewCount(video.statistics.viewCount)
+    }
+  } catch (error) {
+    console.error('Error getting video details:', error)
+    return null
+  }
+}
+
+/**
+ * MAIN FUNCTION: Get YouTube track data for our enhancement system
+ *
+ * This matches the pattern used in our Spotify integration
+ */
+export async function getYouTubeTrackData(artist: string, track: string) {
+  console.log(`🎵 Getting YouTube data for: ${artist} - ${track}`)
+
+  const video = await searchYouTubeTrackVideo(artist, track)
+
+  if (!video) {
+    return null
+  }
+
+  return {
+    video,
+    // Computed fields for easy use in our UI
+    videoId: video.id,
+    embedUrl: video.embedUrl,
+    watchUrl: video.watchUrl,
+    thumbnail: video.thumbnail,
+    isOfficialChannel: video.channelTitle.toLowerCase().includes('vevo') ||
+                      video.channelTitle.toLowerCase().includes('official'),
+    hasHighViews: video.viewCount ? parseInt(video.viewCount.replace(/[^\d]/g, '')) > 1000000 : false
+  }
+}
+
+/**
  * Generate contextual search queries for different types of music content
  */
 export function generateMusicSearchQueries(artist: string, album: string): string[] {
