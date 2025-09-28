@@ -1,0 +1,35 @@
+{
+  "name": "community_image_section",
+  "display_name": "Community Image Section",
+  "schema": {
+    "background_image": {
+      "type": "asset",
+      "pos": 0,
+      "display_name": "Background Image",
+      "required": false
+    },
+    "title": {
+      "type": "text",
+      "pos": 1,
+      "display_name": "Title",
+      "default_value": "GLOBAL COMMUNITY",
+      "required": true
+    },
+    "subtitle": {
+      "type": "text",
+      "pos": 2,
+      "display_name": "Subtitle",
+      "default_value": "Artists and listeners united by urban music",
+      "required": true
+    }
+  },
+  "image": null,
+  "preview_field": null,
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "community_image_section",
+  "component_group_uuid": null
+}

@@ -1,0 +1,29 @@
+{
+  "name": "philosophy_section",
+  "display_name": "Philosophy Section",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "display_name": "Title",
+      "default_value": "ABOUT RHYTHM LAB SELECTOR",
+      "required": true
+    },
+    "content": {
+      "type": "richtext",
+      "pos": 1,
+      "display_name": "Content",
+      "default_value": "",
+      "required": true
+    }
+  },
+  "image": null,
+  "preview_field": null,
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "philosophy_section",
+  "component_group_uuid": null
+}

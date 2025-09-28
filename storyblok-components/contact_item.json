@@ -1,0 +1,36 @@
+{
+  "name": "contact_item",
+  "display_name": "Contact Item",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "display_name": "Title",
+      "default_value": "",
+      "required": true
+    },
+    "description": {
+      "type": "text",
+      "pos": 1,
+      "display_name": "Description",
+      "default_value": "",
+      "required": true
+    },
+    "email": {
+      "type": "text",
+      "pos": 2,
+      "display_name": "Email",
+      "default_value": "",
+      "required": true
+    }
+  },
+  "image": null,
+  "preview_field": null,
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "contact_item",
+  "component_group_uuid": null
+}

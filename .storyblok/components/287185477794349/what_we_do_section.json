@@ -1,0 +1,30 @@
+{
+  "name": "what_we_do_section",
+  "display_name": "What We Do Section",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "display_name": "Title",
+      "default_value": "WHAT WE DO",
+      "required": true
+    },
+    "services": {
+      "type": "bloks",
+      "pos": 1,
+      "display_name": "Services",
+      "restrict_components": true,
+      "component_whitelist": ["service_card"],
+      "required": true
+    }
+  },
+  "image": null,
+  "preview_field": null,
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "what_we_do_section",
+  "component_group_uuid": null
+}

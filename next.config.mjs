@@ -10,6 +10,16 @@ const nextConfig = {
     // your project has type errors.
     ignoreBuildErrors: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'a.storyblok.com',
+        port: '',
+        pathname: '/f/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

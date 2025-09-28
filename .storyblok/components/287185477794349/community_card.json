@@ -1,0 +1,42 @@
+{
+  "name": "community_card",
+  "display_name": "Community Card",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "display_name": "Title",
+      "default_value": "",
+      "required": true
+    },
+    "description": {
+      "type": "textarea",
+      "pos": 1,
+      "display_name": "Description",
+      "default_value": "",
+      "required": true
+    },
+    "button_text": {
+      "type": "text",
+      "pos": 2,
+      "display_name": "Button Text",
+      "default_value": "",
+      "required": false
+    },
+    "button_link": {
+      "type": "multilink",
+      "pos": 3,
+      "display_name": "Button Link",
+      "required": false
+    }
+  },
+  "image": null,
+  "preview_field": null,
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "community_card",
+  "component_group_uuid": null
+}

@@ -1,0 +1,105 @@
+{
+  "name": "about_page",
+  "display_name": "About Page",
+  "schema": {
+    "hero_section": {
+      "type": "bloks",
+      "pos": 0,
+      "display_name": "Hero Section",
+      "restrict_components": true,
+      "component_whitelist": ["hero_section"],
+      "maximum": 1,
+      "required": true
+    },
+    "mission_section": {
+      "type": "bloks",
+      "pos": 1,
+      "display_name": "Mission Section",
+      "restrict_components": true,
+      "component_whitelist": ["mission_section"],
+      "maximum": 1,
+      "required": true
+    },
+    "host_section": {
+      "type": "bloks",
+      "pos": 2,
+      "display_name": "Host Section",
+      "restrict_components": true,
+      "component_whitelist": ["host_section"],
+      "maximum": 1,
+      "required": true
+    },
+    "what_we_do_section": {
+      "type": "bloks",
+      "pos": 3,
+      "display_name": "What We Do Section",
+      "restrict_components": true,
+      "component_whitelist": ["what_we_do_section"],
+      "maximum": 1,
+      "required": true
+    },
+    "philosophy_section": {
+      "type": "bloks",
+      "pos": 4,
+      "display_name": "Philosophy Section",
+      "restrict_components": true,
+      "component_whitelist": ["philosophy_section"],
+      "maximum": 1,
+      "required": true
+    },
+    "community_image_section": {
+      "type": "bloks",
+      "pos": 5,
+      "display_name": "Community Image Section",
+      "restrict_components": true,
+      "component_whitelist": ["community_image_section"],
+      "maximum": 1,
+      "required": true
+    },
+    "community_section": {
+      "type": "bloks",
+      "pos": 6,
+      "display_name": "Community Section",
+      "restrict_components": true,
+      "component_whitelist": ["community_section"],
+      "maximum": 1,
+      "required": true
+    },
+    "partner_stations_section": {
+      "type": "bloks",
+      "pos": 7,
+      "display_name": "Partner Stations Section",
+      "restrict_components": true,
+      "component_whitelist": ["partner_stations_section"],
+      "maximum": 1,
+      "required": true
+    },
+    "contact_section": {
+      "type": "bloks",
+      "pos": 8,
+      "display_name": "Contact Section",
+      "restrict_components": true,
+      "component_whitelist": ["contact_section"],
+      "maximum": 1,
+      "required": true
+    },
+    "footer_cta_section": {
+      "type": "bloks",
+      "pos": 9,
+      "display_name": "Footer CTA Section",
+      "restrict_components": true,
+      "component_whitelist": ["footer_cta_section"],
+      "maximum": 1,
+      "required": true
+    }
+  },
+  "image": null,
+  "preview_field": null,
+  "is_root": true,
+  "preview_tmpl": null,
+  "is_nestable": false,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "about_page",
+  "component_group_uuid": null
+}

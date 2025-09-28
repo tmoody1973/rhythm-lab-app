@@ -1,0 +1,45 @@
+{
+  "name": "cta_button",
+  "display_name": "CTA Button",
+  "schema": {
+    "text": {
+      "type": "text",
+      "pos": 0,
+      "display_name": "Button Text",
+      "default_value": "",
+      "required": true
+    },
+    "link": {
+      "type": "multilink",
+      "pos": 1,
+      "display_name": "Button Link",
+      "required": true
+    },
+    "style": {
+      "type": "option",
+      "pos": 2,
+      "display_name": "Button Style",
+      "options": [
+        {
+          "name": "Primary",
+          "value": "primary"
+        },
+        {
+          "name": "Secondary",
+          "value": "secondary"
+        }
+      ],
+      "default_value": "primary",
+      "required": true
+    }
+  },
+  "image": null,
+  "preview_field": null,
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "cta_button",
+  "component_group_uuid": null
+}

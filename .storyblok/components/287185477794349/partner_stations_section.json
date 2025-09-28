@@ -1,0 +1,43 @@
+{
+  "name": "partner_stations_section",
+  "display_name": "Partner Stations Section",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "display_name": "Title",
+      "default_value": "OUR PARTNER STATIONS",
+      "required": true
+    },
+    "description": {
+      "type": "textarea",
+      "pos": 1,
+      "display_name": "Description",
+      "default_value": "",
+      "required": true
+    },
+    "station_logos": {
+      "type": "asset",
+      "pos": 2,
+      "display_name": "Station Logos",
+      "filetypes": ["images"],
+      "required": false
+    },
+    "contact_email": {
+      "type": "text",
+      "pos": 3,
+      "display_name": "Contact Email",
+      "default_value": "partners@rhythmlabradio.com",
+      "required": true
+    }
+  },
+  "image": null,
+  "preview_field": null,
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "partner_stations_section",
+  "component_group_uuid": null
+}

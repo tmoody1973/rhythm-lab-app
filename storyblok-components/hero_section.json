@@ -1,0 +1,49 @@
+{
+  "name": "hero_section",
+  "display_name": "Hero Section",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "display_name": "Title",
+      "default_value": "ABOUT RHYTHM LAB RADIO",
+      "required": true
+    },
+    "description": {
+      "type": "textarea",
+      "pos": 1,
+      "display_name": "Description",
+      "default_value": "",
+      "required": true
+    },
+    "hero_image": {
+      "type": "asset",
+      "pos": 2,
+      "display_name": "Hero Background Image",
+      "required": false
+    },
+    "hero_image_title": {
+      "type": "text",
+      "pos": 3,
+      "display_name": "Hero Image Title",
+      "default_value": "URBAN MUSIC DISCOVERY",
+      "required": true
+    },
+    "hero_image_subtitle": {
+      "type": "text",
+      "pos": 4,
+      "display_name": "Hero Image Subtitle",
+      "default_value": "Connecting underground scenes with global audiences",
+      "required": true
+    }
+  },
+  "image": null,
+  "preview_field": null,
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "hero_section",
+  "component_group_uuid": null
+}

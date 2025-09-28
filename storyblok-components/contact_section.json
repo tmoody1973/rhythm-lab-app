@@ -1,0 +1,30 @@
+{
+  "name": "contact_section",
+  "display_name": "Contact Section",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "display_name": "Title",
+      "default_value": "GET IN TOUCH",
+      "required": true
+    },
+    "contact_items": {
+      "type": "bloks",
+      "pos": 1,
+      "display_name": "Contact Items",
+      "restrict_components": true,
+      "component_whitelist": ["contact_item"],
+      "required": true
+    }
+  },
+  "image": null,
+  "preview_field": null,
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "contact_section",
+  "component_group_uuid": null
+}

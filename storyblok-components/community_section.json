@@ -1,0 +1,37 @@
+{
+  "name": "community_section",
+  "display_name": "Community Section",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "display_name": "Title",
+      "default_value": "JOIN OUR COMMUNITY",
+      "required": true
+    },
+    "description": {
+      "type": "textarea",
+      "pos": 1,
+      "display_name": "Description",
+      "default_value": "",
+      "required": true
+    },
+    "community_cards": {
+      "type": "bloks",
+      "pos": 2,
+      "display_name": "Community Cards",
+      "restrict_components": true,
+      "component_whitelist": ["community_card"],
+      "required": true
+    }
+  },
+  "image": null,
+  "preview_field": null,
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "community_section",
+  "component_group_uuid": null
+}
