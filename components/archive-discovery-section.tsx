@@ -161,28 +161,19 @@ export function ArchiveDiscoverySection() {
         </div>
       </div>
 
-      {/* Search & Discovery */}
+      {/* Substack Newsletter Signup */}
       <div>
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">📈 Trending Searches</h3>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { tag: "deep-house", count: 234 },
-            { tag: "jazz", count: 189 },
-            { tag: "electronic", count: 156 },
-            { tag: "ambient", count: 143 },
-            { tag: "techno", count: 128 },
-            { tag: "fusion", count: 98 },
-          ].map((item, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              size="sm"
-              className="border-border text-muted-foreground hover:border-[#b12e2e] hover:text-[#b12e2e] bg-transparent"
-            >
-              #{item.tag}
-              <span className="ml-2 text-xs opacity-60">{item.count}</span>
-            </Button>
-          ))}
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">📧 Newsletter</h3>
+        <div className="bg-card border-2 border-border/50 rounded-xl overflow-hidden">
+          <iframe
+            src="https://rhythmlab.substack.com/embed"
+            width="100%"
+            height="320"
+            style={{ border: 'none', background: 'white' }}
+            frameBorder="0"
+            scrolling="no"
+            className="w-full"
+          />
         </div>
       </div>
 
