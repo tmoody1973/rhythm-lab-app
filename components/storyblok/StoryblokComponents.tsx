@@ -454,7 +454,7 @@ export const MenuItem = ({ blok }: { blok: any }) => {
   return (
     <Link
       href={blok.menu_link?.cached_url || blok.menu_link?.url || '#'}
-      className={`flex flex-col items-center justify-center py-3 px-1 min-w-0 flex-1 transition-all duration-200 active:scale-95 ${
+      className={`flex flex-col items-center justify-center py-3 px-2 min-w-0 transition-all duration-200 active:scale-95 ${
         isActive
           ? 'text-[#b12e2e]'
           : 'text-muted-foreground hover:text-foreground active:text-foreground'
@@ -476,10 +476,10 @@ export const MobileNavigation = ({ blok }: { blok: any }) => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-300 lg:hidden z-30 shadow-lg"
+      className="fixed bottom-[80px] left-0 right-0 bg-white border-t-2 border-gray-300 lg:hidden z-40 shadow-lg"
       {...storyblokEditable(blok)}
     >
-      <div className="flex items-center justify-center gap-4 px-2 py-3">
+      <div className="flex items-center justify-center gap-2 px-4 py-3">
         {blok.menu_items?.map((item: any) => (
           <MenuItem key={item._uid} blok={item} />
         ))}

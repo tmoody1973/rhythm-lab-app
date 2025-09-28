@@ -11,8 +11,7 @@ body {
 /* Mobile navigation and player spacing */
 @media (max-width: 1023px) {
   body {
-    padding-top: 80px; /* Space for audio player at top on mobile */
-    padding-bottom: 60px; /* Space for mobile nav at bottom on mobile */
+    padding-bottom: 140px; /* Space for stacked audio player (80px) + mobile nav (60px) on mobile */
   }
 }
 
