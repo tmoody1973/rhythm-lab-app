@@ -163,12 +163,34 @@ export async function GET(
       // Continue without tracks rather than failing completely
     }
 
+    // Sync missing image from Storyblok if needed
+    let finalShow = { ...show }
+    if (!show.mixcloud_picture && show.storyblok_id) {
+      console.log(`[Shows API] Missing image, fetching from Storyblok ID: ${show.storyblok_id}`)
+      try {
+        const storyblokImage = await fetchImageFromStoryblok(show.storyblok_id)
+        if (storyblokImage) {
+          console.log(`[Shows API] Found image from Storyblok: ${storyblokImage}`)
+
+          // Update Supabase with the image for future use
+          await supabase
+            .from('shows')
+            .update({ mixcloud_picture: storyblokImage })
+            .eq('id', show.id)
+
+          finalShow.mixcloud_picture = storyblokImage
+        }
+      } catch (error) {
+        console.error('Error fetching image from Storyblok:', error)
+      }
+    }
+
     // Transform show data
     const transformedShow = {
-      ...show,
-      duration_formatted: show.duration ? formatDuration(show.duration) : null,
-      tags: extractTags(show.title, show.description),
-      published_date_formatted: new Date(show.published_date).toLocaleDateString('en-US', {
+      ...finalShow,
+      duration_formatted: finalShow.duration ? formatDuration(finalShow.duration) : null,
+      tags: extractTags(finalShow.title, finalShow.description),
+      published_date_formatted: new Date(finalShow.published_date).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -256,4 +278,52 @@ function extractTags(title: string, description: string): string[] {
 
   // Return unique tags, max 4
   return [...new Set(tags)].slice(0, 4)
+}
+
+/**
+ * Fetch image URL from Storyblok story
+ */
+async function fetchImageFromStoryblok(storyblokId: string): Promise<string | null> {
+  try {
+    const storyblokToken = process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN
+    if (!storyblokToken) {
+      console.error('Storyblok access token not configured')
+      return null
+    }
+
+    const response = await fetch(
+      `https://api.storyblok.com/v2/cdn/stories/${storyblokId}?token=${storyblokToken}&version=published`,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Rhythm Lab Radio App'
+        }
+      }
+    )
+
+    if (!response.ok) {
+      console.error(`Storyblok API error: ${response.status}`)
+      return null
+    }
+
+    const data = await response.json()
+    const story = data.story
+
+    if (story?.content?.mixcloud_picture) {
+      // Handle both string URLs and Storyblok Asset objects
+      const pictureField = story.content.mixcloud_picture
+
+      if (typeof pictureField === 'string') {
+        return pictureField
+      } else if (typeof pictureField === 'object' && pictureField.filename) {
+        return pictureField.filename
+      }
+    }
+
+    return null
+
+  } catch (error) {
+    console.error('Error fetching from Storyblok:', error)
+    return null
+  }
 }
