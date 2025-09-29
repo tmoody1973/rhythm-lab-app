@@ -187,11 +187,12 @@ const handler = withAdminAuth(async (request: NextRequest): Promise<NextResponse
         storySlug: storyblokResponse.story.slug
       })
 
-      // Update show with Storyblok ID
+      // Update show with Storyblok ID and slug
       const { error: updateError } = await supabase
         .from('shows')
         .update({
           storyblok_id: storyblokId,
+          slug: storyblokResponse.story.slug, // Save Storyblok's slug with timestamp
           updated_at: new Date().toISOString()
         })
         .eq('id', showId)

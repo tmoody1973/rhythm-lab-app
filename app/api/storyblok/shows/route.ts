@@ -112,7 +112,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       }
 
       return {
-        id: story.content.show_id || story.id, // Use database UUID if available, otherwise Storyblok ID
+        id: story.id,
         storyblok_id: story.id,
         title: story.content.title || story.name,
         description: story.content.description || '',
@@ -124,8 +124,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         track_count: trackCount,
         tracks: tracks,
         tags: extractTags(story.content.title, story.content.description),
-        slug: story.slug,
-        show_id: story.content.show_id || story.id.toString() // Use database UUID if available
+        slug: story.slug, // Storyblok slug with timestamp
+        show_id: story.content.show_id || story.id.toString() // Database UUID if available
       }
     })
 
