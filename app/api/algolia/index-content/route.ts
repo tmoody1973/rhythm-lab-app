@@ -423,7 +423,7 @@ function generateCorrectUrl(fullSlug: string, contentType: string): string {
 
   switch (contentType) {
     case 'deep_dive':
-      return `/deep-dive/${actualSlug}`
+      return `/deep-dives/${actualSlug}`
     case 'blog_post':
       return `/blog/${actualSlug}`
     case 'artist_profile':

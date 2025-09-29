@@ -203,7 +203,7 @@ export default async function DeepDivesPage() {
                   key={dive.id}
                   className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl"
                 >
-                  <Link href={hasDeepDives ? `/deep-dive/${dive.slug}` : '#'}>
+                  <Link href={hasDeepDives ? `/deep-dives/${dive.slug}` : '#'}>
                     <div className="aspect-[16/10] relative overflow-hidden">
                       {hasDeepDives ? (
                         dive.content?.featured_image?.filename ? (
@@ -244,7 +244,7 @@ export default async function DeepDivesPage() {
                         }
                       </span>
                     </div>
-                    <Link href={hasDeepDives ? `/deep-dive/${dive.slug}` : '#'}>
+                    <Link href={hasDeepDives ? `/deep-dives/${dive.slug}` : '#'}>
                       <h3 className="text-foreground font-bold text-xl mb-3 leading-tight hover:text-primary transition-colors">
                         {hasDeepDives ? dive.name : dive.title}
                       </h3>
@@ -301,7 +301,7 @@ export default async function DeepDivesPage() {
                           />
                         )}
                       </div>
-                      <Link href={hasDeepDives ? `/deep-dive/${dive.slug}` : '#'}>
+                      <Link href={hasDeepDives ? `/deep-dives/${dive.slug}` : '#'}>
                         <Button
                           size="sm"
                           className="text-white text-sm px-6 py-2"
@@ -330,7 +330,7 @@ export default async function DeepDivesPage() {
                   key={dive.id}
                   className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl"
                 >
-                  <Link href={hasDeepDives ? `/deep-dive/${dive.slug}` : '#'}>
+                  <Link href={hasDeepDives ? `/deep-dives/${dive.slug}` : '#'}>
                     <div className="aspect-[16/9] relative overflow-hidden">
                       {hasDeepDives ? (
                         dive.content?.featured_image?.filename ? (
@@ -371,7 +371,7 @@ export default async function DeepDivesPage() {
                         }
                       </span>
                     </div>
-                    <Link href={hasDeepDives ? `/deep-dive/${dive.slug}` : '#'}>
+                    <Link href={hasDeepDives ? `/deep-dives/${dive.slug}` : '#'}>
                       <h3 className="text-foreground font-bold text-base mb-2 leading-tight hover:text-primary transition-colors">
                         {hasDeepDives ? dive.name : dive.title}
                       </h3>
@@ -416,7 +416,7 @@ export default async function DeepDivesPage() {
                           : `${dive.duration} • ${dive.plays} plays`
                         }
                       </span>
-                      <Link href={hasDeepDives ? `/deep-dive/${dive.slug}` : '#'}>
+                      <Link href={hasDeepDives ? `/deep-dives/${dive.slug}` : '#'}>
                         <Button
                           size="sm"
                           className="text-white text-xs px-3 py-1"

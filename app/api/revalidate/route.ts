@@ -37,11 +37,11 @@ export async function POST(request: NextRequest) {
         const slug = storyPath.replace('blog/', '')
         pathsToRevalidate.push(`/blog/${slug}`)
         pathsToRevalidate.push('/blog')
-      } else if (storyPath.startsWith('deep-dive/')) {
+      } else if (storyPath.startsWith('deep-dives/')) {
         // Deep dive - revalidate the specific post and listing
-        const slug = storyPath.replace('deep-dive/', '')
-        pathsToRevalidate.push(`/deep-dive/${slug}`)
-        pathsToRevalidate.push('/deep-dive')
+        const slug = storyPath.replace('deep-dives/', '')
+        pathsToRevalidate.push(`/deep-dives/${slug}`)
+        pathsToRevalidate.push('/deep-dives')
       } else if (storyPath.startsWith('profiles/')) {
         // Profile - revalidate the specific profile and listing
         const slug = storyPath.replace('profiles/', '')
