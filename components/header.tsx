@@ -64,7 +64,7 @@ export function Header() {
                   BLOG
                 </Button>
               </Link>
-              <Link href="/deep-dives" >
+              <Link href="/deep-dive" >
                 <Button
                   variant="ghost"
                   className="nts-text-caps text-sm font-bold hover:bg-transparent hover:text-gray-700 px-0 text-black"
@@ -199,7 +199,7 @@ export function Header() {
                           <span className="nts-text-caps text-base font-bold text-foreground group-hover:text-gray-700">BLOG</span>
                         </Link>
 
-                        <Link href="/deep-dives" className="block p-4 rounded-xl transition-all duration-200 hover:bg-gray-50 active:scale-95 group">
+                        <Link href="/deep-dive" className="block p-4 rounded-xl transition-all duration-200 hover:bg-gray-50 active:scale-95 group">
                           <span className="nts-text-caps text-base font-bold text-foreground group-hover:text-gray-700">DEEP DIVES</span>
                         </Link>
 

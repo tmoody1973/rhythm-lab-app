@@ -115,7 +115,7 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="mb-8">
             <Link
-              href="/deep-dives"
+              href="/deep-dive"
               className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               ← Back to Deep Dives
@@ -268,7 +268,7 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
                   )}
                 </div>
 
-                <Link href="/deep-dives">
+                <Link href="/deep-dive">
                   <Button
                     className="text-white"
                     style={{ backgroundColor: postColor }}

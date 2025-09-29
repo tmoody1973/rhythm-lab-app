@@ -8,7 +8,7 @@ import { FavoriteButton } from "@/components/favorite-button"
 import { sb } from "@/src/lib/storyblok"
 import Link from "next/link"
 
-type ContentType = 'all' | 'blog' | 'deep-dives' | 'profiles'
+type ContentType = 'all' | 'blog' | 'deep-dive' | 'profiles'
 
 interface ContentItem {
   id: number
@@ -44,7 +44,7 @@ function getTypeLabel(type: string) {
 function getRoutePrefix(type: string) {
   switch (type) {
     case 'blog': return '/blog'
-    case 'deep-dive': return '/deep-dives'
+    case 'deep-dive': return '/deep-dive'
     case 'profile': return '/profiles'
     default: return ''
   }
@@ -236,7 +236,7 @@ export function ExploreSection() {
   const filteredContent = allContent.filter(item => {
     if (activeFilter === 'all') return true
     if (activeFilter === 'blog') return item.type === 'blog'
-    if (activeFilter === 'deep-dives') return item.type === 'deep-dive'
+    if (activeFilter === 'deep-dive') return item.type === 'deep-dive'
     if (activeFilter === 'profiles') return item.type === 'profile'
     return true
   })
@@ -244,7 +244,7 @@ export function ExploreSection() {
   const filterButtons = [
     { key: 'all' as ContentType, label: 'All' },
     { key: 'blog' as ContentType, label: 'Blog' },
-    { key: 'deep-dives' as ContentType, label: 'Deep Dives' },
+    { key: 'deep-dive' as ContentType, label: 'Deep Dives' },
     { key: 'profiles' as ContentType, label: 'Profiles' }
   ]
 
