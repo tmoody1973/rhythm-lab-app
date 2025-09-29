@@ -181,7 +181,7 @@ export function ExploreSection() {
           version: 'published',
           per_page: 50,
           sort_by: 'first_published_at:desc',
-          starts_with: 'deep-dive/'
+          starts_with: 'deep-dives/'
         }).catch(() => ({ data: { stories: [] } })),
 
         // Profiles
