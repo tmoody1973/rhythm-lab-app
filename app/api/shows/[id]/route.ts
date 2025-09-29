@@ -85,8 +85,12 @@ export async function GET(
         // If slug fails, try multiple approaches to find the show
         let found = false
 
-        // First try: numeric ID from slug as storyblok_id
-        if (numericId) {
+        // Check if numeric ID is a real Storyblok ID (8-9 digits) or timestamp (13+ digits)
+        const isStoryblokId = numericId && numericId.length >= 8 && numericId.length <= 9
+        const isTimestamp = numericId && numericId.length >= 13
+
+        if (isStoryblokId) {
+          // First try: look for it in the database with this storyblok_id
           console.log(`[Shows API] Trying storyblok_id lookup: "${numericId}"`)
           const storyblokResult = await supabase
             .from('shows')
@@ -98,11 +102,66 @@ export async function GET(
             show = storyblokResult.data[0]
             showError = null
             found = true
-            console.log(`[Shows API] Found by storyblok_id: ${numericId}`)
+            console.log(`[Shows API] Found by storyblok_id in database: ${numericId}`)
+          } else {
+            // If not in database, fetch from Storyblok API
+            console.log(`[Shows API] Not in database, trying Storyblok API with ID: ${numericId}`)
+            try {
+              const storyblokToken = process.env.NEXT_PUBLIC_STORYBLOK_ACCESS_TOKEN
+              if (storyblokToken) {
+                const storyblokResponse = await fetch(`https://api.storyblok.com/v2/cdn/stories/${numericId}?token=${storyblokToken}`)
+
+                if (storyblokResponse.ok) {
+                  const storyblokData = await storyblokResponse.json()
+                  if (storyblokData.story && storyblokData.story.content?.component === 'mixcloud_show') {
+                    const storyblokShow = storyblokData.story
+                    show = {
+                      id: storyblokShow.content.show_id || storyblokShow.uuid || storyblokShow.id,
+                      title: storyblokShow.content.title || storyblokShow.name,
+                      slug: storyblokShow.slug,
+                      description: storyblokShow.content.description || '',
+                      mixcloud_url: storyblokShow.content.mixcloud_url || '',
+                      mixcloud_embed: storyblokShow.content.mixcloud_embed || '',
+                      mixcloud_picture: typeof storyblokShow.content.mixcloud_picture === 'string'
+                        ? storyblokShow.content.mixcloud_picture
+                        : storyblokShow.content.mixcloud_picture?.filename || '',
+                      published_date: storyblokShow.content.published_date || storyblokShow.published_at,
+                      storyblok_id: numericId,
+                      status: 'published',
+                      created_at: storyblokShow.created_at,
+                      updated_at: storyblokShow.updated_at
+                    }
+                    showError = null
+                    found = true
+                    console.log(`[Shows API] Found in Storyblok API`)
+                  }
+                }
+              }
+            } catch (sbError) {
+              console.error('Storyblok API lookup failed:', sbError)
+            }
+          }
+        } else if (isTimestamp) {
+          console.log(`[Shows API] Numeric ID is a timestamp (${numericId}), trying to find by slug without timestamp`)
+          // Try to find by the slug without the timestamp
+          const slugWithoutTimestamp = showId.substring(0, showId.lastIndexOf('-'))
+          console.log(`[Shows API] Looking for slug: "${slugWithoutTimestamp}"`)
+
+          const slugWithoutTimestampResult = await supabase
+            .from('shows')
+            .select('*')
+            .eq('slug', slugWithoutTimestamp)
+            .limit(1)
+
+          if (slugWithoutTimestampResult.data && slugWithoutTimestampResult.data.length > 0) {
+            show = slugWithoutTimestampResult.data[0]
+            showError = null
+            found = true
+            console.log(`[Shows API] Found by slug without timestamp`)
           }
         }
 
-        // Second try: look up by slug pattern in the slug field
+        // Third try: look up by slug pattern in the slug field
         if (!found) {
           console.log(`[Shows API] Trying slug pattern lookup`)
           const slugResult = await supabase
@@ -117,23 +176,8 @@ export async function GET(
             found = true
             console.log(`[Shows API] Found by slug pattern`)
           } else {
-            // Third try: match by title keywords (jones girls, quincy jones, bobbi humphrey, massive attack)
-            console.log(`[Shows API] Trying title keyword lookup`)
-            const titleResult = await supabase
-              .from('shows')
-              .select('*')
-              .ilike('title', '%jones girls%')
-              .ilike('title', '%quincy jones%')
-              .ilike('title', '%bobbi humphrey%')
-              .ilike('title', '%massive attack%')
-              .limit(1)
-
-            if (titleResult.data && titleResult.data.length > 0) {
-              show = titleResult.data[0]
-              showError = null
-              found = true
-              console.log(`[Shows API] Found by title keywords`)
-            }
+            console.log(`[Shows API] No show found with ID/slug: ${showId}`)
+            // Don't fall back to arbitrary hardcoded shows
           }
         }
 

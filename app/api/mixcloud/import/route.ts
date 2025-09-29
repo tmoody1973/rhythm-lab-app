@@ -36,7 +36,7 @@ interface ImportResponse {
  * POST /api/mixcloud/import
  * Import a Mixcloud show with playlist data to Supabase and Storyblok
  */
-const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextResponse> => {
+const handler = withAdminAuth(async (request: NextRequest): Promise<NextResponse> => {
   try {
     const body: ImportShowRequest = await request.json()
 
@@ -71,17 +71,15 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       }
     }
 
-    // Create Supabase client
-    const supabase = createServerClient(
+    // Create Supabase client with service role for admin operations (bypasses RLS)
+    const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
+    const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll()
-          },
-          setAll() {},
-        },
+        auth: {
+          persistSession: false
+        }
       }
     )
 
@@ -159,9 +157,18 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
 
     // 3. Create Storyblok entry using the same method as upload show
     let storyblokId: string | undefined
+    let storyblokWarning: string | undefined
+
     try {
       const publishedDate = new Date(body.date)
       const storyblokTracklist = hasPlaylist ? tracksToStoryblokFormat(parseResult.tracks) : []
+
+      console.log('📝 Creating Storyblok story for:', {
+        title: body.title,
+        showId: showId,
+        tracklistCount: storyblokTracklist.length,
+        hasPlaylist
+      })
 
       const storyblokResponse = await createMixcloudShowStory({
         title: body.title,
@@ -174,9 +181,14 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       })
 
       storyblokId = storyblokResponse.story.id.toString()
+      console.log('✅ Storyblok story created successfully:', {
+        storyblokId,
+        storyName: storyblokResponse.story.name,
+        storySlug: storyblokResponse.story.slug
+      })
 
       // Update show with Storyblok ID
-      await supabase
+      const { error: updateError } = await supabase
         .from('shows')
         .update({
           storyblok_id: storyblokId,
@@ -184,8 +196,20 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
         })
         .eq('id', showId)
 
+      if (updateError) {
+        console.error('Failed to update show with storyblok_id:', updateError)
+        storyblokWarning = `Storyblok story created but failed to link: ${updateError.message}`
+      }
+
     } catch (storyblokError) {
-      console.error('Storyblok creation failed:', storyblokError)
+      console.error('❌ Storyblok creation failed:', {
+        error: storyblokError,
+        message: storyblokError instanceof Error ? storyblokError.message : 'Unknown error',
+        stack: storyblokError instanceof Error ? storyblokError.stack : undefined
+      })
+
+      storyblokWarning = `Storyblok creation failed: ${storyblokError instanceof Error ? storyblokError.message : 'Unknown error'}`
+      parseResult.warnings.push(storyblokWarning)
       // Don't fail the entire import, just log the warning
     }
 
@@ -195,10 +219,10 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       storyblok_id: storyblokId,
       tracks_imported: tracksImported,
       errors: parseResult.errors,
-      warnings: parseResult.warnings,
+      warnings: storyblokWarning ? [storyblokWarning, ...parseResult.warnings] : parseResult.warnings,
       message: hasPlaylist
-        ? `Successfully imported show "${body.title}" with ${tracksImported} tracks`
-        : `Successfully imported show "${body.title}" (no playlist data)`
+        ? `Successfully imported show "${body.title}" with ${tracksImported} tracks${storyblokId ? '' : ' (Storyblok sync failed - see warnings)'}`
+        : `Successfully imported show "${body.title}" (no playlist data)${storyblokId ? '' : ' (Storyblok sync failed - see warnings)'}`
     })
 
   } catch (error) {

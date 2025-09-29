@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdminAuth } from '@/lib/auth/admin'
-import { createServerClient } from '@supabase/ssr'
 import { createMixcloudShowStory } from '@/lib/storyblok-management'
 import { parsePlaylistText, tracksToDbFormat, tracksToStoryblokFormat } from '@/lib/playlist-parser'
 
@@ -28,7 +27,7 @@ interface CreateShowResponse {
  * POST /api/mixcloud/create-show
  * Create show record in database and sync to Storyblok after successful Mixcloud upload
  */
-const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextResponse> => {
+const handler = withAdminAuth(async (request: NextRequest): Promise<NextResponse> => {
   try {
     // Parse FormData (for file uploads) or JSON
     let body: CreateShowRequest
@@ -64,16 +63,28 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       }, { status: 400 })
     }
 
-    const supabase = createServerClient(
+    // Create Supabase client with service role for admin operations (bypasses RLS)
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!serviceRoleKey) {
+      console.error('❌ SUPABASE_SERVICE_ROLE_KEY not found in environment variables')
+      return NextResponse.json({
+        success: false,
+        message: 'Server configuration error: Service role key not found',
+        errors: ['SUPABASE_SERVICE_ROLE_KEY environment variable is not configured']
+      }, { status: 500 })
+    }
+
+    console.log('🔑 Using service role key (first 20 chars):', serviceRoleKey.substring(0, 20))
+
+    const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
+    const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      serviceRoleKey,
       {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll()
-          },
-          setAll() {},
-        },
+        auth: {
+          persistSession: false
+        }
       }
     )
 
@@ -91,8 +102,17 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
     // 2. Create show record in database
     const publishedDate = body.published_date ? new Date(body.published_date) : new Date()
 
+    // Generate a slug from the title
+    const slug = body.title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
+
     const showData = {
       title: body.title,
+      slug: slug, // Add slug field
       description: body.description || '',
       mixcloud_url: body.mixcloud_url,
       mixcloud_embed: generateMixcloudEmbed(body.mixcloud_url),

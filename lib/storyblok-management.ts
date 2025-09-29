@@ -56,6 +56,16 @@ export async function createStoryblokStory(
     throw new Error('STORYBLOK_SPACE_ID not configured')
   }
 
+  // Log the payload being sent
+  console.log('📤 Sending to Storyblok API:', {
+    name: storyData.name,
+    slug: storyData.slug,
+    component: storyData.content.component,
+    parent_id: storyData.parent_id,
+    tracklistCount: storyData.content.tracklist?.length || 0,
+    firstTrack: storyData.content.tracklist?.[0]
+  })
+
   const response = await fetch(`https://mapi.storyblok.com/v1/spaces/${spaceId}/stories/`, {
     method: 'POST',
     headers: {
@@ -69,11 +79,17 @@ export async function createStoryblokStory(
 
   if (!response.ok) {
     const error = await response.text()
-    console.error('Storyblok create story error:', error)
+    console.error('❌ Storyblok create story error:', {
+      status: response.status,
+      statusText: response.statusText,
+      error
+    })
     throw new Error(`Storyblok API error (${response.status}): ${error}`)
   }
 
-  return response.json()
+  const result = await response.json()
+  console.log('✅ Storyblok story created:', result.story.id)
+  return result
 }
 
 /**

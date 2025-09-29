@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdminAuth } from '@/lib/auth/admin'
-import { createServerClient } from '@supabase/ssr'
 import { parsePlaylistText, tracksToDbFormat, tracksToStoryblokFormat } from '@/lib/playlist-parser'
 
 interface SyncShowRequest {
@@ -39,7 +38,7 @@ interface SyncResponse {
  * PUT /api/mixcloud/sync
  * Update existing show and sync with Storyblok
  */
-const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextResponse> => {
+const handler = withAdminAuth(async (request: NextRequest): Promise<NextResponse> => {
   try {
     const body: SyncShowRequest = await request.json()
 
@@ -50,17 +49,15 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       }, { status: 400 })
     }
 
-    // Create Supabase client
-    const supabase = createServerClient(
+    // Create Supabase client with service role for admin operations (bypasses RLS)
+    const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
+    const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll()
-          },
-          setAll() {},
-        },
+        auth: {
+          persistSession: false
+        }
       }
     )
 
@@ -147,6 +144,19 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
     }
 
     // 4. Update Storyblok if requested and story exists
+    console.log('Storyblok sync check:', {
+      update_storyblok: body.update_storyblok,
+      has_storyblok_id: !!existingShow.storyblok_id,
+      storyblok_id: existingShow.storyblok_id,
+      has_parseResult: !!parseResult,
+      track_count: parseResult?.tracks?.length || 0
+    })
+
+    if (body.update_storyblok !== false && !existingShow.storyblok_id) {
+      warnings.push('Cannot sync to Storyblok: Show does not have a storyblok_id. Please re-import this show.')
+      console.warn('⚠️ Show missing storyblok_id:', body.show_id)
+    }
+
     if (body.update_storyblok !== false && existingShow.storyblok_id) {
       try {
         // Get updated show data
@@ -176,13 +186,24 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
           storyblokContent.tracklist = formattedTracks
         }
 
+        console.log('Updating Storyblok story:', existingShow.storyblok_id, 'with content:', {
+          title: storyblokContent.title,
+          tracklistCount: storyblokContent.tracklist?.length || 0
+        })
+
         await updateStoryblokShow(existingShow.storyblok_id, {
           name: storyblokContent.title,
           content: storyblokContent
         })
 
+        updatedFields.push('storyblok')
+        console.log('✅ Storyblok update successful')
+
       } catch (storyblokError) {
-        warnings.push(`Storyblok update failed: ${storyblokError instanceof Error ? storyblokError.message : 'Unknown error'}`)
+        console.error('❌ Storyblok update error:', storyblokError)
+        const errorMsg = `Storyblok update failed: ${storyblokError instanceof Error ? storyblokError.message : 'Unknown error'}`
+        errors.push(errorMsg)
+        warnings.push(errorMsg)
       }
     }
 
@@ -268,7 +289,7 @@ async function updateStoryblokShow(storyId: string, updateData: any) {
  * GET /api/mixcloud/sync?show_id={id}
  * Get show sync status and information
  */
-const getHandler = withAdminAuth(async (request: NextRequest, user): Promise<NextResponse> => {
+const getHandler = withAdminAuth(async (request: NextRequest): Promise<NextResponse> => {
   try {
     const url = new URL(request.url)
     const showId = url.searchParams.get('show_id')
@@ -280,16 +301,15 @@ const getHandler = withAdminAuth(async (request: NextRequest, user): Promise<Nex
       }, { status: 400 })
     }
 
-    const supabase = createServerClient(
+    // Create Supabase client with service role for admin operations
+    const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
+    const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll()
-          },
-          setAll() {},
-        },
+        auth: {
+          persistSession: false
+        }
       }
     )
 

@@ -20,8 +20,17 @@ export function RadioProvider({ children }: { children: ReactNode }) {
     const fetchRadioData = async () => {
       try {
         const edgeFunctionUrl = 'https://iqzecpfmmsjooxuzvdgu.supabase.co/functions/v1/spinitron-proxy'
+        const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+        if (!anonKey) {
+          console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY is not defined')
+          setIsLive(false)
+          setIsLoading(false)
+          return
+        }
+
         const headers = {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${anonKey}`,
           'Content-Type': 'application/json'
         }
 

@@ -125,7 +125,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         tracks: tracks,
         tags: extractTags(story.content.title, story.content.description),
         slug: story.slug,
-        show_id: story.content.show_id || story.id
+        show_id: story.content.show_id || story.id.toString() // Use Storyblok story ID if no database show_id
       }
     })
 

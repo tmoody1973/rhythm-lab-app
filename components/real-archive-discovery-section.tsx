@@ -13,6 +13,7 @@ import Link from "next/link"
 interface Show {
   id: string
   slug: string
+  show_id: string // Database UUID - use this for navigation
   title: string
   description: string
   published_date: string
@@ -165,7 +166,7 @@ export function RealArchiveDiscoverySection() {
                     key={show.id}
                     className="bg-background hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-border/50 rounded-xl group"
                   >
-                    <Link href={`/show/${show.slug}`}>
+                    <Link href={`/show/${show.show_id || show.id}`}>
                       <div className="aspect-[16/9] relative overflow-hidden">
                         {show.mixcloud_picture ? (
                           <img
@@ -195,7 +196,7 @@ export function RealArchiveDiscoverySection() {
                         </span>
                       </div>
 
-                      <Link href={`/show/${show.slug}`}>
+                      <Link href={`/show/${show.show_id || show.id}`}>
                         <h3 className="text-foreground font-bold text-lg mb-2 leading-tight text-balance hover:text-primary transition-colors">
                           {show.title}
                         </h3>
@@ -251,7 +252,7 @@ export function RealArchiveDiscoverySection() {
                         )}
 
                         <div className="flex justify-end">
-                          <Link href={`/show/${show.slug}`}>
+                          <Link href={`/show/${show.show_id || show.id}`}>
                             <Button
                               size="sm"
                               variant="outline"
