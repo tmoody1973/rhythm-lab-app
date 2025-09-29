@@ -1,5 +1,5 @@
 import { getSongsAdminIndex, getContentAdminIndex } from './client'
-import type { SongRecord, ContentRecord } from './types'
+import type { SongRecord, ContentRecord, ArtistRelationshipRecord, ArtistProfileRecord } from './types'
 
 // Batch size for efficient indexing
 const BATCH_SIZE = 1000
@@ -203,6 +203,140 @@ export function prepareSongForIndexing(songData: any): SongRecord {
     ai_enhanced: Boolean(songData.ai_enhanced),
     created_at: songData.created_at || now,
     updated_at: now
+  }
+}
+
+// Index artist relationships
+export async function indexArtistRelationships(relationships: ArtistRelationshipRecord[]) {
+  try {
+    // For now, we'll use the content index for relationships
+    // In production, you might want a dedicated relationships index
+    const contentIndex = getContentAdminIndex()
+
+    const batches = []
+    for (let i = 0; i < relationships.length; i += BATCH_SIZE) {
+      batches.push(relationships.slice(i, i + BATCH_SIZE))
+    }
+
+    console.log(`Indexing ${relationships.length} artist relationships in ${batches.length} batches...`)
+
+    const results = []
+    for (const batch of batches) {
+      const result = await contentIndex.saveObjects(batch)
+      results.push(result)
+      console.log(`✅ Indexed batch of ${batch.length} relationships`)
+    }
+
+    return {
+      success: true,
+      indexed: relationships.length,
+      results
+    }
+  } catch (error) {
+    console.error('❌ Error indexing artist relationships:', error)
+    throw error
+  }
+}
+
+// Index artist profiles with relationship data
+export async function indexArtistProfiles(profiles: ArtistProfileRecord[]) {
+  try {
+    const contentIndex = getContentAdminIndex()
+
+    const batches = []
+    for (let i = 0; i < profiles.length; i += BATCH_SIZE) {
+      batches.push(profiles.slice(i, i + BATCH_SIZE))
+    }
+
+    console.log(`Indexing ${profiles.length} artist profiles in ${batches.length} batches...`)
+
+    const results = []
+    for (const batch of batches) {
+      const result = await contentIndex.saveObjects(batch)
+      results.push(result)
+      console.log(`✅ Indexed batch of ${batch.length} artist profiles`)
+    }
+
+    return {
+      success: true,
+      indexed: profiles.length,
+      results
+    }
+  } catch (error) {
+    console.error('❌ Error indexing artist profiles:', error)
+    throw error
+  }
+}
+
+// Utility function to prepare artist relationship data for indexing
+export function prepareArtistRelationshipForIndexing(relationshipData: any): ArtistRelationshipRecord {
+  const now = new Date().toISOString()
+
+  return {
+    objectID: relationshipData.id || `relationship_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    source_artist_id: relationshipData.source_artist_id,
+    source_artist_name: relationshipData.source_artist?.name || relationshipData.source_artist_name || '',
+    source_artist_slug: relationshipData.source_artist?.slug || relationshipData.source_artist_slug || '',
+    target_artist_id: relationshipData.target_artist_id,
+    target_artist_name: relationshipData.target_artist?.name || relationshipData.target_artist_name || '',
+    target_artist_slug: relationshipData.target_artist?.slug || relationshipData.target_artist_slug || '',
+    relationship_type: relationshipData.relationship_type,
+    strength: relationshipData.strength || 1.0,
+    collaboration_count: relationshipData.collaboration_count || 1,
+    first_collaboration_date: relationshipData.first_collaboration_date,
+    last_collaboration_date: relationshipData.last_collaboration_date,
+    verified: Boolean(relationshipData.verified),
+    evidence_tracks: Array.isArray(relationshipData.evidence_tracks) ? relationshipData.evidence_tracks : [],
+    evidence_releases: Array.isArray(relationshipData.evidence_releases) ? relationshipData.evidence_releases : [],
+    source_data: relationshipData.source_data || {},
+    notes: relationshipData.notes,
+    created_at: relationshipData.created_at || now,
+    updated_at: relationshipData.updated_at || now
+  }
+}
+
+// Utility function to prepare artist profile data for indexing
+export function prepareArtistProfileForIndexing(artistData: any): ArtistProfileRecord {
+  const now = new Date().toISOString()
+
+  return {
+    objectID: artistData.id || `artist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    name: artistData.name || '',
+    slug: artistData.slug || '',
+    real_name: artistData.real_name,
+    bio: artistData.bio,
+    origin_country: artistData.origin_country,
+    origin_city: artistData.origin_city,
+    genres: Array.isArray(artistData.genres) ? artistData.genres : [],
+    aliases: Array.isArray(artistData.aliases) ? artistData.aliases : [],
+    profile_image_url: artistData.profile_image_url,
+    banner_image_url: artistData.banner_image_url,
+    website_url: artistData.website_url,
+    social_urls: {
+      instagram: artistData.instagram_url,
+      twitter: artistData.twitter_url,
+      facebook: artistData.facebook_url,
+      soundcloud: artistData.soundcloud_url,
+      spotify: artistData.spotify_url,
+      bandcamp: artistData.bandcamp_url,
+      youtube: artistData.youtube_url
+    },
+    external_ids: {
+      discogs_id: artistData.discogs_id,
+      spotify_id: artistData.spotify_id
+    },
+    active_years: {
+      start: artistData.active_years_start,
+      end: artistData.active_years_end
+    },
+    collaboration_count: artistData.collaboration_count || 0,
+    influence_score: artistData.influence_score || 0,
+    collaborator_names: Array.isArray(artistData.collaborator_names) ? artistData.collaborator_names : [],
+    labels: Array.isArray(artistData.labels) ? artistData.labels : [],
+    is_featured: Boolean(artistData.is_featured),
+    view_count: artistData.view_count || 0,
+    created_at: artistData.created_at || now,
+    updated_at: artistData.updated_at || now
   }
 }
 

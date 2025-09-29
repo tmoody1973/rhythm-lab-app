@@ -40,3 +40,5 @@ next-env.d.ts
 .env.vercel
 
 /src/generated/prisma
+.env.vercel.check
+.env.vercel.prod

@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-live-songs",
+      "schedule": "*/10 * * * *"
+    }
+  ]
+}

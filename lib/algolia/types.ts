@@ -25,6 +25,83 @@ export interface SongRecord {
   danceability?: number // 1-10 scale
   tags?: string[]
   ai_enhanced?: boolean
+
+  // Artist relationship fields (from processing relationships)
+  featured_artists?: string[]
+  remixers?: string[]
+  producers?: string[]
+  collaborators?: string[]
+  related_artists?: string[]
+  has_collaborations?: boolean
+  collaboration_count?: number
+
+  created_at: string
+  updated_at: string
+}
+
+// Artist relationship data structure for Algolia indexing
+export interface ArtistRelationshipRecord {
+  objectID: string
+  source_artist_id: string
+  source_artist_name: string
+  source_artist_slug: string
+  target_artist_id: string
+  target_artist_name: string
+  target_artist_slug: string
+  relationship_type: 'collaboration' | 'remix' | 'featured' | 'producer' | 'label_mate' | 'influence' | 'side_project' | 'group_member'
+  strength: number
+  collaboration_count: number
+  first_collaboration_date?: string
+  last_collaboration_date?: string
+  verified: boolean
+  evidence_tracks?: string[]
+  evidence_releases?: string[]
+  source_data?: {
+    source?: string
+    [key: string]: any
+  }
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+// Enhanced artist profile data structure
+export interface ArtistProfileRecord {
+  objectID: string
+  name: string
+  slug: string
+  real_name?: string
+  bio?: string
+  origin_country?: string
+  origin_city?: string
+  genres?: string[]
+  aliases?: string[]
+  profile_image_url?: string
+  banner_image_url?: string
+  website_url?: string
+  social_urls?: {
+    instagram?: string
+    twitter?: string
+    facebook?: string
+    soundcloud?: string
+    spotify?: string
+    bandcamp?: string
+    youtube?: string
+  }
+  external_ids?: {
+    discogs_id?: number
+    spotify_id?: string
+  }
+  active_years?: {
+    start?: number
+    end?: number
+  }
+  collaboration_count?: number
+  influence_score?: number
+  collaborator_names?: string[] // For search
+  labels?: string[] // Record labels associated with artist
+  is_featured: boolean
+  view_count: number
   created_at: string
   updated_at: string
 }

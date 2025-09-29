@@ -13,6 +13,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { searchClient, INDICES } from '@/lib/algolia/client'
 import { getSpotifyTrackData } from '@/lib/spotify/api'
 import { getYouTubeTrackData } from '@/lib/youtube/api'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 interface EnhancedTrackData {
   spotify?: {
@@ -89,16 +95,30 @@ export async function GET(
           }
         })(),
 
-        // YouTube API call
+        // YouTube data (cached first, then API fallback)
         (async () => {
           try {
             console.log('📺 Fetching YouTube data...')
+
+            // FIRST: Try to get cached YouTube data
+            const cachedData = await getCachedYouTubeData(trackId)
+
+            if (cachedData) {
+              console.log(`✅ YouTube: Using cached data - "${cachedData.video.title}" by ${cachedData.video.channelTitle}`)
+              return cachedData
+            }
+
+            // FALLBACK: Use YouTube API if no cached data (but only occasionally)
+            // This helps with new tracks while preserving quota for existing ones
+            console.log('💡 No cached YouTube data, making API call...')
             const data = await getYouTubeTrackData(basicTrackData.artist, basicTrackData.song)
+
             if (data) {
-              console.log(`✅ YouTube: Found video "${data.video.title}" by ${data.video.channelTitle}`)
-              return data
+              console.log(`✅ YouTube API: Found video "${data.video.title}" by ${data.video.channelTitle}`)
+              // Note: We could optionally cache this data here, but it's better to do it in batches
+              return { ...data, cached: false }
             } else {
-              console.log('❌ YouTube: No match found')
+              console.log('❌ YouTube API: No match found')
               return null
             }
           } catch (error) {
@@ -199,6 +219,75 @@ async function getBasicTrackData(trackId: string) {
 
   } catch (error) {
     console.error('Error fetching basic track data:', error)
+    return null
+  }
+}
+
+/**
+ * Get cached YouTube data from database
+ * This avoids hitting the YouTube API repeatedly
+ */
+async function getCachedYouTubeData(trackId: string) {
+  try {
+    // Determine table based on track ID prefix
+    const table = trackId.startsWith('live_song_') ? 'songs' : 'mixcloud_tracks'
+
+    // Extract the actual database ID from the Algolia object ID
+    const dbId = trackId.replace('live_song_', '').replace('archive_track_', '')
+
+    console.log(`🎵 Checking YouTube cache in ${table} for ID: ${dbId}`)
+
+    const { data, error } = await supabase
+      .from(table)
+      .select('youtube_url, youtube_video_id, youtube_thumbnail, youtube_title, youtube_channel, youtube_duration, youtube_view_count, youtube_cached_at')
+      .eq('id', dbId)
+      .single()
+
+    if (error) {
+      console.log(`No cached YouTube data found in ${table} for ${dbId}`)
+      return null
+    }
+
+    if (data.youtube_url) {
+      console.log(`✅ Found cached YouTube data: "${data.youtube_title}" by ${data.youtube_channel}`)
+
+      // Format the data to match the YouTube API response structure
+      return {
+        video: {
+          id: data.youtube_video_id,
+          title: data.youtube_title,
+          channelTitle: data.youtube_channel,
+          thumbnail: data.youtube_thumbnail,
+          duration: data.youtube_duration,
+          viewCount: data.youtube_view_count,
+          embedUrl: `https://www.youtube.com/embed/${data.youtube_video_id}`,
+          watchUrl: data.youtube_url
+        },
+        videoId: data.youtube_video_id,
+        embedUrl: `https://www.youtube.com/embed/${data.youtube_video_id}`,
+        watchUrl: data.youtube_url,
+        thumbnail: data.youtube_thumbnail,
+        isOfficialChannel: data.youtube_channel?.toLowerCase().includes('vevo') ||
+                          data.youtube_channel?.toLowerCase().includes('official') || false,
+        hasHighViews: data.youtube_view_count ?
+                      parseInt(data.youtube_view_count.replace(/[^\d]/g, '')) > 1000000 : false,
+        cached: true,
+        cachedAt: data.youtube_cached_at
+      }
+    }
+
+    // YouTube data was attempted but no video found
+    if (data.youtube_cached_at) {
+      console.log(`No YouTube video exists for this track (cached at ${data.youtube_cached_at})`)
+      return null
+    }
+
+    // No cache attempt yet
+    console.log(`No YouTube cache attempt yet for ${dbId}`)
+    return null
+
+  } catch (error) {
+    console.error('Error getting cached YouTube data:', error)
     return null
   }
 }

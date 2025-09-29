@@ -39,6 +39,69 @@ export async function POST(request: NextRequest) {
         )
       `)
 
+    // Also fetch artist relationships for each track
+    console.log('Fetching artist relationships...')
+    console.log('Track IDs to fetch relationships for:', tracks.map(t => t.id).slice(0, 5))
+    const trackRelationships = new Map<string, any[]>()
+
+    if (tracks && tracks.length > 0) {
+      // Get all track credits for these tracks
+      const { data: credits } = await supabase
+        .from('track_credits')
+        .select(`
+          track_id,
+          artist_id,
+          credit_type,
+          artist_profiles!inner (
+            name,
+            slug
+          )
+        `)
+        .eq('track_table', 'mixcloud_tracks')
+        .in('track_id', tracks.map(t => t.id))
+
+      console.log(`Found ${credits?.length || 0} track credits`)
+
+      // Get all artist relationships
+      const { data: relationships } = await supabase
+        .from('artist_relationships')
+        .select(`
+          source_artist_id,
+          target_artist_id,
+          relationship_type,
+          strength,
+          collaboration_count,
+          artist_profiles!source_artist_id (
+            name,
+            slug
+          ),
+          target_artist:artist_profiles!target_artist_id (
+            name,
+            slug
+          )
+        `)
+
+      console.log(`Found ${relationships?.length || 0} artist relationships`)
+
+      // Organize data by track
+      if (credits) {
+        for (const track of tracks) {
+          const trackCredits = credits.filter(c => c.track_id === track.id)
+          const artistIds = trackCredits.map(c => c.artist_id)
+
+          // Find relationships for artists in this track
+          const trackRels = relationships?.filter(r =>
+            artistIds.includes(r.source_artist_id) || artistIds.includes(r.target_artist_id)
+          ) || []
+
+          trackRelationships.set(track.id, {
+            credits: trackCredits,
+            relationships: trackRels
+          })
+        }
+      }
+    }
+
     if (error) {
       console.error('Supabase error:', error)
       return NextResponse.json(
@@ -117,6 +180,35 @@ export async function POST(request: NextRequest) {
       const weeklySchedule = storyblokShow?.weekly_schedule || ''
       const timeSlot = storyblokShow?.time_slot || ''
 
+      // Get relationship data for this track
+      const trackRelData = trackRelationships.get(track.id) || { credits: [], relationships: [] }
+      const featuredArtists = trackRelData.credits
+        .filter((c: any) => c.credit_type === 'featured_artist')
+        .map((c: any) => c.artist_profiles?.name)
+        .filter(Boolean)
+
+      const remixers = trackRelData.credits
+        .filter((c: any) => c.credit_type === 'remixer')
+        .map((c: any) => c.artist_profiles?.name)
+        .filter(Boolean)
+
+      const producers = trackRelData.credits
+        .filter((c: any) => c.credit_type === 'producer')
+        .map((c: any) => c.artist_profiles?.name)
+        .filter(Boolean)
+
+      const collaborators = trackRelData.relationships
+        .filter((r: any) => r.relationship_type === 'collaboration')
+        .map((r: any) => r.artist_profiles?.name || r.target_artist?.name)
+        .filter(Boolean)
+
+      const allRelatedArtists = [
+        ...featuredArtists,
+        ...remixers,
+        ...producers,
+        ...collaborators
+      ].filter((name, index, arr) => arr.indexOf(name) === index) // Remove duplicates
+
       return {
         objectID: `archive_track_${track.id}`,
 
@@ -148,6 +240,15 @@ export async function POST(request: NextRequest) {
         position: track.position || 0,
         hour: track.hour || 1,
 
+        // Artist relationships and collaboration data
+        featured_artists: featuredArtists,
+        remixers: remixers,
+        producers: producers,
+        collaborators: collaborators,
+        related_artists: allRelatedArtists,
+        has_collaborations: allRelatedArtists.length > 0,
+        collaboration_count: allRelatedArtists.length,
+
         // Enhanced links
         spotify_url: track.spotify_url || '',
         youtube_url: track.youtube_url || '',
@@ -170,7 +271,7 @@ export async function POST(request: NextRequest) {
         has_external_links: !!(track.spotify_url || track.youtube_url || track.discogs_url),
         has_storyblok_data: !!storyblokShow,
 
-        // Enhanced search optimization (includes Storyblok metadata)
+        // Enhanced search optimization (includes Storyblok metadata and relationships)
         searchable_text: [
           track.track,
           track.artist,
@@ -180,7 +281,14 @@ export async function POST(request: NextRequest) {
           ...(Array.isArray(showGenres) ? showGenres : [showGenres].filter(Boolean)),
           ...(Array.isArray(showTags) ? showTags : [showTags].filter(Boolean)),
           weeklySchedule,
-          timeSlot
+          timeSlot,
+          // Add all related artists to search
+          ...allRelatedArtists,
+          // Add descriptive terms for relationship types
+          ...(featuredArtists.length > 0 ? ['featuring', 'feat', 'featured'] : []),
+          ...(remixers.length > 0 ? ['remix', 'remixed by'] : []),
+          ...(producers.length > 0 ? ['produced by', 'producer'] : []),
+          ...(collaborators.length > 0 ? ['collaboration', 'collab with'] : [])
         ].filter(Boolean).join(' '),
 
         // Display metadata with host and schedule info

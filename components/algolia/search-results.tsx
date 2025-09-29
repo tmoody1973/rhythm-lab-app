@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import type { SongSearchResult, ContentSearchResult } from '@/lib/algolia/types'
 import { cn } from '@/lib/utils'
+import { InfluenceGraph } from '@/components/influence-graph'
 
 interface SearchResultsProps {
   searchType?: 'songs' | 'content' | 'mixed'
@@ -360,6 +361,23 @@ function SongResultItem({
                   {tag}
                 </Badge>
               ))}
+            </div>
+          )}
+
+          {/* Artist Influence Graph - only show if has collaborations */}
+          {result.has_collaborations && (
+            <div className="mt-3">
+              <InfluenceGraph trackData={{
+                track: result.title || result.track || '',
+                artist: result.artist || '',
+                featured_artists: result.featured_artists || [],
+                remixers: result.remixers || [],
+                producers: result.producers || [],
+                collaborators: result.collaborators || [],
+                related_artists: result.related_artists || [],
+                has_collaborations: result.has_collaborations || false,
+                collaboration_count: result.collaboration_count || 0
+              }} />
             </div>
           )}
         </div>

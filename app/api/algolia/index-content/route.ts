@@ -27,8 +27,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch all published stories from Storyblok with better error handling using direct fetch
+    // Note: Now including shows for searchable weekly show content
     const storyblokResponse = await Promise.race([
-      fetch(`https://api.storyblok.com/v2/cdn/stories?version=published&per_page=100&sort_by=published_at:desc&token=${storyblokToken}&excluding_slugs=shows/*`),
+      fetch(`https://api.storyblok.com/v2/cdn/stories?version=published&per_page=100&sort_by=published_at:desc&token=${storyblokToken}`),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('Storyblok API timeout after 15 seconds')), 15000)
       )
@@ -197,6 +198,9 @@ function getStoryTitle(story: any): string {
     story.content?.headline,
     story.content?.article_title,
     story.content?.show_title,
+    story.content?.show_name,
+    story.content?.program_name,
+    story.content?.series_title,
     story.content?.artist_name,
     story.content?.episode_title,
     story.name,
@@ -260,6 +264,9 @@ function getContentType(component: string): string {
       return 'artist_profile'
     case 'show':
     case 'episode':
+    case 'radio_show':
+    case 'weekly_show':
+    case 'program':
       return 'show'
     case 'page':
       return 'page'
@@ -350,8 +357,12 @@ function extractSpecificMetadata(content: any, contentType: string): any {
     case 'show':
       metadata.show_type = content?.show_type || 'regular'
       metadata.duration = content?.duration
-      metadata.host = content?.host || content?.dj_name
-      metadata.schedule = content?.weekly_schedule
+      metadata.host = content?.host || content?.dj_name || content?.dj || content?.presenter
+      metadata.schedule = content?.weekly_schedule || content?.schedule || content?.airtime
+      metadata.day_of_week = content?.day_of_week || content?.broadcast_day
+      metadata.time_slot = content?.time_slot || content?.broadcast_time
+      metadata.genre = content?.genre || content?.music_genre
+      metadata.description = content?.show_description || content?.description
       break
 
     case 'blog_post':

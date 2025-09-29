@@ -342,6 +342,341 @@ function levenshteinDistance(str1: string, str2: string): number {
 }
 
 /**
+ * Get artist information from Spotify
+ */
+export async function getSpotifyArtist(artistId: string): Promise<any | null> {
+  try {
+    const accessToken = await getSpotifyAccessToken()
+
+    const response = await fetch(
+      `https://api.spotify.com/v1/artists/${artistId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      }
+    )
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.log(`Artist not found: ${artistId}`)
+        return null
+      }
+      throw new Error(`Spotify artist lookup failed: ${response.status}`)
+    }
+
+    return await response.json()
+
+  } catch (error) {
+    console.error('Spotify artist lookup error:', error)
+    return null
+  }
+}
+
+/**
+ * Get artist's albums from Spotify (includes collaborations)
+ */
+export async function getSpotifyArtistAlbums(
+  artistId: string,
+  options: {
+    include_groups?: string[]
+    market?: string
+    limit?: number
+    offset?: number
+  } = {}
+): Promise<any[]> {
+  try {
+    const accessToken = await getSpotifyAccessToken()
+
+    const {
+      include_groups = ['album', 'single', 'appears_on', 'compilation'],
+      market = 'US',
+      limit = 50,
+      offset = 0
+    } = options
+
+    const response = await fetch(
+      `https://api.spotify.com/v1/artists/${artistId}/albums?` + new URLSearchParams({
+        include_groups: include_groups.join(','),
+        market,
+        limit: limit.toString(),
+        offset: offset.toString()
+      }),
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`Spotify albums lookup failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+    return data.items || []
+
+  } catch (error) {
+    console.error('Spotify artist albums error:', error)
+    return []
+  }
+}
+
+/**
+ * Extract collaborations from Spotify track/album data
+ */
+export function extractSpotifyCollaborations(spotifyTrack: SpotifyTrack): Array<{
+  artistName: string
+  artistId: string
+  type: 'main_artist' | 'featured_artist'
+}> {
+  const collaborations: Array<{
+    artistName: string
+    artistId: string
+    type: 'main_artist' | 'featured_artist'
+  }> = []
+
+  // Main artists
+  spotifyTrack.artists.forEach(artist => {
+    collaborations.push({
+      artistName: artist.name,
+      artistId: artist.id,
+      type: 'main_artist'
+    })
+  })
+
+  // Check track name for featured artists (common pattern: "Song Title (feat. Artist)")
+  const featRegex = /\((?:feat\.?|featuring|ft\.?|with)\s+([^)]+)\)/i
+  const featMatch = spotifyTrack.name.match(featRegex)
+
+  if (featMatch) {
+    const featArtists = featMatch[1].split(/[,&]/).map(name => name.trim())
+    featArtists.forEach(artistName => {
+      if (artistName && !collaborations.some(c => c.artistName.toLowerCase() === artistName.toLowerCase())) {
+        collaborations.push({
+          artistName,
+          artistId: '', // We don't have the Spotify ID from the track title
+          type: 'featured_artist'
+        })
+      }
+    })
+  }
+
+  return collaborations
+}
+
+/**
+ * Get artist collaboration network from Spotify
+ */
+export async function getSpotifyArtistCollaborations(
+  artistId: string,
+  options: {
+    maxAlbums?: number
+    includeAppearances?: boolean
+  } = {}
+): Promise<{
+  collaborators: Map<string, {
+    artistName: string
+    artistId: string
+    collaborationType: 'main_artist' | 'featured_artist'
+    trackCount: number
+    tracks: Array<{
+      trackName: string
+      trackId: string
+      albumName: string
+      releaseDate?: string
+    }>
+  }>
+}> {
+  const { maxAlbums = 50, includeAppearances = true } = options
+
+  try {
+    console.log(`[Spotify Collaboration] Building network for artist ${artistId}`)
+
+    // Get all albums including appearances
+    const includeGroups = includeAppearances
+      ? ['album', 'single', 'appears_on', 'compilation']
+      : ['album', 'single']
+
+    const albums = await getSpotifyArtistAlbums(artistId, {
+      include_groups: includeGroups,
+      limit: maxAlbums
+    })
+
+    const collaborators = new Map()
+
+    // Process each album to extract tracks and collaborations
+    for (const album of albums) {
+      try {
+        const accessToken = await getSpotifyAccessToken()
+
+        // Get album tracks
+        const tracksResponse = await fetch(
+          `https://api.spotify.com/v1/albums/${album.id}/tracks?limit=50`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+            },
+          }
+        )
+
+        if (!tracksResponse.ok) continue
+
+        const tracksData = await tracksResponse.json()
+
+        for (const track of tracksData.items || []) {
+          const collaborations = extractSpotifyCollaborations(track)
+
+          collaborations.forEach(collab => {
+            // Skip the main artist we're analyzing
+            if (collab.artistId === artistId) return
+
+            const key = collab.artistName.toLowerCase()
+
+            if (collaborators.has(key)) {
+              const existing = collaborators.get(key)
+              existing.trackCount++
+              existing.tracks.push({
+                trackName: track.name,
+                trackId: track.id,
+                albumName: album.name,
+                releaseDate: album.release_date
+              })
+            } else {
+              collaborators.set(key, {
+                artistName: collab.artistName,
+                artistId: collab.artistId,
+                collaborationType: collab.type,
+                trackCount: 1,
+                tracks: [{
+                  trackName: track.name,
+                  trackId: track.id,
+                  albumName: album.name,
+                  releaseDate: album.release_date
+                }]
+              })
+            }
+          })
+        }
+
+        // Rate limiting
+        await new Promise(resolve => setTimeout(resolve, 100))
+
+      } catch (error) {
+        console.warn(`[Spotify Collaboration] Error processing album ${album.id}:`, error)
+        continue
+      }
+    }
+
+    console.log(`[Spotify Collaboration] Found ${collaborators.size} collaborators`)
+    return { collaborators }
+
+  } catch (error) {
+    console.error('[Spotify Collaboration] Error building network:', error)
+    return { collaborators: new Map() }
+  }
+}
+
+/**
+ * Search for an artist and get their Spotify ID
+ */
+export async function searchSpotifyArtist(artistName: string): Promise<{
+  id: string
+  name: string
+  popularity: number
+  genres: string[]
+  followers: number
+  images: Array<{ url: string; width: number; height: number }>
+  external_urls: { spotify: string }
+} | null> {
+  try {
+    const accessToken = await getSpotifyAccessToken()
+
+    const response = await fetch(
+      `https://api.spotify.com/v1/search?` + new URLSearchParams({
+        q: artistName,
+        type: 'artist',
+        limit: '1'
+      }),
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`Spotify artist search failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    if (data.artists?.items?.length > 0) {
+      const artist = data.artists.items[0]
+      return {
+        id: artist.id,
+        name: artist.name,
+        popularity: artist.popularity,
+        genres: artist.genres || [],
+        followers: artist.followers?.total || 0,
+        images: artist.images || [],
+        external_urls: artist.external_urls
+      }
+    }
+
+    return null
+
+  } catch (error) {
+    console.error('Spotify artist search error:', error)
+    return null
+  }
+}
+
+/**
+ * Get related artists from Spotify (artists with similar style/audience)
+ */
+export async function getSpotifyRelatedArtists(artistId: string): Promise<Array<{
+  id: string
+  name: string
+  popularity: number
+  genres: string[]
+}>> {
+  try {
+    const accessToken = await getSpotifyAccessToken()
+
+    const response = await fetch(
+      `https://api.spotify.com/v1/artists/${artistId}/related-artists`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      }
+    )
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.log(`Related artists not found for: ${artistId}`)
+        return []
+      }
+      throw new Error(`Spotify related artists failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    return (data.artists || []).map((artist: any) => ({
+      id: artist.id,
+      name: artist.name,
+      popularity: artist.popularity,
+      genres: artist.genres || []
+    }))
+
+  } catch (error) {
+    console.error('Spotify related artists error:', error)
+    return []
+  }
+}
+
+/**
  * MAIN: Get Enhanced Track Data
  *
  * This is the main function that combines all Spotify features.

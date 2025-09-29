@@ -19,6 +19,7 @@ import {
   Tag
 } from 'lucide-react'
 import Image from 'next/image'
+import { InfluenceGraph } from '@/components/influence-graph'
 
 interface TrackData {
   objectID: string
@@ -46,6 +47,15 @@ interface TrackData {
   show_genres?: string[]
   show_tags?: string[]
   host_name?: string
+
+  // Artist relationship fields
+  featured_artists?: string[]
+  remixers?: string[]
+  producers?: string[]
+  collaborators?: string[]
+  related_artists?: string[]
+  has_collaborations?: boolean
+  collaboration_count?: number
 }
 
 export default function TrackPage() {
@@ -334,6 +344,21 @@ export default function TrackPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Artist Influence Graph */}
+            {trackData.has_collaborations && (
+              <InfluenceGraph trackData={{
+                track: trackData.track || trackData.song || '',
+                artist: trackData.artist || '',
+                featured_artists: trackData.featured_artists || [],
+                remixers: trackData.remixers || [],
+                producers: trackData.producers || [],
+                collaborators: trackData.collaborators || [],
+                related_artists: trackData.related_artists || [],
+                has_collaborations: trackData.has_collaborations || false,
+                collaboration_count: trackData.collaboration_count || 0
+              }} />
+            )}
 
             {/* Show/Episode Context */}
             {(trackData.episode_title || trackData.show_title) && (

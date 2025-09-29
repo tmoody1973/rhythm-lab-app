@@ -883,6 +883,268 @@ export async function searchDiscogsArtists(
 }
 
 /**
+ * Extract artist relationships from a Discogs release
+ */
+export async function extractArtistRelationshipsFromRelease(releaseId: number, type?: 'release' | 'master'): Promise<{
+  collaborations: Array<{
+    artistName: string
+    artistId?: number
+    role: string
+    creditType: 'main_artist' | 'featured_artist' | 'producer' | 'engineer' | 'mixer' | 'songwriter' | 'composer' | 'remixer' | 'vocalist' | 'instrumentalist' | 'arranger'
+  }>
+  labelInfo: {
+    labelName: string
+    labelId?: number
+    catalogNumber?: string
+  } | null
+}> {
+  try {
+    const release = await getDiscogsReleaseDetails(releaseId, type)
+    if (!release) {
+      return { collaborations: [], labelInfo: null }
+    }
+
+    const collaborations: Array<{
+      artistName: string
+      artistId?: number
+      role: string
+      creditType: 'main_artist' | 'featured_artist' | 'producer' | 'engineer' | 'mixer' | 'songwriter' | 'composer' | 'remixer' | 'vocalist' | 'instrumentalist' | 'arranger'
+    }> = []
+
+    // Extract main artists
+    release.artists?.forEach(artist => {
+      const creditType = determineCreditType(artist.role)
+      collaborations.push({
+        artistName: artist.name,
+        artistId: artist.id,
+        role: artist.role || 'Artist',
+        creditType
+      })
+    })
+
+    // Extract additional credits from extraartists (producers, engineers, etc.)
+    if ('extraartists' in release && (release as any).extraartists) {
+      (release as any).extraartists.forEach((artist: any) => {
+        const creditType = determineCreditType(artist.role)
+        collaborations.push({
+          artistName: artist.name,
+          artistId: artist.id,
+          role: artist.role || 'Additional Artist',
+          creditType
+        })
+      })
+    }
+
+    // Extract label information
+    const labelInfo = release.labels?.[0] ? {
+      labelName: release.labels[0].name,
+      labelId: release.labels[0].id,
+      catalogNumber: release.labels[0].catno
+    } : null
+
+    console.log(`[Discogs Relationships] Extracted ${collaborations.length} collaborations from release ${releaseId}`)
+
+    return { collaborations, labelInfo }
+
+  } catch (error) {
+    console.error('[Discogs Relationships] Error extracting relationships:', error)
+    return { collaborations: [], labelInfo: null }
+  }
+}
+
+/**
+ * Get all collaborators for an artist across their discography
+ */
+export async function getArtistCollaborationNetwork(
+  artistId: number,
+  options: {
+    maxReleases?: number
+    includeProducers?: boolean
+    includeLabels?: boolean
+  } = {}
+): Promise<{
+  collaborators: Map<string, {
+    artistName: string
+    artistId?: number
+    collaborationCount: number
+    roles: Set<string>
+    releases: Array<{ releaseId: number, releaseTitle: string, year?: number }>
+  }>
+  labels: Map<string, {
+    labelName: string
+    labelId?: number
+    releaseCount: number
+    releases: Array<{ releaseId: number, catalogNumber?: string }>
+  }>
+}> {
+  const { maxReleases = 50, includeProducers = true, includeLabels = true } = options
+
+  try {
+    console.log(`[Discogs Collaboration] Building network for artist ${artistId}`)
+
+    // Get artist releases
+    const releases = await getDiscogsArtistReleases(artistId, { maxResults: maxReleases })
+
+    const collaborators = new Map()
+    const labels = new Map()
+
+    // Process each release to extract relationships
+    for (const release of releases) {
+      const releaseDetails = await extractArtistRelationshipsFromRelease(release.id, release.type as 'release' | 'master')
+
+      // Process collaborations
+      releaseDetails.collaborations.forEach(collab => {
+        // Skip self-references
+        if (collab.artistId === artistId) return
+
+        // Filter based on options
+        if (!includeProducers && ['producer', 'engineer', 'mixer'].includes(collab.creditType)) {
+          return
+        }
+
+        const key = collab.artistName.toLowerCase()
+        if (collaborators.has(key)) {
+          const existing = collaborators.get(key)
+          existing.collaborationCount++
+          existing.roles.add(collab.role)
+          existing.releases.push({
+            releaseId: release.id,
+            releaseTitle: release.title,
+            year: release.year
+          })
+        } else {
+          collaborators.set(key, {
+            artistName: collab.artistName,
+            artistId: collab.artistId,
+            collaborationCount: 1,
+            roles: new Set([collab.role]),
+            releases: [{
+              releaseId: release.id,
+              releaseTitle: release.title,
+              year: release.year
+            }]
+          })
+        }
+      })
+
+      // Process label relationships
+      if (includeLabels && releaseDetails.labelInfo) {
+        const key = releaseDetails.labelInfo.labelName.toLowerCase()
+        if (labels.has(key)) {
+          const existing = labels.get(key)
+          existing.releaseCount++
+          existing.releases.push({
+            releaseId: release.id,
+            catalogNumber: releaseDetails.labelInfo.catalogNumber
+          })
+        } else {
+          labels.set(key, {
+            labelName: releaseDetails.labelInfo.labelName,
+            labelId: releaseDetails.labelInfo.labelId,
+            releaseCount: 1,
+            releases: [{
+              releaseId: release.id,
+              catalogNumber: releaseDetails.labelInfo.catalogNumber
+            }]
+          })
+        }
+      }
+
+      // Rate limiting pause
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+
+    console.log(`[Discogs Collaboration] Found ${collaborators.size} collaborators and ${labels.size} labels`)
+
+    return { collaborators, labels }
+
+  } catch (error) {
+    console.error('[Discogs Collaboration] Error building network:', error)
+    return { collaborators: new Map(), labels: new Map() }
+  }
+}
+
+/**
+ * Find artist connections through shared releases
+ */
+export async function findSharedReleases(artist1Id: number, artist2Id: number): Promise<Array<{
+  releaseId: number
+  releaseTitle: string
+  year?: number
+  artist1Role: string
+  artist2Role: string
+  labelName?: string
+}>> {
+  try {
+    console.log(`[Discogs Shared] Finding shared releases between ${artist1Id} and ${artist2Id}`)
+
+    // Get releases for both artists
+    const [artist1Releases, artist2Releases] = await Promise.all([
+      getDiscogsArtistReleases(artist1Id, { maxResults: 100 }),
+      getDiscogsArtistReleases(artist2Id, { maxResults: 100 })
+    ])
+
+    const sharedReleases: Array<{
+      releaseId: number
+      releaseTitle: string
+      year?: number
+      artist1Role: string
+      artist2Role: string
+      labelName?: string
+    }> = []
+
+    // Find overlapping releases
+    for (const release1 of artist1Releases) {
+      const matchingRelease = artist2Releases.find(r2 => r2.id === release1.id)
+      if (matchingRelease) {
+        // Get detailed release info to determine roles
+        const details = await extractArtistRelationshipsFromRelease(release1.id, release1.type as 'release' | 'master')
+
+        const artist1Collab = details.collaborations.find(c => c.artistId === artist1Id)
+        const artist2Collab = details.collaborations.find(c => c.artistId === artist2Id)
+
+        sharedReleases.push({
+          releaseId: release1.id,
+          releaseTitle: release1.title,
+          year: release1.year,
+          artist1Role: artist1Collab?.role || 'Unknown',
+          artist2Role: artist2Collab?.role || 'Unknown',
+          labelName: details.labelInfo?.labelName
+        })
+      }
+    }
+
+    console.log(`[Discogs Shared] Found ${sharedReleases.length} shared releases`)
+    return sharedReleases
+
+  } catch (error) {
+    console.error('[Discogs Shared] Error finding shared releases:', error)
+    return []
+  }
+}
+
+/**
+ * Helper function to determine credit type from Discogs role
+ */
+function determineCreditType(role: string): 'main_artist' | 'featured_artist' | 'producer' | 'engineer' | 'mixer' | 'songwriter' | 'composer' | 'remixer' | 'vocalist' | 'instrumentalist' | 'arranger' {
+  const roleKey = role?.toLowerCase() || ''
+
+  if (roleKey.includes('producer') || roleKey.includes('produced by')) return 'producer'
+  if (roleKey.includes('engineer') || roleKey.includes('recorded by')) return 'engineer'
+  if (roleKey.includes('mix') || roleKey.includes('mixed by')) return 'mixer'
+  if (roleKey.includes('songwriter') || roleKey.includes('written by')) return 'songwriter'
+  if (roleKey.includes('composer') || roleKey.includes('composed by')) return 'composer'
+  if (roleKey.includes('remix') || roleKey.includes('remixed by')) return 'remixer'
+  if (roleKey.includes('vocal') || roleKey.includes('voice') || roleKey.includes('singer')) return 'vocalist'
+  if (roleKey.includes('arrange') || roleKey.includes('arranged by')) return 'arranger'
+  if (roleKey.includes('guitar') || roleKey.includes('bass') || roleKey.includes('drum') ||
+      roleKey.includes('keyboard') || roleKey.includes('piano') || roleKey.includes('synth')) return 'instrumentalist'
+  if (roleKey.includes('featuring') || roleKey.includes('feat.') || roleKey.includes('guest')) return 'featured_artist'
+
+  return 'main_artist'
+}
+
+/**
  * Get artist discography and format for Storyblok artist profile
  */
 export async function getArtistDiscographyByIdForProfile(
