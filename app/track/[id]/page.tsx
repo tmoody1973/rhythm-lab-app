@@ -19,7 +19,7 @@ import {
   Tag
 } from 'lucide-react'
 import Image from 'next/image'
-import { InfluenceGraph } from '@/components/influence-graph'
+import { UnifiedAIInsights } from '@/components/unified-ai-insights'
 
 interface TrackData {
   objectID: string
@@ -135,8 +135,8 @@ export default function TrackPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background text-foreground p-8">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
           <div className="animate-pulse">
             <div className="h-8 bg-muted rounded w-1/2 mb-4"></div>
             <div className="h-64 bg-muted rounded mb-4"></div>
@@ -150,8 +150,8 @@ export default function TrackPage() {
 
   if (error || !trackData) {
     return (
-      <div className="min-h-screen bg-background text-foreground p-8">
-        <div className="max-w-4xl mx-auto text-center">
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="container mx-auto px-4 py-8 max-w-7xl text-center">
           <h1 className="text-2xl font-bold mb-4">Track Not Found</h1>
           <p className="text-muted-foreground mb-8">{error || 'This track could not be found.'}</p>
           <Button onClick={() => window.history.back()}>
@@ -222,7 +222,7 @@ export default function TrackPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="max-w-4xl mx-auto p-8">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header Section with Album Art */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row gap-6 mb-6">
@@ -291,9 +291,9 @@ export default function TrackPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="xl:col-span-3 space-y-6">
 
             {/* Track Details */}
             <Card>
@@ -345,19 +345,25 @@ export default function TrackPage() {
               </CardContent>
             </Card>
 
-            {/* Artist Influence Graph */}
-            {trackData.has_collaborations && (
-              <InfluenceGraph trackData={{
-                track: trackData.track || trackData.song || '',
-                artist: trackData.artist || '',
-                featured_artists: trackData.featured_artists || [],
-                remixers: trackData.remixers || [],
-                producers: trackData.producers || [],
-                collaborators: trackData.collaborators || [],
-                related_artists: trackData.related_artists || [],
-                has_collaborations: trackData.has_collaborations || false,
-                collaboration_count: trackData.collaboration_count || 0
-              }} />
+            {/* Unified AI Insights - Replaces both AI Musical Insights and AI-Enhanced Influence Graph */}
+            {(trackData.artist && (trackData.song || trackData.track)) && (
+              <UnifiedAIInsights
+                trackData={{
+                  track: trackData.track || trackData.song || '',
+                  artist: trackData.artist || '',
+                  featured_artists: trackData.featured_artists || [],
+                  remixers: trackData.remixers || [],
+                  producers: trackData.producers || [],
+                  collaborators: trackData.collaborators || [],
+                  related_artists: trackData.related_artists || [],
+                  has_collaborations: trackData.has_collaborations || false,
+                  collaboration_count: trackData.collaboration_count || 0
+                }}
+                onArtistClick={(artistName) => {
+                  console.log('Artist clicked:', artistName)
+                  // TODO: Navigate to artist page or search
+                }}
+              />
             )}
 
             {/* Show/Episode Context */}
