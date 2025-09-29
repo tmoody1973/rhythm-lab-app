@@ -51,7 +51,12 @@ export async function uploadAudioToSupabase(
     }
 
     // Upload using fetch with multipart/form-data
-    const response = await fetch('/api/podcast/upload-to-supabase', {
+    // Use full URL for server-side fetch
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXTAUTH_URL || 'http://localhost:3000'
+
+    const response = await fetch(`${baseUrl}/api/podcast/upload-to-supabase`, {
       method: 'POST',
       body: formData // Don't set Content-Type header - let browser set it with boundary
     })
@@ -101,7 +106,12 @@ export async function uploadAudioViaBase64(
     // Convert to base64
     const audioBase64 = Buffer.from(audioBuffer).toString('base64')
 
-    const response = await fetch('/api/podcast/upload-to-supabase', {
+    // Use full URL for server-side fetch
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXTAUTH_URL || 'http://localhost:3000'
+
+    const response = await fetch(`${baseUrl}/api/podcast/upload-to-supabase`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

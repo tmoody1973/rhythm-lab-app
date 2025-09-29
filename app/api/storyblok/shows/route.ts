@@ -59,7 +59,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       version: 'published',
       page: page.toString(),
       per_page: perPage.toString(),
-      sort_by: 'created_at:desc'
+      sort_by: 'published_at:desc'
     })
 
     // Add search if provided
@@ -127,6 +127,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         slug: story.slug,
         show_id: story.content.show_id || story.id
       }
+    })
+
+    // Sort by published_date (newest first) - use the custom published_date from content
+    // This ensures consistent sorting regardless of Storyblok's published_at vs our custom date
+    transformedShows.sort((a, b) => {
+      const dateA = new Date(a.published_date)
+      const dateB = new Date(b.published_date)
+      return dateB.getTime() - dateA.getTime() // Newest first (descending order)
     })
 
     return NextResponse.json({

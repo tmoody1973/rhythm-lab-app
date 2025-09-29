@@ -295,59 +295,67 @@ export default function TrackPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-          {/* Main Content */}
-          <div className="xl:col-span-3 space-y-6">
+        {/* Check if sidebar has content */}
+        {(() => {
+          const hasSidebarContent =
+            trackData.mixcloud_picture ||
+            (trackData.show_genres?.length && trackData.show_genres.length > 0) ||
+            (trackData.show_tags?.length && trackData.show_tags.length > 0)
 
-            {/* Track Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Disc3 className="w-5 h-5" />
-                  Track Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(trackData.song || trackData.track) && (
-                    <div>
-                      <label className="text-sm text-muted-foreground">Title</label>
-                      <p className="font-medium">{trackData.song || trackData.track}</p>
-                    </div>
-                  )}
+          return (
+            <div className={`grid grid-cols-1 gap-8 ${hasSidebarContent ? 'xl:grid-cols-4' : ''}`}>
+              {/* Main Content */}
+              <div className={`space-y-6 ${hasSidebarContent ? 'xl:col-span-3' : ''}`}>
 
-                  {trackData.artist && (
-                    <div>
-                      <label className="text-sm text-muted-foreground">Artist</label>
-                      <p className="font-medium">{trackData.artist}</p>
-                    </div>
-                  )}
+                {/* Track Details */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Disc3 className="w-5 h-5" />
+                      Track Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {(trackData.song || trackData.track) && (
+                        <div>
+                          <label className="text-sm text-muted-foreground">Title</label>
+                          <p className="font-medium">{trackData.song || trackData.track}</p>
+                        </div>
+                      )}
 
-                  {trackData.release && (
-                    <div>
-                      <label className="text-sm text-muted-foreground">Release/Album</label>
-                      <p className="font-medium">{trackData.release}</p>
-                    </div>
-                  )}
+                      {trackData.artist && (
+                        <div>
+                          <label className="text-sm text-muted-foreground">Artist</label>
+                          <p className="font-medium">{trackData.artist}</p>
+                        </div>
+                      )}
 
-                  {trackData.label && (
-                    <div>
-                      <label className="text-sm text-muted-foreground">Label</label>
-                      <p className="font-medium">{trackData.label}</p>
-                    </div>
-                  )}
+                      {trackData.release && (
+                        <div>
+                          <label className="text-sm text-muted-foreground">Release/Album</label>
+                          <p className="font-medium">{trackData.release}</p>
+                        </div>
+                      )}
 
-                  {trackData.duration && (
-                    <div>
-                      <label className="text-sm text-muted-foreground">Duration</label>
-                      <p className="font-medium">
-                        {Math.floor(trackData.duration / 60)}:{(trackData.duration % 60).toString().padStart(2, '0')}
-                      </p>
+                      {trackData.label && (
+                        <div>
+                          <label className="text-sm text-muted-foreground">Label</label>
+                          <p className="font-medium">{trackData.label}</p>
+                        </div>
+                      )}
+
+                      {trackData.duration && (
+                        <div>
+                          <label className="text-sm text-muted-foreground">Duration</label>
+                          <p className="font-medium">
+                            {Math.floor(trackData.duration / 60)}:{(trackData.duration % 60).toString().padStart(2, '0')}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
 
             {/* Unified AI Insights - Replaces both AI Musical Insights and AI-Enhanced Influence Graph */}
             {(trackData.artist && (trackData.song || trackData.track)) && (
@@ -747,68 +755,71 @@ export default function TrackPage() {
                 </CardContent>
               </Card>
             )}
-          </div>
+              </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Album/Show Artwork */}
-            {trackData.mixcloud_picture && (
-              <Card>
-                <CardContent className="p-0">
-                  <div className="aspect-square relative overflow-hidden rounded-lg">
-                    <Image
-                      src={trackData.mixcloud_picture}
-                      alt={getTrackTitle()}
-                      fill
-                      className="object-cover"
-                      sizes="400px"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Tags & Genres */}
-            {(trackData.show_genres?.length || trackData.show_tags?.length) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Tag className="w-5 h-5" />
-                    Tags & Genres
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {trackData.show_genres?.length && (
-                    <div>
-                      <label className="text-sm text-muted-foreground mb-2 block">Genres</label>
-                      <div className="flex flex-wrap gap-2">
-                        {trackData.show_genres.map((genre, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {genre}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
+              {/* Sidebar - Only render if there's content */}
+              {hasSidebarContent && (
+                <div className="space-y-6">
+                  {/* Album/Show Artwork */}
+                  {trackData.mixcloud_picture && (
+                    <Card>
+                      <CardContent className="p-0">
+                        <div className="aspect-square relative overflow-hidden rounded-lg">
+                          <Image
+                            src={trackData.mixcloud_picture}
+                            alt={getTrackTitle()}
+                            fill
+                            className="object-cover"
+                            sizes="400px"
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
 
-                  {trackData.show_tags?.length && (
-                    <div>
-                      <label className="text-sm text-muted-foreground mb-2 block">Tags</label>
-                      <div className="flex flex-wrap gap-2">
-                        {trackData.show_tags.map((tag, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+                  {/* Tags & Genres */}
+                  {(trackData.show_genres?.length || trackData.show_tags?.length) && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Tag className="w-5 h-5" />
+                          Tags & Genres
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {trackData.show_genres?.length && (
+                          <div>
+                            <label className="text-sm text-muted-foreground mb-2 block">Genres</label>
+                            <div className="flex flex-wrap gap-2">
+                              {trackData.show_genres.map((genre, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {genre}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
-          </div>
-        </div>
+                        {trackData.show_tags?.length && (
+                          <div>
+                            <label className="text-sm text-muted-foreground mb-2 block">Tags</label>
+                            <div className="flex flex-wrap gap-2">
+                              {trackData.show_tags.map((tag, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })()}
       </div>
     </div>
   )
