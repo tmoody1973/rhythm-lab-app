@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateContent, ContentRequest } from '@/lib/ai/content-generator'
+import { withAdminAuth } from '@/lib/auth/admin'
 
-export async function POST(request: NextRequest) {
+const handler = withAdminAuth(async (request: NextRequest) => {
   try {
     const { title, tracks } = await request.json()
 
@@ -9,6 +10,21 @@ export async function POST(request: NextRequest) {
     if (!title || !tracks || !Array.isArray(tracks) || tracks.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Title and tracks array are required' },
+        { status: 400 }
+      )
+    }
+
+    // Additional input validation for security
+    if (typeof title !== 'string' || title.length > 500) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid title (max 500 characters)' },
+        { status: 400 }
+      )
+    }
+
+    if (tracks.length > 100) {
+      return NextResponse.json(
+        { success: false, error: 'Too many tracks (max 100)' },
         { status: 400 }
       )
     }
@@ -53,7 +69,9 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
+
+export const POST = handler
 
 // Format tracks array into readable text for the AI prompt
 function formatTracksForPrompt(tracks: any[]): string {

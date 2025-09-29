@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { checkRateLimit, getRateLimitIdentifier, getRateLimitHeaders } from '@/lib/security/rate-limit'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,6 +9,23 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
+    // Apply rate limiting: 10 requests per minute (generous for AI operations)
+    const identifier = getRateLimitIdentifier(request)
+    const rateLimit = checkRateLimit(identifier, {
+      limit: 10,
+      window: 60000 // 1 minute
+    })
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimit.remaining, rateLimit.resetTime)
+        }
+      )
+    }
+
     // Check admin auth
     const authHeader = request.headers.get('authorization')
     if (authHeader !== `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN}`) {

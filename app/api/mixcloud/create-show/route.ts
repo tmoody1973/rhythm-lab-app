@@ -178,6 +178,12 @@ const handler = withAdminAuth(async (request: NextRequest): Promise<NextResponse
       })
 
       // Update show record with Storyblok ID and slug
+      console.log('📝 Updating show with Storyblok data:', {
+        showId,
+        storyblok_id: storyblokResponse.story.id.toString(),
+        slug: storyblokResponse.story.slug
+      })
+
       const { error: updateError } = await supabase
         .from('shows')
         .update({
@@ -188,7 +194,10 @@ const handler = withAdminAuth(async (request: NextRequest): Promise<NextResponse
         .eq('id', showId)
 
       if (updateError) {
+        console.error('❌ Failed to update show with Storyblok data:', updateError)
         warnings.push(`Show created but failed to link Storyblok ID: ${updateError.message}`)
+      } else {
+        console.log('✅ Successfully updated show with slug:', storyblokResponse.story.slug)
       }
 
     } catch (storyblokError) {
