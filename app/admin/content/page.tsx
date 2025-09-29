@@ -514,18 +514,75 @@ export default function ContentGenerationPage() {
     setStoryblokUploadResult(null)
 
     try {
-      // If audio is already uploaded to storage, just update the result
+      // If audio is already uploaded to storage, update existing Storyblok story if available
       if (audioResult.uploadedToStorage && audioResult.url) {
-        setStoryblokUploadResult({
-          success: true,
-          audio: {
-            url: audioResult.url,
-            fileName: audioResult.fileName || `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`,
-            size: audioResult.size,
-            storage: audioResult.storage || 'supabase'
-          },
-          message: 'Audio already uploaded to storage'
-        })
+        // Try to update existing Storyblok story with audio URL if story ID is available
+        if (publishResult?.storyId) {
+          try {
+            console.log(`Updating existing Storyblok story ${publishResult.storyId} with audio URL`)
+
+            const updateResponse = await fetch('/api/storyblok/update-audio', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                storyId: publishResult.storyId,
+                audioUrl: audioResult.url,
+                audioTitle: `Sound Refinery: ${generatedContent.title}`
+              }),
+            })
+
+            const updateResult = await updateResponse.json()
+
+            if (updateResult.success) {
+              setStoryblokUploadResult({
+                success: true,
+                audio: {
+                  url: audioResult.url,
+                  fileName: audioResult.fileName || `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`,
+                  size: audioResult.size,
+                  storage: audioResult.storage || 'supabase'
+                },
+                storyUpdate: {
+                  success: true,
+                  storyId: publishResult.storyId,
+                  updatedAt: new Date().toISOString()
+                },
+                message: 'Audio synced to existing Storyblok story'
+              })
+            } else {
+              throw new Error(updateResult.message || 'Failed to update Storyblok story')
+            }
+          } catch (storyUpdateError) {
+            console.error('Failed to update Storyblok story with audio:', storyUpdateError)
+            // Still show success for storage, but note the Storyblok sync issue
+            setStoryblokUploadResult({
+              success: true,
+              audio: {
+                url: audioResult.url,
+                fileName: audioResult.fileName || `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`,
+                size: audioResult.size,
+                storage: audioResult.storage || 'supabase'
+              },
+              message: 'Audio uploaded to storage, but failed to sync to Storyblok',
+              warning: storyUpdateError instanceof Error ? storyUpdateError.message : 'Storyblok sync failed'
+            })
+          }
+        } else {
+          // No story ID available, just show storage success
+          setStoryblokUploadResult({
+            success: true,
+            audio: {
+              url: audioResult.url,
+              fileName: audioResult.fileName || `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`,
+              size: audioResult.size,
+              storage: audioResult.storage || 'supabase'
+            },
+            message: 'Audio already uploaded to storage (no Storyblok story to update)'
+          })
+        }
+
         setIsUploadingToStoryblok(false)
         return
       }

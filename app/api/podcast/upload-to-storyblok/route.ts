@@ -181,6 +181,7 @@ export async function POST(request: NextRequest) {
           // Add audio field to the story content
           const updatedContent = {
             ...story.content,
+            podcast_audio_url: uploadResult.pretty_url || uploadResult.public_url || uploadResult.filename,
             podcast_audio: {
               filename: uploadResult.filename,
               alt: title || `Sound Refinery Podcast: ${story.name}`,
