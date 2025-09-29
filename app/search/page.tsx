@@ -1,6 +1,7 @@
 import React from 'react'
 import { Metadata } from 'next'
 import { Search } from 'lucide-react'
+import { Header } from '@/components/header'
 import { ImprovedSearchInterface } from '@/components/algolia/improved-search-interface'
 
 export const metadata: Metadata = {
@@ -18,9 +19,9 @@ export default async function SearchPage({
   const initialType = typeof params.type === 'string' ? params.type : 'all'
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background text-foreground">
+      <Header />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-8 pb-24">
             {/* Page Header */}
             <div className="text-center mb-12">
@@ -43,7 +44,7 @@ export default async function SearchPage({
               initialSearchType={initialType}
             />
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   )
 }

@@ -8,7 +8,7 @@ import { searchClient, INDICES } from '@/lib/algolia/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Music, FileText, Users, Grid, List, Filter, Search, PlayCircle, Calendar, Clock } from 'lucide-react'
+import { Music, FileText, Users, Grid, List, Filter, Search, PlayCircle, Calendar, Clock, Brain } from 'lucide-react'
 import { TrackAlbumArt } from './track-album-art'
 import { DateFilter } from './date-filter'
 
@@ -440,12 +440,20 @@ function SearchHit({ hit, viewMode, searchType }: {
                 </div>
               )}
 
-              <a
-                href={getTrackUrl(hit)}
-                className="text-purple-400 hover:text-purple-300 text-sm font-medium"
-              >
-                View Details →
-              </a>
+              <div className="flex items-center gap-3">
+                <a
+                  href={getTrackUrl(hit)}
+                  className="text-purple-400 hover:text-purple-300 text-sm font-medium"
+                >
+                  View Details →
+                </a>
+                {(hit.content_type === 'live_song' || hit.content_type === 'archive_track') && hit.artist && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Brain className="w-3 h-3" />
+                    <span>AI Insights Available</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>
@@ -516,15 +524,23 @@ function SearchHit({ hit, viewMode, searchType }: {
           </div>
         )}
 
-          <a
-            href={getTrackUrl(hit)}
-            className="inline-flex items-center gap-2 text-primary hover:text-primary/80 text-sm font-medium transition-colors"
-          >
-            View Details
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
+          <div className="flex items-center justify-between">
+            <a
+              href={getTrackUrl(hit)}
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 text-sm font-medium transition-colors"
+            >
+              View Details
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+            {(hit.content_type === 'live_song' || hit.content_type === 'archive_track') && hit.artist && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Brain className="w-3 h-3 text-purple-400" />
+                <span>AI</span>
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

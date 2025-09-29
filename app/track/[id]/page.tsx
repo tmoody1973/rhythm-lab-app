@@ -19,6 +19,7 @@ import {
   Tag
 } from 'lucide-react'
 import Image from 'next/image'
+import { Header } from '@/components/header'
 import { UnifiedAIInsights } from '@/components/unified-ai-insights'
 
 interface TrackData {
@@ -136,6 +137,7 @@ export default function TrackPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background text-foreground">
+        <Header />
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           <div className="animate-pulse">
             <div className="h-8 bg-muted rounded w-1/2 mb-4"></div>
@@ -151,6 +153,7 @@ export default function TrackPage() {
   if (error || !trackData) {
     return (
       <div className="min-h-screen bg-background text-foreground">
+        <Header />
         <div className="container mx-auto px-4 py-8 max-w-7xl text-center">
           <h1 className="text-2xl font-bold mb-4">Track Not Found</h1>
           <p className="text-muted-foreground mb-8">{error || 'This track could not be found.'}</p>
@@ -222,6 +225,7 @@ export default function TrackPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Header />
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header Section with Album Art */}
         <div className="mb-8">

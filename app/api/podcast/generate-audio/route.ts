@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js'
+import { supabaseStorage } from '@/lib/supabase'
 
 interface ScriptLine {
   speaker: 'Samara' | 'Carl'
@@ -174,25 +175,95 @@ export async function POST(request: NextRequest) {
 
       console.log(`Generated audio: ${finalAudio.length} bytes`)
 
-      // Return the audio as base64 for frontend handling
-      // In production, you'd want to upload this to cloud storage
-      const audioBase64 = finalAudio.toString('base64')
+      // Check file size and decide how to return the audio
+      const fileSizeMB = finalAudio.length / (1024 * 1024)
+      const PAYLOAD_LIMIT_MB = 4 // Safe limit for Edge Functions
 
-      return NextResponse.json({
-        success: true,
-        audio: {
-          data: audioBase64,
-          mimeType: 'audio/mpeg',
-          size: finalAudio.length,
-          duration: Math.round(script.length * 3), // Rough estimate: 3 seconds per line
-        },
-        metadata: {
-          generatedAt: new Date().toISOString(),
-          scriptLines: script.length,
-          voices: ['Samara', 'Carl'],
-          format: 'mp3_44100_128'
+      if (fileSizeMB > PAYLOAD_LIMIT_MB) {
+        console.log(`Audio file too large for payload (${fileSizeMB.toFixed(1)}MB), uploading to storage...`)
+
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+        const fileName = `sound-refinery-podcast-${timestamp}.mp3`
+
+        // Upload directly to Supabase storage
+        const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_')
+        const storagePath = `podcasts/sound-refinery/${timestamp}_${sanitizedFileName}`
+
+        console.log(`Uploading to Supabase path: ${storagePath}`)
+
+        const { data: uploadData, error: uploadError } = await supabaseStorage
+          .from('audio_files')
+          .upload(storagePath, finalAudio, {
+            contentType: 'audio/mpeg',
+            cacheControl: '3600',
+            upsert: false,
+            metadata: {
+              title: 'Sound Refinery Podcast',
+              originalFileName: fileName,
+              uploadedAt: new Date().toISOString(),
+              source: 'admin-podcast-generator'
+            }
+          })
+
+        if (uploadError) {
+          console.error('Supabase upload error:', uploadError)
+          throw new Error(`Failed to upload audio to storage: ${uploadError.message}`)
         }
-      })
+
+        // Get the public URL for the uploaded file
+        const { data: urlData } = supabaseStorage
+          .from('audio_files')
+          .getPublicUrl(storagePath)
+
+        const publicUrl = urlData.publicUrl
+        console.log(`Audio uploaded successfully to: ${publicUrl}`)
+
+        return NextResponse.json({
+          success: true,
+          audio: {
+            url: publicUrl,
+            path: storagePath,
+            fileName: fileName,
+            mimeType: 'audio/mpeg',
+            size: finalAudio.length,
+            duration: Math.round(script.length * 3), // Rough estimate: 3 seconds per line
+            storage: 'supabase',
+            uploadedToStorage: true
+          },
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            scriptLines: script.length,
+            voices: ['Samara', 'Carl'],
+            format: 'mp3_44100_128',
+            fileSizeMB: parseFloat(fileSizeMB.toFixed(2)),
+            storagePath: storagePath
+          }
+        })
+      } else {
+        console.log(`Audio file small enough for payload (${fileSizeMB.toFixed(1)}MB), returning as base64...`)
+
+        // Return the audio as base64 for small files
+        const audioBase64 = finalAudio.toString('base64')
+
+        return NextResponse.json({
+          success: true,
+          audio: {
+            data: audioBase64,
+            mimeType: 'audio/mpeg',
+            size: finalAudio.length,
+            duration: Math.round(script.length * 3), // Rough estimate: 3 seconds per line
+            uploadedToStorage: false
+          },
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            scriptLines: script.length,
+            voices: ['Samara', 'Carl'],
+            format: 'mp3_44100_128',
+            fileSizeMB: parseFloat(fileSizeMB.toFixed(2))
+          }
+        })
+      }
 
     } catch (elevenLabsError: any) {
       console.error('ElevenLabs API error:', elevenLabsError)

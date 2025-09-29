@@ -287,7 +287,17 @@ export default function ContentGenerationPage() {
   const [podcastScript, setPodcastScript] = useState<Array<{ speaker: 'Samara' | 'Carl', text: string }> | null>(null)
   const [isEditingScript, setIsEditingScript] = useState(false)
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false)
-  const [audioResult, setAudioResult] = useState<{ data: string; mimeType: string; size: number; duration: number } | null>(null)
+  const [audioResult, setAudioResult] = useState<{
+    data?: string;
+    url?: string;
+    mimeType: string;
+    size: number;
+    duration: number;
+    uploadedToStorage?: boolean;
+    fileName?: string;
+    path?: string;
+    storage?: string;
+  } | null>(null)
   const [scriptGenerationError, setScriptGenerationError] = useState<string | null>(null)
   const [audioGenerationError, setAudioGenerationError] = useState<string | null>(null)
   const [isUploadingToStoryblok, setIsUploadingToStoryblok] = useState(false)
@@ -469,16 +479,28 @@ export default function ContentGenerationPage() {
     if (!audioResult || !generatedContent) return
 
     try {
-      const audioBlob = new Blob([
-        Uint8Array.from(atob(audioResult.data), c => c.charCodeAt(0))
-      ], { type: audioResult.mimeType })
+      const fileName = audioResult.fileName || `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`
 
-      const url = URL.createObjectURL(audioBlob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`
-      a.click()
-      URL.revokeObjectURL(url)
+      if (audioResult.url) {
+        // Audio is stored in cloud storage - use direct link
+        const a = document.createElement('a')
+        a.href = audioResult.url
+        a.download = fileName
+        a.target = '_blank' // Open in new tab for cloud storage URLs
+        a.click()
+      } else if (audioResult.data) {
+        // Audio is base64 encoded - create blob
+        const audioBlob = new Blob([
+          Uint8Array.from(atob(audioResult.data), c => c.charCodeAt(0))
+        ], { type: audioResult.mimeType })
+
+        const url = URL.createObjectURL(audioBlob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = fileName
+        a.click()
+        URL.revokeObjectURL(url)
+      }
     } catch (error) {
       console.error('Download error:', error)
     }
@@ -492,6 +514,27 @@ export default function ContentGenerationPage() {
     setStoryblokUploadResult(null)
 
     try {
+      // If audio is already uploaded to storage, just update the result
+      if (audioResult.uploadedToStorage && audioResult.url) {
+        setStoryblokUploadResult({
+          success: true,
+          audio: {
+            url: audioResult.url,
+            fileName: audioResult.fileName || `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`,
+            size: audioResult.size,
+            storage: audioResult.storage || 'supabase'
+          },
+          message: 'Audio already uploaded to storage'
+        })
+        setIsUploadingToStoryblok(false)
+        return
+      }
+
+      // Only upload if we have base64 data
+      if (!audioResult.data) {
+        throw new Error('No audio data available for upload')
+      }
+
       const fileName = `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`
       const title = `Sound Refinery: ${generatedContent.title}`
 
@@ -1324,12 +1367,18 @@ export default function ContentGenerationPage() {
                           <Button
                             onClick={handleUploadToSupabase}
                             size="sm"
-                            disabled={isUploadingToStoryblok}
+                            disabled={isUploadingToStoryblok || audioResult.uploadedToStorage}
+                            variant={audioResult.uploadedToStorage ? "secondary" : "default"}
                           >
                             {isUploadingToStoryblok ? (
                               <>
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                 Uploading...
+                              </>
+                            ) : audioResult.uploadedToStorage ? (
+                              <>
+                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                Already Uploaded
                               </>
                             ) : (
                               <>
@@ -1366,10 +1415,21 @@ export default function ContentGenerationPage() {
                       <audio
                         controls
                         className="w-full mt-2"
-                        src={`data:${audioResult.mimeType};base64,${audioResult.data}`}
+                        src={
+                          audioResult.url
+                            ? audioResult.url
+                            : audioResult.data
+                            ? `data:${audioResult.mimeType};base64,${audioResult.data}`
+                            : ''
+                        }
                       >
                         Your browser does not support the audio element.
                       </audio>
+                      {audioResult.uploadedToStorage && (
+                        <p className="text-xs text-blue-700 mt-1">
+                          ✓ Audio uploaded to {audioResult.storage || 'cloud storage'}
+                        </p>
+                      )}
                     </div>
 
                     {/* Cloud Storage Upload Results */}
