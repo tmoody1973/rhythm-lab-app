@@ -217,7 +217,7 @@ export default async function DeepDivesPage() {
                             className="w-full h-full flex items-center justify-center text-white text-xl font-bold"
                             style={{ backgroundColor: diveColor }}
                           >
-                            {dive.name}
+                            {dive.content?.title || dive.content?.show_title || dive.name}
                           </div>
                         )
                       ) : (
@@ -246,7 +246,7 @@ export default async function DeepDivesPage() {
                     </div>
                     <Link href={hasDeepDives ? `/deep-dives/${dive.slug}` : '#'}>
                       <h3 className="text-foreground font-bold text-xl mb-3 leading-tight hover:text-primary transition-colors">
-                        {hasDeepDives ? dive.name : dive.title}
+                        {hasDeepDives ? (dive.content?.title || dive.content?.show_title || dive.name) : dive.title}
                       </h3>
                     </Link>
                     <p className="text-muted-foreground text-base mb-4 leading-relaxed">
@@ -292,7 +292,7 @@ export default async function DeepDivesPage() {
                           <FavoriteButton
                             content={{
                               id: dive.id,
-                              title: dive.name,
+                              title: dive.content?.title || dive.content?.show_title || dive.name,
                               type: 'deep_dive',
                               image: dive.content?.featured_image?.filename,
                               description: safeRenderText(dive.content?.intro) || safeRenderText(dive.content?.description)
@@ -344,7 +344,7 @@ export default async function DeepDivesPage() {
                             className="w-full h-full flex items-center justify-center text-white text-lg font-bold p-4 text-center"
                             style={{ backgroundColor: diveColor }}
                           >
-                            {dive.name}
+                            {dive.content?.title || dive.content?.show_title || dive.name}
                           </div>
                         )
                       ) : (
@@ -373,7 +373,7 @@ export default async function DeepDivesPage() {
                     </div>
                     <Link href={hasDeepDives ? `/deep-dives/${dive.slug}` : '#'}>
                       <h3 className="text-foreground font-bold text-base mb-2 leading-tight hover:text-primary transition-colors">
-                        {hasDeepDives ? dive.name : dive.title}
+                        {hasDeepDives ? (dive.content?.title || dive.content?.show_title || dive.name) : dive.title}
                       </h3>
                     </Link>
                     {(hasDeepDives ? (safeRenderText(dive.content?.intro) || safeRenderText(dive.content?.description)) : dive.description) && (

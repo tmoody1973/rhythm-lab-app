@@ -49,11 +49,13 @@ export async function generateMetadata({ params }: DeepDivePageProps): Promise<M
 
     const description = safeRenderText(story.content?.intro) || safeRenderText(story.content?.description) || 'In-depth exploration from Rhythm Lab Radio';
 
+    const pageTitle = story.content?.title || story.content?.show_title || story.name;
+
     return {
-      title: story.name + ' | Rhythm Lab Radio Deep Dives',
+      title: pageTitle + ' | Rhythm Lab Radio Deep Dives',
       description: description,
       openGraph: {
-        title: story.name,
+        title: pageTitle,
         description: description,
         images: story.content?.featured_image?.filename ? [story.content.featured_image.filename] : [],
       },
@@ -151,7 +153,7 @@ export default async function DeepDivePage({ params }: DeepDivePageProps) {
               </div>
 
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
-                {story.name}
+                {content?.title || content?.show_title || story.name}
               </h1>
 
               {content?.intro && (
