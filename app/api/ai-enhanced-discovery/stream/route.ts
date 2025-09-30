@@ -251,22 +251,63 @@ Focus on factual, verifiable connections. Include specific album names, years, p
         ],
         max_tokens: 2500,
         temperature: 0.7,
-        stream: false  // We handle streaming at the API level
+        stream: true  // Enable streaming for progressive updates
       })
-    })
-
-    sendUpdate('status', {
-      message: 'Received AI response, parsing data...',
-      stage: 'ai_parsing',
-      progress: 60
     })
 
     if (!response.ok) {
       throw new Error(`Perplexity API error: ${response.status}`)
     }
 
-    const data = await response.json()
-    const content = data.choices[0]?.message?.content || '{}'
+    // Process the streaming response
+    const reader = response.body?.getReader()
+    if (!reader) {
+      throw new Error('No stream reader available')
+    }
+
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let content = ''
+    let progressIncrement = 40
+
+    sendUpdate('status', {
+      message: 'Receiving AI analysis...',
+      stage: 'ai_streaming',
+      progress: 40
+    })
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim()
+          if (data === '[DONE]') continue
+
+          try {
+            const parsed = JSON.parse(data)
+            const delta = parsed.choices[0]?.delta?.content
+            if (delta) {
+              content += delta
+              // Update progress incrementally
+              progressIncrement = Math.min(70, progressIncrement + 2)
+              sendUpdate('status', {
+                message: 'Receiving AI analysis...',
+                stage: 'ai_streaming',
+                progress: progressIncrement
+              })
+            }
+          } catch (e) {
+            // Skip invalid JSON
+          }
+        }
+      }
+    }
 
     // Log the raw response for debugging
     console.log('Perplexity raw response for', artistName, ':', {
