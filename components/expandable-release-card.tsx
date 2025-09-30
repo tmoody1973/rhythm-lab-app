@@ -65,7 +65,7 @@ export function ExpandableReleaseCard({ releases, children }: ExpandableReleaseC
   // EXPLANATION: State for YouTube videos
   const [youtubeVideos, setYoutubeVideos] = useState<YouTubeVideo[]>([])
   const [loadingVideos, setLoadingVideos] = useState(false)
-  const [videoError, setVideoError] = useState<string | null>(null)
+  const [videoError, setVideoError] = useState<string | undefined>(undefined)
 
   // EXPLANATION: Reference to the expanded card DOM element (for outside click detection)
   const ref = useRef<HTMLDivElement>(null)
@@ -105,7 +105,7 @@ export function ExpandableReleaseCard({ releases, children }: ExpandableReleaseC
    */
   const fetchYouTubeVideos = async (artist: string, album: string) => {
     setLoadingVideos(true)
-    setVideoError(null)
+    setVideoError(undefined)
 
     try {
       const response = await fetch('/api/youtube/search-videos', {
@@ -145,7 +145,7 @@ export function ExpandableReleaseCard({ releases, children }: ExpandableReleaseC
     setError(null)
     setActiveTab('details') // Reset to details tab when opening
     setYoutubeVideos([]) // Clear previous videos
-    setVideoError(null)
+    setVideoError(undefined)
 
     // EXPLANATION: If we already have detailed data, don't fetch it again
     if (release.detailed) {
