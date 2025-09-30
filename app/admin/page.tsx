@@ -59,18 +59,18 @@ export default function AdminDashboardPage() {
         </Card>
 
         <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-          <Link href="/admin/users">
+          <Link href="/admin/algolia-sync">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">User Management</CardTitle>
+              <CardTitle className="text-lg">Algolia Search Sync</CardTitle>
               <CardDescription>
-                View and manage user accounts and roles
+                Manually sync archive tracks and live songs to search
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <Badge variant="outline">Coming Soon</Badge>
-                <Button variant="ghost" size="sm" disabled>
-                  Go to Users →
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>
+                <Button variant="ghost" size="sm">
+                  Go to Sync →
                 </Button>
               </div>
             </CardContent>
