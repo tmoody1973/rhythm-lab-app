@@ -396,7 +396,7 @@ export function ExploreSection() {
                   {/* Title */}
                   <Link href={`${routePrefix}/${item.slug}`}>
                     <h3 className="text-foreground font-bold text-sm mb-2 leading-tight hover:text-primary transition-colors line-clamp-2">
-                      {item.name.toUpperCase()}
+                      {(item.content?.title || item.content?.show_title || item.name).toUpperCase()}
                     </h3>
                   </Link>
 
