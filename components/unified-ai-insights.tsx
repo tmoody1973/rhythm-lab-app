@@ -394,7 +394,11 @@ function FullWidthAILayout({
 
           {/* Musical Insights */}
           {aiAnalysis.discovery_insights && (
-            <InsightsSection insights={aiAnalysis.discovery_insights} onRetry={onRetry} />
+            <InsightsSection
+              insights={aiAnalysis.discovery_insights}
+              onRetry={onRetry}
+              artistName={trackData.artist}
+            />
           )}
         </div>
 
@@ -634,10 +638,12 @@ function ConnectionTypesSummary({
 // Musical insights section
 function InsightsSection({
   insights,
-  onRetry
+  onRetry,
+  artistName
 }: {
   insights: AIAnalysis['discovery_insights']
   onRetry?: () => void
+  artistName?: string
 }) {
   // Check if insights contain error messages
   const hasError =
@@ -648,36 +654,84 @@ function InsightsSection({
 
   if (hasError) {
     return (
-      <Card className="border-red-200 bg-red-50">
+      <Card className="border-yellow-200 bg-yellow-50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-red-800">
-            <Sparkles className="w-5 h-5 text-red-600" />
+          <CardTitle className="flex items-center gap-2 text-yellow-800">
+            <Sparkles className="w-5 h-5 text-yellow-600" />
             Musical Insights
           </CardTitle>
-          <CardDescription className="text-red-700">AI analysis temporarily unavailable</CardDescription>
+          <CardDescription className="text-yellow-700">Limited information available</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-full bg-red-100">
-              <Brain className="w-5 h-5 text-red-600" />
+            <div className="p-2 rounded-full bg-yellow-100">
+              <Brain className="w-5 h-5 text-yellow-600" />
             </div>
             <div className="flex-1">
-              <h3 className="font-medium text-red-800">Analysis failed</h3>
-              <p className="text-sm text-red-600 mt-1">
-                We couldn't generate insights for this artist. This may be due to API rate limits or temporary service issues.
+              <h3 className="font-medium text-yellow-800">Artist information not found</h3>
+              <p className="text-sm text-yellow-700 mt-1">
+                Our AI couldn't find detailed information about this artist. This often happens with:
               </p>
+              <ul className="text-sm text-yellow-700 mt-2 space-y-1 list-disc list-inside">
+                <li>Emerging or underground artists</li>
+                <li>Regional artists with limited online presence</li>
+                <li>Artists with minimal discography documentation</li>
+                <li>Very new releases not yet indexed</li>
+              </ul>
             </div>
           </div>
-          {onRetry && (
-            <Button
-              variant="outline"
-              onClick={onRetry}
-              className="w-full border-red-200 text-red-600 hover:bg-red-50"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Retry Analysis (Force Fresh)
-            </Button>
-          )}
+
+          <div className="flex gap-2">
+            {onRetry && (
+              <Button
+                variant="outline"
+                onClick={onRetry}
+                className="flex-1 border-yellow-200 text-yellow-700 hover:bg-yellow-100"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+            )}
+          </div>
+
+          <div className="pt-2 border-t border-yellow-200">
+            <p className="text-xs text-yellow-600 mb-2">Try searching manually:</p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="text-xs border-yellow-200 text-yellow-700 hover:bg-yellow-100"
+              >
+                <a href={`https://www.discogs.com/search/?q=${encodeURIComponent(artistName || '')}`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-3 h-3 mr-1" />
+                  Discogs
+                </a>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="text-xs border-yellow-200 text-yellow-700 hover:bg-yellow-100"
+              >
+                <a href={`https://musicbrainz.org/search?query=${encodeURIComponent(artistName || '')}&type=artist`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-3 h-3 mr-1" />
+                  MusicBrainz
+                </a>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="text-xs border-yellow-200 text-yellow-700 hover:bg-yellow-100"
+              >
+                <a href={`https://www.allmusic.com/search/artists/${encodeURIComponent(artistName || '')}`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-3 h-3 mr-1" />
+                  AllMusic
+                </a>
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     )
