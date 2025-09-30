@@ -105,7 +105,6 @@ export function UnifiedAIInsights({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN}`,
         },
         body: JSON.stringify({
           artist_name: artist,

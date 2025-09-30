@@ -8,12 +8,6 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    // Check admin auth
-    const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${process.env.NEXT_PUBLIC_ADMIN_TOKEN}`) {
-      return new Response('Unauthorized', { status: 401 })
-    }
-
     const {
       artist_name,
       track_name,
