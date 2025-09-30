@@ -302,18 +302,29 @@ Focus on factual, verifiable connections. Include specific album names, years, p
     return parsedResult
 
   } catch (error) {
-    console.error('Streaming Perplexity AI call failed:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Streaming Perplexity AI call failed:', {
+      artist: artistName,
+      track: trackName,
+      error: errorMessage,
+      timestamp: new Date().toISOString()
+    })
+
     sendUpdate('error', {
       message: 'AI analysis failed, using fallback data',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: errorMessage,
+      details: {
+        artist: artistName,
+        track: trackName
+      }
     })
 
     return {
-      reasoning: 'Fallback recommendations due to AI error',
+      reasoning: `Fallback recommendations due to AI error: ${errorMessage}`,
       recommended_artists: [],
       discovery_insights: {
-        musical_lineage: 'Unable to analyze due to error',
-        scene_connections: 'Error occurred during analysis'
+        musical_lineage: `Unable to analyze due to error: ${errorMessage}`,
+        scene_connections: `Error occurred during analysis: ${errorMessage}`
       }
     }
   }
