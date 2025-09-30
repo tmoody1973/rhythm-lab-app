@@ -16,7 +16,8 @@ import {
   ExternalLink,
   PlayCircle,
   ArrowUpRight,
-  Star
+  Star,
+  RefreshCw
 } from 'lucide-react'
 
 interface AIAnalysis {
@@ -84,8 +85,13 @@ export function UnifiedAIInsights({
 
   const { track, artist } = trackData
 
+  // Retry function that forces a fresh API call
+  const retryAnalysis = () => {
+    fetchStreamingAIAnalysis(true) // Force refresh to bypass cache
+  }
+
   // Streaming AI analysis fetch
-  const fetchStreamingAIAnalysis = async () => {
+  const fetchStreamingAIAnalysis = async (forceRefresh = false) => {
     if (!artist) return
 
     setLoading(true)
@@ -104,7 +110,7 @@ export function UnifiedAIInsights({
         body: JSON.stringify({
           artist_name: artist,
           track_name: track,
-          force_refresh: false,
+          force_refresh: forceRefresh,
         }),
       })
 
@@ -335,7 +341,7 @@ export function UnifiedAIInsights({
             </div>
             <Button
               variant="outline"
-              onClick={fetchStreamingAIAnalysis}
+              onClick={retryAnalysis}
               className="mt-4 border-red-200 text-red-600 hover:bg-red-50"
             >
               Try Again
@@ -349,7 +355,7 @@ export function UnifiedAIInsights({
           trackData={trackData}
           aiAnalysis={aiAnalysis}
           onArtistClick={onArtistClick}
-          onRetry={fetchStreamingAIAnalysis}
+          onRetry={retryAnalysis}
         />
       )}
     </div>
@@ -668,7 +674,8 @@ function InsightsSection({
               onClick={onRetry}
               className="w-full border-red-200 text-red-600 hover:bg-red-50"
             >
-              Retry Analysis
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Retry Analysis (Force Fresh)
             </Button>
           )}
         </CardContent>
