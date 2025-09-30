@@ -112,14 +112,15 @@ export function Header() {
             </nav>
 
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:bg-transparent"
-                onClick={() => setSearchModalOpen(true)}
-              >
-                <span className="text-lg">🔍</span>
-              </Button>
+              <Link href="/search">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-transparent"
+                >
+                  <span className="text-lg">🔍</span>
+                </Button>
+              </Link>
 
 
               {/* Auth buttons for desktop */}
