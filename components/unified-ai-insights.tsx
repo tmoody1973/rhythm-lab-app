@@ -349,6 +349,7 @@ export function UnifiedAIInsights({
           trackData={trackData}
           aiAnalysis={aiAnalysis}
           onArtistClick={onArtistClick}
+          onRetry={fetchStreamingAIAnalysis}
         />
       )}
     </div>
@@ -359,11 +360,13 @@ export function UnifiedAIInsights({
 function FullWidthAILayout({
   trackData,
   aiAnalysis,
-  onArtistClick
+  onArtistClick,
+  onRetry
 }: {
   trackData: TrackData
   aiAnalysis: AIAnalysis
   onArtistClick?: (artistName: string) => void
+  onRetry?: () => void
 }) {
   const topRecommendations = aiAnalysis.recommended_artists
     ?.sort((a, b) => b.similarity_score - a.similarity_score)
@@ -385,7 +388,7 @@ function FullWidthAILayout({
 
           {/* Musical Insights */}
           {aiAnalysis.discovery_insights && (
-            <InsightsSection insights={aiAnalysis.discovery_insights} />
+            <InsightsSection insights={aiAnalysis.discovery_insights} onRetry={onRetry} />
           )}
         </div>
 
@@ -624,10 +627,55 @@ function ConnectionTypesSummary({
 
 // Musical insights section
 function InsightsSection({
-  insights
+  insights,
+  onRetry
 }: {
   insights: AIAnalysis['discovery_insights']
+  onRetry?: () => void
 }) {
+  // Check if insights contain error messages
+  const hasError =
+    insights.musical_lineage?.includes('Unable to analyze') ||
+    insights.scene_connections?.includes('Error occurred') ||
+    insights.musical_lineage?.includes('error') ||
+    insights.scene_connections?.includes('error')
+
+  if (hasError) {
+    return (
+      <Card className="border-red-200 bg-red-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-red-800">
+            <Sparkles className="w-5 h-5 text-red-600" />
+            Musical Insights
+          </CardTitle>
+          <CardDescription className="text-red-700">AI analysis temporarily unavailable</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-full bg-red-100">
+              <Brain className="w-5 h-5 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-red-800">Analysis failed</h3>
+              <p className="text-sm text-red-600 mt-1">
+                We couldn't generate insights for this artist. This may be due to API rate limits or temporary service issues.
+              </p>
+            </div>
+          </div>
+          {onRetry && (
+            <Button
+              variant="outline"
+              onClick={onRetry}
+              className="w-full border-red-200 text-red-600 hover:bg-red-50"
+            >
+              Retry Analysis
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="border-slate-200">
       <CardHeader>
