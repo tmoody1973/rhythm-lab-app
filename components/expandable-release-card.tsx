@@ -214,7 +214,14 @@ export function ExpandableReleaseCard({ releases, children }: ExpandableReleaseC
 
     } catch (err) {
       console.error('[ExpandableCard] Error fetching details:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load release details')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load release details'
+
+      // Check if this is a missing Discogs URL issue
+      if (!release.discogs_url || errorMessage.includes('404')) {
+        setError('This release needs a Discogs URL to view details. Please add the discogs_url field in Storyblok.')
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setLoadingDetails(false)
     }
