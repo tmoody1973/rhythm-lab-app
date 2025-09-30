@@ -274,13 +274,27 @@ Focus on factual, verifiable connections. Include specific album names, years, p
     const data = await response.json()
     const content = data.choices[0]?.message?.content || '{}'
 
-    // Extract JSON from response
+    // Log the raw response for debugging
+    console.log('Perplexity raw response for', artistName, ':', {
+      contentLength: content.length,
+      firstChars: content.substring(0, 200),
+      lastChars: content.substring(content.length - 200)
+    })
+
+    // Extract JSON from response (try to find the outermost braces)
     const jsonMatch = content.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
+      console.error('Failed to extract JSON. Raw content:', content)
       throw new Error('No valid JSON found in AI response')
     }
 
-    const parsedResult = JSON.parse(jsonMatch[0])
+    let parsedResult
+    try {
+      parsedResult = JSON.parse(jsonMatch[0])
+    } catch (parseError) {
+      console.error('JSON parse failed. Matched content:', jsonMatch[0])
+      throw new Error(`Failed to parse JSON: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`)
+    }
 
     // Send intermediate results as they're processed
     if (parsedResult.recommended_artists?.length > 0) {
