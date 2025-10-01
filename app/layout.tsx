@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter, Outfit } from "next/font/google"
 import { Suspense } from "react"
+import Script from "next/script"
 import "./globals.css"
 import { PersistentAudioPlayer } from "@/components/persistent-audio-player"
 import { UnifiedPersistentPlayer } from "@/components/unified-persistent-player"
@@ -37,6 +38,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          src="https://cdn.databuddy.cc/databuddy.js"
+          data-client-id="UCDi6utgTgVm6zH5yBl-W"
+          data-enable-batching="true"
+          crossOrigin="anonymous"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body className={`font-sans ${inter.variable} ${outfit.variable} antialiased`}>
         <ClerkAuthProvider>
           <RadioProvider>
