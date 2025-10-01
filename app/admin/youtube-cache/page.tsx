@@ -65,6 +65,7 @@ export default function YouTubeCachePage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           source: 'both',
           limit: batchSize,
