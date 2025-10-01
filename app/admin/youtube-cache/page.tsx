@@ -27,10 +27,11 @@ interface CacheStatus {
 interface CacheResult {
   success: boolean
   message?: string
-  processed?: number
-  cached?: number
-  failed?: number
-  skipped?: number
+  summary?: {
+    tracks_processed: number
+    successfully_cached: number
+    failed_or_not_found: number
+  }
   error?: string
 }
 
@@ -293,10 +294,12 @@ export default function YouTubeCachePage() {
                 {result.success ? (
                   <div className="space-y-1">
                     <div className="font-medium">{result.message}</div>
-                    <div className="text-sm">
-                      Processed: {result.processed} | Cached: {result.cached} |
-                      Failed: {result.failed} | Skipped: {result.skipped}
-                    </div>
+                    {result.summary && (
+                      <div className="text-sm">
+                        Processed: {result.summary.tracks_processed} | Cached: {result.summary.successfully_cached} |
+                        Failed: {result.summary.failed_or_not_found}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="font-medium">{result.error || result.message}</div>
