@@ -47,6 +47,14 @@ export default function RootLayout({
               <MobileNavigationWrapper />
               <Databuddy
                 clientId="UCDi6utgTgVm6zH5yBl-W"
+                trackOutgoingLinks={true}
+                trackInteractions={true}
+                trackEngagement={true}
+                trackScrollDepth={true}
+                trackExitIntent={true}
+                trackBounceRate={true}
+                trackWebVitals={true}
+                trackErrors={true}
                 enableBatching={true}
               />
             </UnifiedPlayerProvider>
