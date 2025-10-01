@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getYouTubeTrackData } from '@/lib/youtube/api'
-import { verifyAdminAuth } from '@/lib/auth/admin'
+import { auth } from '@clerk/nextjs/server'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,9 +11,9 @@ const supabase = createClient(
 export async function POST(request: NextRequest) {
   try {
     // Check admin auth using Clerk
-    const authResult = await verifyAdminAuth(request)
-    if (authResult.error || !authResult.user) {
-      return NextResponse.json({ error: authResult.error || 'Unauthorized' }, { status: 401 })
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized - Please sign in' }, { status: 401 })
     }
 
     console.log('🎥 Starting YouTube video caching process...')
