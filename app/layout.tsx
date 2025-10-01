@@ -10,6 +10,7 @@ import { RadioProvider } from "@/lib/radio/context"
 import { UnifiedPlayerProvider } from "@/lib/audio/unified-player-context"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ClerkAuthProvider } from "@/contexts/clerk-auth-context"
+import { Databuddy } from '@databuddy/sdk'
 
 const inter = Inter({
   subsets: ["latin"],
@@ -44,6 +45,10 @@ export default function RootLayout({
               <PersistentAudioPlayer />
               <UnifiedPersistentPlayer />
               <MobileNavigationWrapper />
+              <Databuddy
+                clientId="UCDi6utgTgVm6zH5yBl-W"
+                enableBatching={true}
+              />
             </UnifiedPlayerProvider>
           </RadioProvider>
         </ClerkAuthProvider>
