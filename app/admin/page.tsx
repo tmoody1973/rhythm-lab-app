@@ -76,6 +76,25 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Link>
         </Card>
+
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+          <Link href="/admin/youtube-cache">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">YouTube Video Cache</CardTitle>
+              <CardDescription>
+                Cache YouTube videos to avoid API rate limits
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Active</Badge>
+                <Button variant="ghost" size="sm">
+                  Go to Cache →
+                </Button>
+              </div>
+            </CardContent>
+          </Link>
+        </Card>
       </div>
 
       {/* System Status */}
