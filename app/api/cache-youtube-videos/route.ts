@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     for (const track of tracksToProcess) {
       try {
         const artistName = track.artist || 'Unknown Artist'
-        const trackName = track.song || track.track || 'Unknown Track'
+        const trackName = (track as any).song || (track as any).track || 'Unknown Track'
 
         console.log(`🎵 Getting YouTube data for: ${artistName} - ${trackName}`)
 
