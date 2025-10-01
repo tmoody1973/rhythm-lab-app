@@ -21,11 +21,11 @@ ADD COLUMN IF NOT EXISTS youtube_cached_at TIMESTAMPTZ;
 -- Create indexes for faster lookups
 CREATE INDEX IF NOT EXISTS idx_mixcloud_tracks_youtube_cached
 ON mixcloud_tracks(youtube_cached_at)
-WHERE youtube_url IS NOT NULL;
+WHERE youtube_video_id IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_songs_youtube_cached
 ON songs(youtube_cached_at)
-WHERE youtube_url IS NOT NULL;
+WHERE youtube_video_id IS NOT NULL;
 
 -- Add comments for documentation
 COMMENT ON COLUMN mixcloud_tracks.youtube_video_id IS 'YouTube video ID for caching - avoids API rate limits';
