@@ -1,5 +1,22 @@
 [
   {
+    "title": "Introduction",
+    "contentType": "artist-profile",
+    "status": "published",
+    "storyblokId": "97201686592653",
+    "storyblokUrl": "https://app.storyblok.com/#/me/spaces/287185477794349/stories/0/0/97201686592653",
+    "liveUrl": "https://your-site.com/profiles/introduction-1759420480207",
+    "metadata": {
+      "generatedBy": "AI",
+      "wordCount": 5493,
+      "hasDiscography": false,
+      "discographyCount": 0,
+      "hasImages": true
+    },
+    "id": "content_1759420481061_934rt1yo3",
+    "createdAt": "2025-10-02T15:54:41.061Z"
+  },
+  {
     "title": "The Origins and Evolution of Amapiano: South Africa’s Cultural Soundscape",
     "contentType": "deep-dive",
     "status": "published",

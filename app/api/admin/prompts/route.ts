@@ -92,29 +92,54 @@ Make every character count - this description determines whether someone discove
 // Save custom prompts to database
 async function savePrompts(templates: any) {
   // Convert templates to database rows
-  const rows = []
+  const updates = []
   for (const [contentType, template] of Object.entries(templates)) {
     if (contentType === '_metadata') continue // Skip metadata
 
     const t = template as any
-    rows.push({
+    updates.push({
       content_type: contentType,
       system_prompt: t.system,
       user_prompt: t.prompt,
-      notes: t.notes,
-      updated_at: new Date().toISOString()
+      notes: t.notes || ''
     })
   }
 
-  // Upsert all templates (insert or update if exists)
-  for (const row of rows) {
-    const { error } = await supabase
+  // Update each template individually
+  for (const update of updates) {
+    // Try to update first
+    const { data: existing } = await supabase
       .from('prompt_templates')
-      .upsert(row)
+      .select('id')
+      .eq('content_type', update.content_type)
+      .single()
 
-    if (error) {
-      console.error('Supabase upsert error:', error)
-      throw error
+    if (existing) {
+      // Update existing
+      const { error } = await supabase
+        .from('prompt_templates')
+        .update({
+          system_prompt: update.system_prompt,
+          user_prompt: update.user_prompt,
+          notes: update.notes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('content_type', update.content_type)
+
+      if (error) {
+        console.error('Update error:', error)
+        throw error
+      }
+    } else {
+      // Insert new
+      const { error } = await supabase
+        .from('prompt_templates')
+        .insert(update)
+
+      if (error) {
+        console.error('Insert error:', error)
+        throw error
+      }
     }
   }
 }
