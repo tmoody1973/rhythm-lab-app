@@ -136,10 +136,6 @@ export function RealArchiveDiscoverySection() {
       {/* Archive Shows Section */}
       <div>
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2 mb-4">
-            📁 Mixcloud Archive ({totalCount} shows)
-          </h2>
-
           {shows.length === 0 ? (
             <div className="text-center py-12">
               <Music2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
