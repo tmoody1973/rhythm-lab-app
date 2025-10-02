@@ -1,28 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { promises as fs } from 'fs'
-import path from 'path'
+import { createClient } from '@supabase/supabase-js'
 import { PROMPT_TEMPLATES } from '@/lib/ai/prompt-templates'
 
-const PROMPTS_FILE_PATH = path.join(process.cwd(), 'data', 'custom-prompts.json')
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
-// Ensure data directory exists
-async function ensureDataDirectory() {
-  const dataDir = path.join(process.cwd(), 'data')
-  try {
-    await fs.access(dataDir)
-  } catch {
-    await fs.mkdir(dataDir, { recursive: true })
-  }
-}
-
-// Load custom prompts or return defaults
+// Load custom prompts from database or return defaults
 async function loadPrompts() {
   try {
-    await ensureDataDirectory()
-    const data = await fs.readFile(PROMPTS_FILE_PATH, 'utf-8')
-    return JSON.parse(data)
-  } catch {
-    // Return default templates if custom file doesn't exist
+    const { data: templates, error } = await supabase
+      .from('prompt_templates')
+      .select('*')
+
+    if (error) throw error
+
+    // Convert database rows to template format
+    if (templates && templates.length > 0) {
+      const result: any = {}
+      for (const template of templates) {
+        result[template.content_type] = {
+          system: template.system_prompt,
+          prompt: template.user_prompt,
+          notes: template.notes
+        }
+      }
+      return result
+    }
+
+    // Return default templates if no custom templates in database
     return {
       'artist-profile': {
         system: PROMPT_TEMPLATES['artist-profile'].system,
@@ -82,10 +89,31 @@ Make every character count - this description determines whether someone discove
   }
 }
 
-// Save custom prompts
+// Save custom prompts to database
 async function savePrompts(templates: any) {
-  await ensureDataDirectory()
-  await fs.writeFile(PROMPTS_FILE_PATH, JSON.stringify(templates, null, 2))
+  // Convert templates to database rows
+  const rows = []
+  for (const [contentType, template] of Object.entries(templates)) {
+    if (contentType === '_metadata') continue // Skip metadata
+
+    const t = template as any
+    rows.push({
+      content_type: contentType,
+      system_prompt: t.system,
+      user_prompt: t.prompt,
+      notes: t.notes,
+      updated_at: new Date().toISOString()
+    })
+  }
+
+  // Upsert all templates (insert or update if exists)
+  for (const row of rows) {
+    const { error } = await supabase
+      .from('prompt_templates')
+      .upsert(row, { onConflict: 'content_type' })
+
+    if (error) throw error
+  }
 }
 
 // GET - Return current prompt templates
