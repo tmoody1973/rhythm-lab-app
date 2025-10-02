@@ -142,17 +142,9 @@ export async function createStoryblokStory(
       story: storyData
     })
 
-    // Automatically publish the story so it appears on the CDN immediately
-    if (response.story?.id) {
-      try {
-        const publishResponse = await callStoryblokAPI(`spaces/${spaceId}/stories/${response.story.id}`, 'PUT', {
-          story: { published: true }
-        })
-        console.log('Story published successfully:', publishResponse.story?.full_slug)
-      } catch (publishError) {
-        console.error('Failed to publish story, but creation succeeded:', publishError)
-      }
-    }
+    // Story is created as a DRAFT
+    // User can preview in Storyblok Visual Editor before manually publishing
+    console.log('Story created as draft:', response.story?.full_slug)
 
     return {
       success: true,
