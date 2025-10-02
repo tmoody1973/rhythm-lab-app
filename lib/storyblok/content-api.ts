@@ -120,7 +120,7 @@ export async function createStoryblokStory(
     }
 
     const storyData = {
-      name: content.title,
+      name: content.seoTitle || content.title,
       slug: slug,
       content: storyContent,
       parent_id: folderId || null, // Use null instead of 0 if no folder ID
