@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withAdminAuth } from '@/lib/auth/admin'
+import { auth } from '@clerk/nextjs/server'
 import { generateContent } from '@/lib/ai/content-generator'
 import { getArtistDiscographyForProfile } from '@/lib/external-apis/discogs'
 
@@ -27,8 +27,14 @@ interface GenerateProfileResponse {
  * POST /api/ai/generate-artist-profile-with-discography
  * Generate artist profile content with Discogs discography integration
  */
-const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextResponse> => {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    // Check admin auth using Clerk
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized - Please sign in' }, { status: 401 })
+    }
+
     const body: GenerateProfileRequest = await request.json()
     const {
       artistName,
@@ -154,6 +160,4 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       error: 'Failed to generate artist profile'
     }, { status: 500 })
   }
-})
-
-export { handler as POST }
+}
