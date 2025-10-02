@@ -86,6 +86,9 @@ Make every character count - this description determines whether someone discove
         notes: 'Show descriptions must be 500-600 characters for Mixcloud optimization. Focus on musical discovery and track highlights.'
       }
     }
+  } catch (error) {
+    console.error('Error loading prompts:', error)
+    throw error
   }
 }
 
