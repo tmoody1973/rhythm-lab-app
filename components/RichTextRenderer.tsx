@@ -29,7 +29,7 @@ export function RichTextRenderer({ content }: { content: any }) {
       case 'paragraph':
         // Check if this paragraph contains shortcodes
         const paragraphText = node.content?.map((child: any) => child.text || '').join('');
-        const hasShortcodes = /\[youtube=([^\]]+)\]/.test(paragraphText);
+        const hasShortcodes = /\[(?:youtube|bandcamp)=([^\]]+)\]/.test(paragraphText);
 
         if (hasShortcodes) {
           // Process the entire paragraph content as shortcodes

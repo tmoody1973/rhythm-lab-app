@@ -1,8 +1,8 @@
 import React from 'react'
 
 /**
- * YouTube shortcode processor for rich text content
- * Converts [youtube=URL] shortcodes into responsive YouTube embeds
+ * Shortcode processor for rich text content
+ * Converts [youtube=URL] and [bandcamp=URL] shortcodes into responsive embeds
  */
 
 interface YouTubeEmbedProps {
@@ -19,6 +19,76 @@ function YouTubeEmbed({ videoId, title = "YouTube video" }: YouTubeEmbedProps) {
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
         className="absolute inset-0 w-full h-full border-0"
+        loading="lazy"
+      />
+    </div>
+  )
+}
+
+interface BandcampEmbedProps {
+  url: string
+  title?: string
+}
+
+function BandcampEmbed({ url, title = "Bandcamp player" }: BandcampEmbedProps) {
+  const [embedUrl, setEmbedUrl] = React.useState<string | null>(null)
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    async function fetchEmbedUrl() {
+      try {
+        const response = await fetch('/api/bandcamp/get-embed-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch Bandcamp embed URL')
+        }
+
+        const data = await response.json()
+        if (data.success && data.embedUrl) {
+          setEmbedUrl(data.embedUrl)
+        } else {
+          throw new Error(data.error || 'Invalid response')
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchEmbedUrl()
+  }, [url])
+
+  if (loading) {
+    return (
+      <div className="w-full h-[120px] my-6 rounded-lg bg-gray-100 animate-pulse flex items-center justify-center">
+        <span className="text-sm text-gray-500">Loading Bandcamp player...</span>
+      </div>
+    )
+  }
+
+  if (error || !embedUrl) {
+    return (
+      <div className="w-full p-4 my-6 rounded-lg bg-red-50 border border-red-200">
+        <span className="text-sm text-red-600">
+          Failed to load Bandcamp player: {error || 'Invalid URL'}
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full my-6">
+      <iframe
+        style={{ border: 0, width: '100%', height: '120px' }}
+        src={embedUrl}
+        title={title}
+        seamless
         loading="lazy"
       />
     </div>
@@ -46,13 +116,13 @@ function extractYouTubeId(url: string): string | null {
 
 /**
  * Process shortcodes in rich text content
- * Currently supports: [youtube=URL]
+ * Currently supports: [youtube=URL], [bandcamp=URL]
  */
 export function processShortcodes(content: string): React.ReactNode[] {
   const elements: React.ReactNode[] = []
 
-  // Split content by YouTube shortcodes while preserving the matches
-  const parts = content.split(/(\[youtube=[^\]]+\])/g)
+  // Split content by both YouTube and Bandcamp shortcodes while preserving the matches
+  const parts = content.split(/(\[(?:youtube|bandcamp)=[^\]]+\])/g)
 
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i]
@@ -62,6 +132,9 @@ export function processShortcodes(content: string): React.ReactNode[] {
 
     // Check if this part is a YouTube shortcode
     const youtubeMatch = part.match(/^\[youtube=([^\]]+)\]$/)
+
+    // Check if this part is a Bandcamp shortcode
+    const bandcampMatch = part.match(/^\[bandcamp=([^\]]+)\]$/)
 
     if (youtubeMatch) {
       const url = youtubeMatch[1]
@@ -83,6 +156,16 @@ export function processShortcodes(content: string): React.ReactNode[] {
           </span>
         )
       }
+    } else if (bandcampMatch) {
+      const url = bandcampMatch[1]
+
+      elements.push(
+        <BandcampEmbed
+          key={`bandcamp-${i}-${url}`}
+          url={url}
+          title="Embedded Bandcamp player"
+        />
+      )
     } else if (part.trim()) {
       // Regular text content - preserve line breaks
       const textWithBreaks = part.split('\n').map((line, lineIndex) => (
