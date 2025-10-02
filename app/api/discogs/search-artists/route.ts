@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withAdminAuth } from '@/lib/auth/admin'
 import { searchDiscogsArtists } from '@/lib/external-apis/discogs'
 
 interface SearchArtistsRequest {
@@ -24,8 +23,9 @@ interface SearchArtistsResponse {
 /**
  * POST /api/discogs/search-artists
  * Search for artists on Discogs to allow user selection
+ * No auth required - read-only search endpoint
  */
-const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextResponse> => {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body: SearchArtistsRequest = await request.json()
     const { query, limit = 10 } = body
@@ -71,6 +71,4 @@ const handler = withAdminAuth(async (request: NextRequest, user): Promise<NextRe
       error: 'Failed to search artists'
     }, { status: 500 })
   }
-})
-
-export { handler as POST }
+}
