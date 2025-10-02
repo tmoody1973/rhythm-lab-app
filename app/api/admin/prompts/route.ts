@@ -110,9 +110,12 @@ async function savePrompts(templates: any) {
   for (const row of rows) {
     const { error } = await supabase
       .from('prompt_templates')
-      .upsert(row, { onConflict: 'content_type' })
+      .upsert(row)
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase upsert error:', error)
+      throw error
+    }
   }
 }
 
@@ -192,7 +195,11 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error saving prompts:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to save prompts' },
+      {
+        success: false,
+        error: 'Failed to save prompts',
+        details: error.message || error.toString()
+      },
       { status: 500 }
     )
   }
