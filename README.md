@@ -4,7 +4,7 @@ A modern web platform for Rhythm Lab Radio, featuring AI-powered music discovery
 
 ## Overview
 
-Rhythm Lab Radio is a Next.js 15 web application that combines traditional radio show hosting with cutting-edge AI technology to create an immersive music discovery experience. The platform integrates with multiple music APIs (Discogs, Spotify, MusicBrainz, YouTube) and uses AI to surface deep musical connections and insights.
+Rhythm Lab Radio is a Next.js 15 web application that combines traditional radio show hosting with AI  to create an immersive music discovery experience. The platform integrates with multiple music APIs (Discogs, Spotify, YouTube) and uses AI to surface deep musical connections and insights.
 
 ## Key Features
 
