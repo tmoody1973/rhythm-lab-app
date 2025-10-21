@@ -7,6 +7,7 @@ import { FavoriteButton } from "@/components/favorite-button"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import dynamic from 'next/dynamic'
+import { safeRenderText } from '@/lib/utils/rich-text'
 
 // Import newsletter component client-side only to avoid hydration issues
 const NewsletterForm = dynamic(() => import('./newsletter-form'), {
@@ -82,15 +83,22 @@ function WeeklyShowCard({ latestShow, showIndex = 0 }: WeeklyShowProps) {
             {latestShow.title}
           </h3>
           <div className="flex flex-wrap gap-2 mb-3">
-            {latestShow.tags.slice(0, 3).map((tag, index) => (
-              <Badge
-                key={index}
-                variant="outline"
-                className={`${colors.border} ${colors.text} text-xs px-3 py-1 rounded-full font-medium`}
-              >
-                {tag}
-              </Badge>
-            ))}
+            {latestShow.tags.slice(0, 3)
+              .map((tag, index) => {
+                const tagText = safeRenderText(tag);
+                if (!tagText) return null;
+
+                return (
+                  <Badge
+                    key={index}
+                    variant="outline"
+                    className={`${colors.border} ${colors.text} text-xs px-3 py-1 rounded-full font-medium`}
+                  >
+                    {tagText}
+                  </Badge>
+                );
+              })
+              .filter(Boolean)}
           </div>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center gap-3">
