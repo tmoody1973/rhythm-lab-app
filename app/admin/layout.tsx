@@ -6,6 +6,8 @@ import { isAdminUser, getAdminMetadata } from '@/lib/auth/admin-client-utils'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import Link from 'next/link'
+import { useEffect } from 'react'
+import { SessionMonitor } from '@/components/admin/session-monitor'
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -13,7 +15,7 @@ interface AdminLayoutProps {
 
 function AdminLayoutContent({ children }: AdminLayoutProps) {
   const { isLoaded, isSignedIn, user } = useUser()
-  const { signOut } = useClerk()
+  const { signOut, session } = useClerk()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -21,6 +23,24 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
     await signOut()
     router.replace('/sign-in')
   }
+
+  // Session keepalive: Actively touch the session to prevent timeout
+  useEffect(() => {
+    if (!isSignedIn || !session) return
+
+    // Refresh session every 5 minutes to keep it alive
+    const keepAliveInterval = setInterval(async () => {
+      try {
+        // Touch the session to refresh the token
+        await session.touch()
+        console.log('Session refreshed to prevent timeout')
+      } catch (error) {
+        console.error('Failed to refresh session:', error)
+      }
+    }, 5 * 60 * 1000) // 5 minutes
+
+    return () => clearInterval(keepAliveInterval)
+  }, [isSignedIn, session])
 
   // Allow login page to render without auth check
   if (pathname === '/admin/login') {
@@ -148,6 +168,9 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
           {children}
         </div>
       </main>
+
+      {/* Session Monitor - Press Cmd/Ctrl+Shift+S to toggle */}
+      <SessionMonitor />
     </div>
   )
 }

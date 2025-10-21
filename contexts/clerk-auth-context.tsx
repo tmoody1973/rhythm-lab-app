@@ -18,6 +18,11 @@ export function ClerkAuthProvider({ children }: ClerkAuthProviderProps) {
           colorPrimary: '#b12e2e', // Match your red theme
         },
       }}
+      // Session configuration to prevent automatic logouts
+      signInFallbackRedirectUrl="/"
+      signUpFallbackRedirectUrl="/"
+      // Clerk automatically refreshes tokens in the background
+      // This prevents sessions from expiring while users are active
     >
       {children}
     </ClerkProvider>
