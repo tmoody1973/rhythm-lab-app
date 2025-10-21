@@ -163,9 +163,9 @@ export function RealShowDetail({ showId }: RealShowDetailProps) {
                           </Badge>
                         )}
                       </div>
-                      <h1 className="text-2xl sm:text-3xl font-bold text-[#2d1810] mb-2 break-words hyphens-auto">{show.title}</h1>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-[#2d1810] mb-2 break-words hyphens-auto">{safeRenderText(show.title)}</h1>
                       <p className="text-[#6b4226] text-base sm:text-lg leading-relaxed break-words">
-                        {show.description || 'No description available'}
+                        {safeRenderText(show.description, 'No description available')}
                       </p>
                     </div>
 

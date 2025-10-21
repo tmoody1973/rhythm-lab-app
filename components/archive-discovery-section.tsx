@@ -80,7 +80,7 @@ function WeeklyShowCard({ latestShow, showIndex = 0 }: WeeklyShowProps) {
             <span className="text-sm text-muted-foreground font-medium">{formatDate(latestShow.published_date)}</span>
           </div>
           <h3 className="text-foreground font-bold text-lg mb-3 leading-tight text-balance">
-            {latestShow.title}
+            {safeRenderText(latestShow.title)}
           </h3>
           <div className="flex flex-wrap gap-2 mb-3">
             {latestShow.tags.slice(0, 3)
