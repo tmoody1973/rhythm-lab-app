@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Play, Clock, Users, Share, Bookmark, Music, ArrowLeft, Sparkles, ExternalLink, Music2, MoreHorizontal, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import { MixcloudOEmbedPlayer } from "./mixcloud-oembed-player"
+import { safeRenderText } from '@/lib/utils/rich-text'
 
 interface Track {
   id: string
@@ -178,15 +179,22 @@ export function RealShowDetail({ showId }: RealShowDetailProps) {
 
                     {show.tags && show.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2">
-                        {show.tags.map((tag, index) => (
-                          <Badge
-                            key={index}
-                            variant="outline"
-                            className="border-[#a0522d] text-[#a0522d] bg-[#f5f1eb] hover:bg-[#a0522d] hover:text-[#f5f1eb]"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
+                        {show.tags
+                          .map((tag, index) => {
+                            const tagText = safeRenderText(tag);
+                            if (!tagText) return null;
+
+                            return (
+                              <Badge
+                                key={index}
+                                variant="outline"
+                                className="border-[#a0522d] text-[#a0522d] bg-[#f5f1eb] hover:bg-[#a0522d] hover:text-[#f5f1eb]"
+                              >
+                                {tagText}
+                              </Badge>
+                            );
+                          })
+                          .filter(Boolean)}
                       </div>
                     )}
 
