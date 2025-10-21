@@ -30,21 +30,42 @@ export function RadioProvider({ children }: { children: ReactNode }) {
     if (typeof window !== 'undefined' && !audioRef.current) {
       audioRef.current = new Audio(streamUrl)
       audioRef.current.volume = volume / 100
+      audioRef.current.preload = 'none' // Don't preload to avoid autoplay issues
 
       // Handle audio events
-      audioRef.current.addEventListener('play', () => setIsPlaying(true))
-      audioRef.current.addEventListener('pause', () => setIsPlaying(false))
-      audioRef.current.addEventListener('ended', () => setIsPlaying(false))
+      audioRef.current.addEventListener('play', () => {
+        console.log('Audio playing')
+        setIsPlaying(true)
+        setIsLoading(false)
+      })
+      audioRef.current.addEventListener('pause', () => {
+        console.log('Audio paused')
+        setIsPlaying(false)
+      })
+      audioRef.current.addEventListener('ended', () => {
+        console.log('Audio ended')
+        setIsPlaying(false)
+      })
       audioRef.current.addEventListener('error', (e) => {
         console.error('Audio error:', e)
+        console.error('Audio error details:', audioRef.current?.error)
         setIsPlaying(false)
+        setIsLoading(false)
+      })
+      audioRef.current.addEventListener('loadstart', () => {
+        console.log('Audio loading...')
+        setIsLoading(true)
+      })
+      audioRef.current.addEventListener('canplay', () => {
+        console.log('Audio can play')
+        setIsLoading(false)
       })
     }
 
     return () => {
       if (audioRef.current) {
         audioRef.current.pause()
-        audioRef.current.src = ''
+        // Don't clear src in cleanup - let it persist
       }
     }
   }, [])

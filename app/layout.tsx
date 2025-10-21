@@ -6,6 +6,7 @@ import Script from "next/script"
 import "./globals.css"
 import { PersistentAudioPlayer } from "@/components/persistent-audio-player"
 import { UnifiedPersistentPlayer } from "@/components/unified-persistent-player"
+import { PersistentRadioPlayer } from "@/components/persistent-radio-player"
 import MobileNavigationWrapper from "@/components/mobile-navigation-wrapper"
 import { RadioProvider } from "@/lib/radio/context"
 import { UnifiedPlayerProvider } from "@/lib/audio/unified-player-context"
@@ -63,7 +64,8 @@ export default function RootLayout({
               <C1ThemeProvider>
                 <Suspense fallback={null}>{children}</Suspense>
                 <PersistentAudioPlayer />
-                <UnifiedPersistentPlayer />
+                {/* <UnifiedPersistentPlayer /> */}
+                <PersistentRadioPlayer />
                 <MobileNavigationWrapper />
                 <Databuddy
                   clientId="UCDi6utgTgVm6zH5yBl-W"
