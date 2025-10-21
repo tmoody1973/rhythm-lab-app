@@ -195,12 +195,12 @@ export function RealArchiveDiscoverySection() {
 
                       <Link href={`/show/${show.slug}`}>
                         <h3 className="text-foreground font-bold text-lg mb-2 leading-tight text-balance hover:text-primary transition-colors">
-                          {show.title}
+                          {safeRenderText(show.title)}
                         </h3>
                       </Link>
 
                       <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-2">
-                        {show.description || 'No description available'}
+                        {safeRenderText(show.description, 'No description available')}
                       </p>
 
                       {show.tags && show.tags.length > 0 && (
