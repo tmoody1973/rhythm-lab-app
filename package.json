@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.32.0",
+    "@crayonai/react-core": "^0.7.6",
+    "@crayonai/react-ui": "^0.8.41",
+    "@crayonai/stream": "^0.6.4",
     "@databuddy/sdk": "^2.1.77",
     "@elevenlabs/elevenlabs-js": "^2.16.0",
     "@hookform/resolvers": "^3.10.0",
@@ -45,9 +48,10 @@
     "@storyblok/richtext": "^3.8.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.57.4",
+    "@thesysai/genui-sdk": "^0.6.34",
     "@types/lodash": "^4.17.20",
     "@vercel/analytics": "1.3.1",
-    "ai": "^5.0.47",
+    "ai": "^5.0.60",
     "algoliasearch": "^5.39.0",
     "autoprefixer": "^10.4.21",
     "axios": "^1.12.2",
@@ -66,6 +70,7 @@
     "lucide-react": "^0.400.0",
     "next": "^15.5.3",
     "next-themes": "^0.4.6",
+    "openai": "^6.2.0",
     "posthog-js": "^1.273.1",
     "posthog-node": "^5.9.3",
     "prisma": "^6.16.2",
@@ -76,6 +81,7 @@
     "react-hook-form": "^7.60.0",
     "react-instantsearch": "^7.16.3",
     "react-instantsearch-nextjs": "^1.0.2",
+    "react-markdown": "^10.1.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.4",
     "slugify": "^1.6.6",
@@ -87,7 +93,9 @@
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
-    "zod": "^4.1.9"
+    "zod": "^4.1.9",
+    "zod-to-json-schema": "^3.24.6",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@types/node": "^22",

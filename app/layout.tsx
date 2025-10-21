@@ -12,6 +12,7 @@ import { UnifiedPlayerProvider } from "@/lib/audio/unified-player-context"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ClerkAuthProvider } from "@/contexts/clerk-auth-context"
 import { Databuddy } from '@databuddy/sdk'
+import { C1ThemeProvider } from '@/components/providers/C1ThemeProvider'
 
 const inter = Inter({
   subsets: ["latin"],
@@ -59,22 +60,24 @@ export default function RootLayout({
         <ClerkAuthProvider>
           <RadioProvider>
             <UnifiedPlayerProvider>
-              <Suspense fallback={null}>{children}</Suspense>
-              <PersistentAudioPlayer />
-              <UnifiedPersistentPlayer />
-              <MobileNavigationWrapper />
-              <Databuddy
-                clientId="UCDi6utgTgVm6zH5yBl-W"
-                trackOutgoingLinks={true}
-                trackInteractions={true}
-                trackEngagement={true}
-                trackScrollDepth={true}
-                trackExitIntent={true}
-                trackBounceRate={true}
-                trackWebVitals={true}
-                trackErrors={true}
-                enableBatching={true}
-              />
+              <C1ThemeProvider>
+                <Suspense fallback={null}>{children}</Suspense>
+                <PersistentAudioPlayer />
+                <UnifiedPersistentPlayer />
+                <MobileNavigationWrapper />
+                <Databuddy
+                  clientId="UCDi6utgTgVm6zH5yBl-W"
+                  trackOutgoingLinks={true}
+                  trackInteractions={true}
+                  trackEngagement={true}
+                  trackScrollDepth={true}
+                  trackExitIntent={true}
+                  trackBounceRate={true}
+                  trackWebVitals={true}
+                  trackErrors={true}
+                  enableBatching={true}
+                />
+              </C1ThemeProvider>
             </UnifiedPlayerProvider>
           </RadioProvider>
         </ClerkAuthProvider>

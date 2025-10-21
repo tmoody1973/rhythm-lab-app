@@ -23,6 +23,7 @@ const isPublicRoute = createRouteMatcher([
   '/shows',
   '/artists',
   '/blog',
+  '/ai-chat',
   '/shows/(.*)',
   '/artists/(.*)',
   '/blog/(.*)',
