@@ -1,69 +1,18 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useRadio } from "@/lib/radio/context"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import type { Song } from "@/lib/database/types"
 
-interface PersistentRadioPlayerProps {
-  currentSong?: Song | null
-  isLive?: boolean
-}
-
-export function PersistentRadioPlayer({ currentSong, isLive }: PersistentRadioPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [volume, setVolume] = useState([50])
-  const [isLoading, setIsLoading] = useState(false)
-  const audioRef = useRef<HTMLAudioElement>(null)
-
-  const streamUrl = "https://wyms.streamguys1.com/rhythmLabRadio?platform=rlr_app"
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume[0] / 100
-    }
-  }, [volume])
-
-  const handlePlayPause = async () => {
-    if (!audioRef.current) return
-
-    try {
-      if (isPlaying) {
-        audioRef.current.pause()
-        setIsPlaying(false)
-      } else {
-        setIsLoading(true)
-        await audioRef.current.play()
-        setIsPlaying(true)
-      }
-    } catch (error) {
-      console.error('Audio playback failed:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+export function PersistentRadioPlayer() {
+  const { currentSong, isLive, isPlaying, volume, togglePlayPause, setVolume, isLoading } = useRadio()
 
   const handleVolumeChange = (newVolume: number[]) => {
-    setVolume(newVolume)
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume[0] / 100
-    }
+    setVolume(newVolume[0])
   }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-card border-t-2 border-border/50 backdrop-blur-sm z-30 shadow-lg">
-      <audio
-        ref={audioRef}
-        src={streamUrl}
-        preload="none"
-        onLoadStart={() => setIsLoading(true)}
-        onCanPlay={() => setIsLoading(false)}
-        onError={() => {
-          setIsLoading(false)
-          setIsPlaying(false)
-        }}
-      />
-
       <div className="px-4 py-3">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
 
@@ -101,7 +50,7 @@ export function PersistentRadioPlayer({ currentSong, isLive }: PersistentRadioPl
 
             {/* Play/Pause Button */}
             <Button
-              onClick={handlePlayPause}
+              onClick={togglePlayPause}
               disabled={isLoading}
               className="w-10 h-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
               size="sm"
@@ -125,7 +74,7 @@ export function PersistentRadioPlayer({ currentSong, isLive }: PersistentRadioPl
                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
               </svg>
               <Slider
-                value={volume}
+                value={[volume]}
                 onValueChange={handleVolumeChange}
                 max={100}
                 step={1}

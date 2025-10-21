@@ -53,10 +53,9 @@ export function MiniMixcloudOEmbedPlayer({
       setLoading(true)
       setError('')
 
-      // Use Mixcloud's oEmbed endpoint with mini parameters and light mode
-      const oEmbedUrl = new URL('https://app.mixcloud.com/oembed')
+      // Use our proxy API to avoid CORS issues
+      const oEmbedUrl = new URL('/api/mixcloud/oembed', window.location.origin)
       oEmbedUrl.searchParams.set('url', mixcloudUrl)
-      oEmbedUrl.searchParams.set('format', 'json')
       oEmbedUrl.searchParams.set('maxwidth', '400')
       oEmbedUrl.searchParams.set('maxheight', '120')
       oEmbedUrl.searchParams.set('light', '1')
@@ -85,7 +84,7 @@ export function MiniMixcloudOEmbedPlayer({
         if (modifiedHtml.includes('src="') && !modifiedHtml.includes('light=1')) {
           modifiedHtml = modifiedHtml.replace(
             /src="([^"]*)"/,
-            (match, src) => {
+            (_match, src) => {
               const separator = src.includes('?') ? '&' : '?'
               return `src="${src}${separator}light=1"`
             }

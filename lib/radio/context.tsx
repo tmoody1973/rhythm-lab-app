@@ -1,12 +1,16 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from "react"
 import type { Song } from "@/lib/database/types"
 
 interface RadioContextType {
   currentSong: Song | null
   isLive: boolean
   isLoading: boolean
+  isPlaying: boolean
+  volume: number
+  togglePlayPause: () => void
+  setVolume: (volume: number) => void
 }
 
 const RadioContext = createContext<RadioContextType | undefined>(undefined)
@@ -15,6 +19,60 @@ export function RadioProvider({ children }: { children: ReactNode }) {
   const [currentSong, setCurrentSong] = useState<Song | null>(null)
   const [isLive, setIsLive] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [volume, setVolumeState] = useState(50)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  const streamUrl = "https://wyms.streamguys1.com/rhythmLabRadio?platform=rlr_app"
+
+  // Initialize audio element
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !audioRef.current) {
+      audioRef.current = new Audio(streamUrl)
+      audioRef.current.volume = volume / 100
+
+      // Handle audio events
+      audioRef.current.addEventListener('play', () => setIsPlaying(true))
+      audioRef.current.addEventListener('pause', () => setIsPlaying(false))
+      audioRef.current.addEventListener('ended', () => setIsPlaying(false))
+      audioRef.current.addEventListener('error', (e) => {
+        console.error('Audio error:', e)
+        setIsPlaying(false)
+      })
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.src = ''
+      }
+    }
+  }, [])
+
+  // Update volume when it changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100
+    }
+  }, [volume])
+
+  const togglePlayPause = async () => {
+    if (!audioRef.current) return
+
+    try {
+      if (isPlaying) {
+        audioRef.current.pause()
+      } else {
+        await audioRef.current.play()
+      }
+    } catch (error) {
+      console.error('Playback error:', error)
+    }
+  }
+
+  const setVolume = (newVolume: number) => {
+    setVolumeState(newVolume)
+  }
 
   useEffect(() => {
     const fetchRadioData = async () => {
@@ -80,7 +138,7 @@ export function RadioProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <RadioContext.Provider value={{ currentSong, isLive, isLoading }}>
+    <RadioContext.Provider value={{ currentSong, isLive, isLoading, isPlaying, volume, togglePlayPause, setVolume }}>
       {children}
     </RadioContext.Provider>
   )

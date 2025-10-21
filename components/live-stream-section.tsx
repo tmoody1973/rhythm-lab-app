@@ -26,7 +26,7 @@ interface CurrentShowContent {
 }
 
 export function LiveStreamSection() {
-  const { currentSong, isLive, isLoading: radioLoading } = useRadio()
+  const { currentSong, isLive, isLoading: radioLoading, isPlaying, togglePlayPause } = useRadio()
   const [recentSongs, setRecentSongs] = useState<Song[]>([])
   const [liveStream, setLiveStream] = useState<LiveStreamStatus | null>(null)
   const [currentShowContent, setCurrentShowContent] = useState<CurrentShowContent | null>(null)
@@ -235,11 +235,24 @@ export function LiveStreamSection() {
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium uppercase tracking-widest text-muted-foreground">TRACK DETAILS</span>
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
-                  <span className="text-sm">▶️</span>
-                </Button>
-                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
-                  <span className="text-sm">🔊</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-10 w-10 rounded-full p-0 bg-primary hover:bg-primary/90 text-primary-foreground transition-all"
+                  onClick={togglePlayPause}
+                  disabled={radioLoading}
+                >
+                  {radioLoading ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent animate-spin rounded-full" />
+                  ) : isPlaying ? (
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  )}
                 </Button>
               </div>
             </div>

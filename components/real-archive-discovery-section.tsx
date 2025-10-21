@@ -9,6 +9,7 @@ import { FavoriteButton } from "@/components/favorite-button"
 import { MiniMixcloudOEmbedPlayer } from "@/components/mini-mixcloud-oembed-player"
 import { Search, Clock, Music2 } from "lucide-react"
 import Link from "next/link"
+import { safeRenderText } from '@/lib/utils/rich-text'
 
 interface Show {
   id: string
@@ -21,7 +22,7 @@ interface Show {
   mixcloud_url: string
   duration_formatted: string
   track_count: number
-  tags: string[]
+  tags: (string | any)[] // Allow for potential object types from API
 }
 
 interface ShowsResponse {
@@ -204,15 +205,22 @@ export function RealArchiveDiscoverySection() {
 
                       {show.tags && show.tags.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-3">
-                          {show.tags.map((tag, tagIndex) => (
-                            <Badge
-                              key={tagIndex}
-                              variant="outline"
-                              className={`${colors.border} ${colors.text} text-xs px-3 py-1 rounded-full font-medium`}
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
+                          {show.tags
+                            .map((tag, tagIndex) => {
+                              const tagText = safeRenderText(tag);
+                              if (!tagText) return null;
+
+                              return (
+                                <Badge
+                                  key={tagIndex}
+                                  variant="outline"
+                                  className={`${colors.border} ${colors.text} text-xs px-3 py-1 rounded-full font-medium`}
+                                >
+                                  {tagText}
+                                </Badge>
+                              );
+                            })
+                            .filter(Boolean)}
                         </div>
                       )}
 
