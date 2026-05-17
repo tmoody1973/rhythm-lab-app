@@ -18,8 +18,10 @@ export async function uploadImageFromUrl(imageUrl: string): Promise<string> {
   if (!res.ok) throw new Error(`Failed to fetch image: ${imageUrl} (${res.status})`)
   const buffer = await res.arrayBuffer()
   const filename = imageUrl.split('/').pop()?.split('?')[0] ?? 'image'
+  const contentType = res.headers.get('content-type') ?? 'image/jpeg'
   const asset = await sanityWriteClient.assets.upload('image', Buffer.from(buffer), {
     filename,
+    contentType,
   })
   return asset._id
 }

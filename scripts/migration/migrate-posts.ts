@@ -85,10 +85,10 @@ async function migratePosts(): Promise<void> {
     const doc = {
       _type: 'post',
       title,
-      subtitle: content.subtitle ?? '',
+      ...(content.subtitle ? { subtitle: content.subtitle } : {}),
       slug: { _type: 'slug', current: slug },
       publishedAt: story.first_published_at ?? story.created_at,
-      excerpt: content.excerpt ?? content.intro ?? '',
+      ...(content.excerpt || content.intro ? { excerpt: content.excerpt || content.intro } : {}),
       readingTime:
         content.reading_time ?? content.estimated_read_time ?? null,
       body,

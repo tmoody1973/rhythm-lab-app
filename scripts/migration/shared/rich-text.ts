@@ -78,29 +78,19 @@ function nodeToPortableText(node: StoryblokNode): unknown[] {
   }
 
   if (node.type === 'blockquote') {
-    return [
-      {
-        _type: 'block',
-        _key: randomKey(),
-        style: 'blockquote',
-        children: (node.content ?? []).flatMap((child) =>
-          (child.content ?? []).map(spanToChild)
-        ),
-        markDefs: [],
-      },
-    ]
-  }
-
-  if (node.type === 'hard_break') {
-    return [
-      {
-        _type: 'block',
-        _key: randomKey(),
-        style: 'normal',
-        children: [{ _type: 'span', _key: randomKey(), text: '\n', marks: [] }],
-        markDefs: [],
-      },
-    ]
+    // Each child paragraph becomes a separate blockquote block
+    return (node.content ?? []).flatMap(child => {
+      if (child.type === 'paragraph') {
+        return [{
+          _type: 'block',
+          _key: randomKey(),
+          style: 'blockquote',
+          children: (child.content ?? []).map(spanToChild),
+          markDefs: [],
+        }]
+      }
+      return nodeToPortableText(child)
+    })
   }
 
   // Skip unknown node types silently
@@ -113,6 +103,16 @@ function spanToChild(node: StoryblokNode): {
   text: string
   marks: string[]
 } {
+  // hard_break is an inline <br> — emit as a newline span
+  if (node.type === 'hard_break') {
+    return {
+      _type: 'span',
+      _key: randomKey(),
+      text: '\n',
+      marks: [],
+    }
+  }
+
   const marks: string[] = (node.marks ?? []).flatMap((m) => {
     if (m.type === 'bold') return ['strong']
     if (m.type === 'italic') return ['em']
