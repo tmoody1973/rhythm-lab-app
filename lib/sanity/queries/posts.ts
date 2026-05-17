@@ -8,7 +8,7 @@ export const ALL_POSTS_QUERY = defineQuery(`
     "slug": slug.current,
     publishedAt,
     excerpt,
-    coverImage,
+    "coverImage": coverImage{asset, hotspot, crop, alt},
     readingTime,
     "tags": tags[]->{label, "slug": slug.current},
     "author": author->{name, avatar}
@@ -23,7 +23,7 @@ export const POST_BY_SLUG_QUERY = defineQuery(`
     "slug": slug.current,
     publishedAt,
     excerpt,
-    coverImage,
+    "coverImage": coverImage{asset, hotspot, crop, alt},
     body,
     readingTime,
     "tags": tags[]->{label, "slug": slug.current},
