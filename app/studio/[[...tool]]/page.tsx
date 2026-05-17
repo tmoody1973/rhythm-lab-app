@@ -1,12 +1,8 @@
+'use client'
+
 import { NextStudio } from 'next-sanity/studio'
 import config from '../../../sanity.config'
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
-
-export default async function StudioPage() {
-  const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
+export default function StudioPage() {
   return <NextStudio config={config} />
 }
