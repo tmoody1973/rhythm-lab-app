@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'content.title is required' }, { status: 400 })
     }
 
-    const slug = slugify(content.title)
+    const slug = slugify(content.title) || `post-${Date.now().toString(36)}`
 
     const doc = {
       _type: sanityType,
