@@ -14,6 +14,7 @@ import { AuthProvider } from "@/contexts/auth-context"
 import { ClerkAuthProvider } from "@/contexts/clerk-auth-context"
 import { Databuddy } from '@databuddy/sdk'
 import { C1ThemeProvider } from '@/components/providers/C1ThemeProvider'
+import { SanityLive } from '@/lib/sanity/live'
 
 const inter = Inter({
   subsets: ["latin"],
@@ -79,6 +80,7 @@ export default function RootLayout({
                   trackErrors={true}
                   enableBatching={true}
                 />
+                <SanityLive />
               </C1ThemeProvider>
             </UnifiedPlayerProvider>
           </RadioProvider>
