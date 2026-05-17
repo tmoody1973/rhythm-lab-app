@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdminAuth } from '@/lib/auth/admin'
-import { createMixcloudShowStory } from '@/lib/storyblok-management'
-import { parsePlaylistText, tracksToDbFormat, tracksToStoryblokFormat } from '@/lib/playlist-parser'
+import { upsertEpisode, type TracklistItem } from '@/lib/sanity/episodeHelpers'
+import { parsePlaylistText, tracksToDbFormat } from '@/lib/playlist-parser'
 
 interface CreateShowRequest {
   title: string
@@ -15,8 +15,8 @@ interface CreateShowRequest {
 interface CreateShowResponse {
   success: boolean
   show_id?: string
-  storyblok_id?: number
-  storyblok_slug?: string
+  sanity_episode_id?: string
+  sanity_slug?: string
   tracks_count?: number
   message?: string
   errors?: string[]
@@ -142,7 +142,6 @@ const handler = withAdminAuth(async (request: NextRequest): Promise<NextResponse
 
     // 3. Insert tracks if playlist was provided
     let tracksCount = 0
-    let storyblokTracklist: any[] = []
 
     if (parseResult && parseResult.tracks.length > 0) {
       // Save tracks to database
@@ -159,69 +158,62 @@ const handler = withAdminAuth(async (request: NextRequest): Promise<NextResponse
         errors.push(`Failed to save tracks: ${tracksError.message}`)
       } else {
         tracksCount = parseResult.tracks.length
-        // Prepare tracks for Storyblok
-        storyblokTracklist = tracksToStoryblokFormat(parseResult.tracks)
       }
     }
 
-    // 4. Create Storyblok story
-    let storyblokResponse: any = null
+    // 4. Create/update Sanity episode draft (replaces Storyblok)
+    let sanityEpisodeId: string | undefined
+    let sanitySlug: string | undefined
+
     try {
-      storyblokResponse = await createMixcloudShowStory({
+      const tracklist: TracklistItem[] = (parseResult?.tracks ?? [])
+        .filter((t: any) => t.artist && t.title)
+        .map((t: any) => ({
+          startTime: t.start_time ?? 0,
+          artistName: String(t.artist ?? ''),
+          trackName: String(t.title ?? ''),
+        }))
+
+      const mixcloudKey = body.mixcloud_url.startsWith('https://www.mixcloud.com')
+        ? body.mixcloud_url.replace('https://www.mixcloud.com', '')
+        : body.mixcloud_url
+
+      const episodeResult = await upsertEpisode({
+        mixcloudKey,
         title: body.title,
-        description: body.description,
-        mixcloudUrl: body.mixcloud_url,
-        publishedDate,
-        tracklist: storyblokTracklist,
-        coverImageFile: body.cover_image,
-        showId: showId
+        date: body.published_date,
+        coverImageUrl: typeof body.cover_image === 'string' ? body.cover_image : undefined,
+        tracklist,
       })
 
-      // Update show record with Storyblok ID and slug
-      console.log('📝 Updating show with Storyblok data:', {
-        showId,
-        storyblok_id: storyblokResponse.story.id.toString(),
-        slug: storyblokResponse.story.slug
-      })
+      sanityEpisodeId = episodeResult.sanityId
+      sanitySlug = episodeResult.slug
 
-      const { error: updateError } = await supabase
-        .from('shows')
-        .update({
-          storyblok_id: storyblokResponse.story.id.toString(),
-          slug: storyblokResponse.story.slug, // Save Storyblok's slug with timestamp
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', showId)
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+      fetch(`${baseUrl}/api/episodes/generate-description`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mixcloudKey, title: body.title, tracklist, tags: [] }),
+      }).catch(err => console.warn('AI description generation failed:', err))
 
-      if (updateError) {
-        console.error('❌ Failed to update show with Storyblok data:', updateError)
-        warnings.push(`Show created but failed to link Storyblok ID: ${updateError.message}`)
-      } else {
-        console.log('✅ Successfully updated show with slug:', storyblokResponse.story.slug)
-      }
-
-    } catch (storyblokError) {
-      const errorMessage = storyblokError instanceof Error ? storyblokError.message : 'Unknown Storyblok error'
-      errors.push(`Storyblok story creation failed: ${errorMessage}`)
-      console.error('Storyblok creation error:', storyblokError)
+    } catch (episodeError) {
+      console.error('Sanity episode creation failed:', episodeError)
+      // Non-fatal: show was already saved to database
     }
 
     // 5. Prepare response
     const response: CreateShowResponse = {
       success: errors.length === 0,
       show_id: showId,
+      sanity_episode_id: sanityEpisodeId,
+      sanity_slug: sanitySlug,
       tracks_count: tracksCount,
       errors,
       warnings,
-      message: `Show created successfully${storyblokResponse ? ' and synced to Storyblok' : ''}`
+      message: `Show created successfully${sanitySlug ? ` — episode at /episodes/${sanitySlug}` : ''}`
     }
 
-    if (storyblokResponse) {
-      response.storyblok_id = storyblokResponse.story.id
-      response.storyblok_slug = storyblokResponse.story.slug
-    }
-
-    const statusCode = errors.length > 0 ? (storyblokResponse ? 207 : 500) : 200
+    const statusCode = errors.length > 0 ? 207 : 200
 
     return NextResponse.json(response, { status: statusCode })
 
