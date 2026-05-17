@@ -73,7 +73,7 @@ export default function ContentGenerationPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null)
   const [isPublishing, setIsPublishing] = useState(false)
-  const [publishResult, setPublishResult] = useState<{ success: boolean; url?: string; storyId?: string; error?: string } | null>(null)
+  const [publishResult, setPublishResult] = useState<{ success: boolean; url?: string; studioUrl?: string; message?: string; error?: string } | null>(null)
   const [selectedImage, setSelectedImage] = useState<ImageResult & { uploadedAsset?: any } | null>(null)
   const [discographyOptions, setDiscographyOptions] = useState<DiscographyOptions>({
     includeDiscography: true,
@@ -202,14 +202,14 @@ export default function ContentGenerationPage() {
     }
   }
 
-  const handlePublishToStoryblok = async () => {
+  const handlePublishToSanity = async () => {
     if (!generatedContent) return
 
     setIsPublishing(true)
     setPublishResult(null)
 
     try {
-      const response = await fetch('/api/admin/publish-to-storyblok', {
+      const response = await fetch('/api/admin/publish-to-sanity', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -217,14 +217,14 @@ export default function ContentGenerationPage() {
         body: JSON.stringify({
           content: generatedContent,
           contentType: request.type,
-          selectedImage: selectedImage, // Include selected image data
-          discography: discographyData, // Include discography data for artist profiles
-          selectedArtist: selectedArtist // Include selected artist with discogs ID/URL
+          selectedImage: selectedImage,
+          discography: discographyData,
+          selectedArtist: selectedArtist
         }),
       })
 
       if (!response.ok) {
-        throw new Error('Failed to publish to Storyblok')
+        throw new Error('Failed to publish to Sanity')
       }
 
       const result = await response.json()
@@ -300,8 +300,8 @@ export default function ContentGenerationPage() {
   } | null>(null)
   const [scriptGenerationError, setScriptGenerationError] = useState<string | null>(null)
   const [audioGenerationError, setAudioGenerationError] = useState<string | null>(null)
-  const [isUploadingToStoryblok, setIsUploadingToStoryblok] = useState(false)
-  const [storyblokUploadResult, setStoryblokUploadResult] = useState<any>(null)
+  const [isPublishingToSanity, setIsPublishingToSanity] = useState(false)
+  const [sanityPublishResult, setSanityPublishResult] = useState<any>(null)
   const [isPublishingToPodbean, setIsPublishingToPodbean] = useState(false)
   const [podbeanPublishResult, setPodbeanPublishResult] = useState<any>(null)
   const [currentPodcastId, setCurrentPodcastId] = useState<string | null>(null)
@@ -328,7 +328,7 @@ export default function ContentGenerationPage() {
           status: 'processing',
           script: null,
           audio: null,
-          storyblok: null,
+          sanityId: publishResult?.sanityId ?? null,
           podbean: null,
           metadata: {
             generatedBy: 'admin-ui'
@@ -510,80 +510,24 @@ export default function ContentGenerationPage() {
   const handleUploadToSupabase = async () => {
     if (!audioResult || !generatedContent) return
 
-    setIsUploadingToStoryblok(true)
-    setStoryblokUploadResult(null)
+    setIsPublishingToSanity(true)
+    setSanityPublishResult(null)
 
     try {
-      // If audio is already uploaded to storage, update existing Storyblok story if available
+      // If audio is already uploaded to storage, just show storage success
       if (audioResult.uploadedToStorage && audioResult.url) {
-        // Try to update existing Storyblok story with audio URL if story ID is available
-        if (publishResult?.storyId) {
-          try {
-            console.log(`Updating existing Storyblok story ${publishResult.storyId} with audio URL`)
+        setSanityPublishResult({
+          success: true,
+          audio: {
+            url: audioResult.url,
+            fileName: audioResult.fileName || `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`,
+            size: audioResult.size,
+            storage: audioResult.storage || 'supabase'
+          },
+          message: 'Audio already uploaded to storage'
+        })
 
-            const updateResponse = await fetch('/api/storyblok/update-audio', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                storyId: publishResult.storyId,
-                audioUrl: audioResult.url,
-                audioTitle: `Sound Refinery: ${generatedContent.title}`
-              }),
-            })
-
-            const updateResult = await updateResponse.json()
-
-            if (updateResult.success) {
-              setStoryblokUploadResult({
-                success: true,
-                audio: {
-                  url: audioResult.url,
-                  fileName: audioResult.fileName || `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`,
-                  size: audioResult.size,
-                  storage: audioResult.storage || 'supabase'
-                },
-                storyUpdate: {
-                  success: true,
-                  storyId: publishResult.storyId,
-                  updatedAt: new Date().toISOString()
-                },
-                message: 'Audio synced to existing Storyblok story'
-              })
-            } else {
-              throw new Error(updateResult.message || 'Failed to update Storyblok story')
-            }
-          } catch (storyUpdateError) {
-            console.error('Failed to update Storyblok story with audio:', storyUpdateError)
-            // Still show success for storage, but note the Storyblok sync issue
-            setStoryblokUploadResult({
-              success: true,
-              audio: {
-                url: audioResult.url,
-                fileName: audioResult.fileName || `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`,
-                size: audioResult.size,
-                storage: audioResult.storage || 'supabase'
-              },
-              message: 'Audio uploaded to storage, but failed to sync to Storyblok',
-              warning: storyUpdateError instanceof Error ? storyUpdateError.message : 'Storyblok sync failed'
-            })
-          }
-        } else {
-          // No story ID available, just show storage success
-          setStoryblokUploadResult({
-            success: true,
-            audio: {
-              url: audioResult.url,
-              fileName: audioResult.fileName || `sound-refinery-${generatedContent.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.mp3`,
-              size: audioResult.size,
-              storage: audioResult.storage || 'supabase'
-            },
-            message: 'Audio already uploaded to storage (no Storyblok story to update)'
-          })
-        }
-
-        setIsUploadingToStoryblok(false)
+        setIsPublishingToSanity(false)
         return
       }
 
@@ -605,7 +549,6 @@ export default function ContentGenerationPage() {
           audioMimeType: audioResult.mimeType,
           fileName: fileName,
           title: title,
-          storyId: publishResult?.storyId // Include story ID if content was published to Storyblok
         }),
       })
 
@@ -629,9 +572,9 @@ export default function ContentGenerationPage() {
       }
 
       const result = await response.json()
-      setStoryblokUploadResult(result)
+      setSanityPublishResult(result)
 
-      // Update podcast history with Storyblok upload
+      // Update podcast history with audio upload
       if (currentPodcastId && result.success) {
         await fetch('/api/admin/podcast-history', {
           method: 'PUT',
@@ -643,26 +586,21 @@ export default function ContentGenerationPage() {
             audio: {
               audioUrl: result.asset?.url
             },
-            storyblok: {
-              assetId: result.asset?.id,
-              storyId: result.storyUpdate?.storyId,
-              assetUrl: result.asset?.url
-            },
             metadata: {
-              uploadedToStoryblokAt: new Date().toISOString(),
+              uploadedToStorageAt: new Date().toISOString(),
               generatedBy: 'admin-ui'
             }
           }),
         })
       }
     } catch (error) {
-      console.error('Storyblok upload error:', error)
-      setStoryblokUploadResult({
+      console.error('Upload error:', error)
+      setSanityPublishResult({
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to upload to Storyblok'
+        error: error instanceof Error ? error.message : 'Failed to upload audio'
       })
     } finally {
-      setIsUploadingToStoryblok(false)
+      setIsPublishingToSanity(false)
     }
   }
 
@@ -945,7 +883,7 @@ export default function ContentGenerationPage() {
                         </div>
 
                         <p className="text-xs text-purple-700">
-                          Discography will be automatically fetched from Discogs and added as release_item blocks in Storyblok.
+                          Discography will be automatically fetched from Discogs and added as release items in Sanity.
                         </p>
                       </div>
                     )}
@@ -1123,7 +1061,7 @@ export default function ContentGenerationPage() {
                       Discography ({discographyData.length} releases)
                     </CardTitle>
                     <CardDescription>
-                      Releases fetched from Discogs that will be added to the Storyblok profile
+                      Releases fetched from Discogs that will be added to the Sanity profile
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -1163,7 +1101,7 @@ export default function ContentGenerationPage() {
                     </div>
                     {discographyData.length > 12 && (
                       <p className="text-sm text-muted-foreground mt-4 text-center">
-                        Showing first 12 of {discographyData.length} releases. All will be included in Storyblok.
+                        Showing first 12 of {discographyData.length} releases. All will be included in Sanity.
                       </p>
                     )}
                   </CardContent>
@@ -1172,7 +1110,7 @@ export default function ContentGenerationPage() {
 
               <div className="flex space-x-4">
                 <Button
-                  onClick={handlePublishToStoryblok}
+                  onClick={handlePublishToSanity}
                   disabled={isPublishing}
                   className="flex-1"
                 >
@@ -1184,7 +1122,7 @@ export default function ContentGenerationPage() {
                   ) : (
                     <>
                       <Upload className="w-4 h-4 mr-2" />
-                      Publish to Storyblok
+                      Publish to Sanity
                     </>
                   )}
                 </Button>
@@ -1196,14 +1134,16 @@ export default function ContentGenerationPage() {
                     {publishResult.success ? (
                       <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
                         <div>
-                          <p className="font-medium text-green-900">Successfully published to Storyblok!</p>
-                          <p className="text-sm text-green-700">Content has been created as a draft in your Storyblok space.</p>
+                          <p className="font-medium text-green-900">Successfully published to Sanity!</p>
+                          <p className="text-sm text-green-700">
+                            {publishResult.message || 'Draft created in Sanity Studio.'}
+                          </p>
                         </div>
-                        {publishResult.url && (
+                        {publishResult.studioUrl && (
                           <Button variant="outline" size="sm" asChild>
-                            <a href={publishResult.url} target="_blank" rel="noopener noreferrer">
+                            <a href={publishResult.studioUrl} target="_blank" rel="noopener noreferrer">
                               <ExternalLink className="w-4 h-4 mr-2" />
-                              View in Storyblok
+                              View in Sanity Studio
                             </a>
                           </Button>
                         )}
@@ -1424,10 +1364,10 @@ export default function ContentGenerationPage() {
                           <Button
                             onClick={handleUploadToSupabase}
                             size="sm"
-                            disabled={isUploadingToStoryblok || audioResult.uploadedToStorage}
+                            disabled={isPublishingToSanity || audioResult.uploadedToStorage}
                             variant={audioResult.uploadedToStorage ? "secondary" : "default"}
                           >
-                            {isUploadingToStoryblok ? (
+                            {isPublishingToSanity ? (
                               <>
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                 Uploading...
@@ -1490,39 +1430,36 @@ export default function ContentGenerationPage() {
                     </div>
 
                     {/* Cloud Storage Upload Results */}
-                    {storyblokUploadResult && (
+                    {sanityPublishResult && (
                       <div className={`p-4 rounded-lg border ${
-                        storyblokUploadResult.success
+                        sanityPublishResult.success
                           ? 'bg-green-50 border-green-200'
                           : 'bg-red-50 border-red-200'
                       }`}>
                         <div className="flex items-center justify-between">
                           <div>
                             <p className={`font-medium ${
-                              storyblokUploadResult.success ? 'text-green-900' : 'text-red-900'
+                              sanityPublishResult.success ? 'text-green-900' : 'text-red-900'
                             }`}>
-                              {storyblokUploadResult.success
+                              {sanityPublishResult.success
                                 ? 'Audio Uploaded to Cloud Storage Successfully!'
                                 : 'Cloud Storage Upload Failed'
                               }
                             </p>
-                            {storyblokUploadResult.success ? (
+                            {sanityPublishResult.success ? (
                               <div className="text-sm text-green-700 mt-1">
-                                <p>Storage: {storyblokUploadResult.audio?.storage || 'Supabase'}</p>
-                                <p>File: {storyblokUploadResult.audio?.fileName}</p>
-                                {storyblokUploadResult.storyUpdate && (
-                                  <p>✅ Deep-dive article updated with podcast audio URL</p>
-                                )}
+                                <p>Storage: {sanityPublishResult.audio?.storage || 'Supabase'}</p>
+                                <p>File: {sanityPublishResult.audio?.fileName}</p>
                               </div>
                             ) : (
                               <p className="text-sm text-red-700 mt-1">
-                                {storyblokUploadResult.error}
+                                {sanityPublishResult.error}
                               </p>
                             )}
                           </div>
-                          {storyblokUploadResult.success && storyblokUploadResult.audio?.url && (
+                          {sanityPublishResult.success && sanityPublishResult.audio?.url && (
                             <Button size="sm" variant="outline" asChild>
-                              <a href={storyblokUploadResult.audio.url} target="_blank" rel="noopener noreferrer">
+                              <a href={sanityPublishResult.audio.url} target="_blank" rel="noopener noreferrer">
                                 <ExternalLink className="w-4 h-4 mr-2" />
                                 Listen
                               </a>
@@ -1743,11 +1680,11 @@ export default function ContentGenerationPage() {
                           </div>
 
                           <div className="flex items-center gap-2 ml-4">
-                            {entry.storyblokUrl && (
+                            {entry.sanityUrl && (
                               <Button size="sm" variant="outline" asChild>
-                                <a href={entry.storyblokUrl} target="_blank" rel="noopener noreferrer">
+                                <a href={entry.sanityUrl} target="_blank" rel="noopener noreferrer">
                                   <Settings className="w-3 h-3 mr-1" />
-                                  Edit in Storyblok
+                                  Edit in Sanity
                                 </a>
                               </Button>
                             )}

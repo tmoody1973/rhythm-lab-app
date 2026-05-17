@@ -95,7 +95,7 @@ export default async function ArtistProfilePage({ params }: ArtistProfilePagePro
                 className="text-white text-sm px-4 py-2 rounded-full font-medium"
                 style={{ backgroundColor: profileColor }}
               >
-                {profile.genre?.toUpperCase() || 'ARTIST PROFILE'}
+                {typeof profile.genre === 'string' ? profile.genre.toUpperCase() : 'ARTIST PROFILE'}
               </Badge>
             </div>
 

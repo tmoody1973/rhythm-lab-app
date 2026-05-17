@@ -25,7 +25,7 @@ export default function AdminDashboardPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Mixcloud Import</CardTitle>
               <CardDescription>
-                Import shows from Mixcloud API into Storyblok
+                Import shows from Mixcloud API
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -110,7 +110,7 @@ export default function AdminDashboardPage() {
               <Badge variant="default" className="bg-green-500">Online</Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Storyblok API</span>
+              <span className="text-sm font-medium">Sanity CMS</span>
               <Badge variant="default" className="bg-green-500">Connected</Badge>
             </div>
             <div className="flex items-center justify-between">
@@ -142,9 +142,9 @@ export default function AdminDashboardPage() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Button variant="outline" asChild>
-              <a href="https://app.storyblok.com" target="_blank" rel="noopener noreferrer">
-                Storyblok CMS
-              </a>
+              <Link href="/studio">
+                Sanity Studio
+              </Link>
             </Button>
             <Button variant="outline" asChild>
               <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer">

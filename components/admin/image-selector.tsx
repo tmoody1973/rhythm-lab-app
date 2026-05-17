@@ -97,46 +97,11 @@ export function ImageSelector({
 
   const handleImageSelect = async (image: ImageResult) => {
     setIsUploading(image.original)
-
     try {
-      const response = await fetch('/api/admin/upload-image-to-storyblok', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          imageUrl: image.original,
-          title: image.title,
-          alt: `${contentTitle} - ${image.title}`,
-          contentType
-        }),
-      })
-
-      if (!response.ok) {
-        // Get the error details from the response
-        let errorMessage = 'Failed to upload image'
-        try {
-          const errorData = await response.json()
-          errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`
-        } catch {
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`
-        }
-        throw new Error(errorMessage)
-      }
-
-      const result = await response.json()
-
-      if (result.success) {
-        onImageSelect({
-          ...image,
-          uploadedAsset: result.asset
-        })
-      } else {
-        throw new Error(result.error || 'Upload failed')
-      }
+      // Use the image URL directly — Storyblok upload replaced by Sanity migration
+      onImageSelect({ ...image, uploadedAsset: { url: image.original } })
     } catch (error) {
-      console.error('Image upload error:', error)
-      alert(`Error uploading image: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Image select error:', error)
     } finally {
       setIsUploading(null)
     }
