@@ -29,9 +29,16 @@ function getPostColor(index: number) {
 }
 
 export default async function BlogPage() {
-  const { data: blogPosts } = await sanityFetch({ query: ALL_POSTS_QUERY })
-  const posts = blogPosts ?? []
-  const hasPosts = posts.length > 0
+  let posts: any[] = []
+  let fetchError = false
+  try {
+    const { data } = await sanityFetch({ query: ALL_POSTS_QUERY })
+    posts = data ?? []
+  } catch (err) {
+    console.error('Failed to fetch blog posts from Sanity:', err)
+    fetchError = true
+  }
+  const hasPosts = !fetchError && posts.length > 0
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -49,7 +56,13 @@ export default async function BlogPage() {
           </p>
         </div>
 
-        {!hasPosts && (
+        {fetchError && (
+          <div className="text-center py-12">
+            <p className="text-red-500 text-lg">Failed to load blog posts. Please try again later.</p>
+          </div>
+        )}
+
+        {!hasPosts && !fetchError && (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">
               No blog posts available yet. Check back soon for fresh content!
@@ -121,9 +134,9 @@ export default async function BlogPage() {
                         </p>
                       )}
                       <div className="flex flex-wrap gap-1 mb-3">
-                        {post.tags?.slice(0, 2).map((tag, tagIdx) => (
+                        {post.tags?.slice(0, 2).map((tag) => (
                           <Badge
-                            key={tagIdx}
+                            key={tag.slug}
                             variant="outline"
                             className="text-xs px-2 py-1 rounded-full font-medium"
                             style={{ borderColor: postColor, color: postColor }}
