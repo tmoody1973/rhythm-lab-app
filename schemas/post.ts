@@ -14,11 +14,12 @@ export const post = defineType({
       options: { source: 'title', maxLength: 96 },
       validation: r => r.required(),
     }),
-    defineField({ name: 'publishedAt', title: 'Published At', type: 'datetime' }),
+    defineField({ name: 'publishedAt', title: 'Published At', type: 'datetime', initialValue: () => new Date().toISOString() }),
     defineField({
       name: 'author',
       title: 'Author',
       type: 'reference',
+      weak: true,
       to: [{ type: 'author' }],
     }),
     defineField({ name: 'excerpt', title: 'Excerpt', type: 'text', rows: 3 }),
@@ -58,7 +59,7 @@ export const post = defineType({
       fields: [
         defineField({ name: 'seoTitle', title: 'SEO Title', type: 'string' }),
         defineField({ name: 'metaDescription', title: 'Meta Description', type: 'text', rows: 2 }),
-        defineField({ name: 'ogImage', title: 'OG Image', type: 'image' }),
+        defineField({ name: 'ogImage', title: 'OG Image', type: 'image', options: { hotspot: true } }),
       ],
     }),
   ],
