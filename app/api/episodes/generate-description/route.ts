@@ -10,8 +10,6 @@ const sanityWriteClient = createClient({
   useCdn: false,
 })
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
 interface GenerateRequest {
   mixcloudKey: string
   title: string
@@ -59,6 +57,8 @@ export async function POST(request: NextRequest) {
     if (!process.env.OPENAI_API_KEY || !process.env.SANITY_API_WRITE_TOKEN) {
       return NextResponse.json({ error: 'Missing API keys' }, { status: 500 })
     }
+
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
     const tracklistText = tracklist?.length
       ? `Tracklist: ${tracklistToText(tracklist)}`
