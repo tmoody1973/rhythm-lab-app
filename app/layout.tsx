@@ -13,7 +13,6 @@ import { UnifiedPlayerProvider } from "@/lib/audio/unified-player-context"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ClerkAuthProvider } from "@/contexts/clerk-auth-context"
 import { Databuddy } from '@databuddy/sdk'
-import { SanityLive } from '@/lib/sanity/live'
 
 const inter = Inter({
   subsets: ["latin"],
@@ -77,7 +76,6 @@ export default function RootLayout({
                 trackErrors={true}
                 enableBatching={true}
               />
-              <SanityLive />
             </UnifiedPlayerProvider>
           </RadioProvider>
         </ClerkAuthProvider>
