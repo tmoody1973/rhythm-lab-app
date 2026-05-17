@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params
   const { data: post } = await sanityFetch({ query: POST_BY_SLUG_QUERY, params: { slug } })
-  if (!post) notFound()
+  if (!post) return notFound()
 
   const postColor = getPostColor(slug)
 
