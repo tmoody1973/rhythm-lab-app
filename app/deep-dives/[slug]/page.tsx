@@ -1,13 +1,14 @@
 import { Header } from "@/components/header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { EnhancedContentRenderer } from "@/components/enhanced-content-renderer"
-import { PodcastPlayButton } from "@/components/podcast-play-button"
-import { sb } from "@/src/lib/storyblok"
+import { PortableTextRenderer } from "@/components/portable-text-renderer"
+import { sanityFetch } from '@/lib/sanity/live'
+import { client } from '@/lib/sanity/client'
+import { DEEP_DIVE_BY_SLUG_QUERY, ALL_DEEP_DIVE_SLUGS_QUERY } from '@/lib/sanity/queries/deepDives'
+import { urlForImage } from '@/lib/sanity/image'
 import Link from "next/link"
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
-import { extractTextFromRichText, safeRenderText } from '@/lib/utils/rich-text'
 
 interface DeepDivePageProps {
   params: Promise<{
@@ -15,278 +16,192 @@ interface DeepDivePageProps {
   }>
 }
 
-function getPostColor(id: number) {
+// Helper function to generate consistent colors for deep dives based on slug hash
+function getPostColor(slug: string) {
   const colors = [
     "#8b5cf6", "#ec4899", "#b12e2e", "#f59e0b",
     "#10b981", "#ef4444", "#b12e2e", "#8b5a2b"
-  ];
-  return colors[id % colors.length];
+  ]
+  const hash = slug.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return colors[hash % colors.length]
 }
 
+// Pre-render known deep dive slugs at build time
+// Use base client (not sanityFetch) — generateStaticParams runs outside a request
+// context and draftMode() cannot be called there
+export async function generateStaticParams() {
+  const data = await client.fetch<Array<{ slug: string }>>(ALL_DEEP_DIVE_SLUGS_QUERY)
+  return (data ?? []).map(({ slug }) => ({ slug }))
+}
+
+// Generate metadata for SEO
 export async function generateMetadata({ params }: DeepDivePageProps): Promise<Metadata> {
   try {
-    const { slug } = await params;
-    const storyblokApi = sb();
-    let response;
-
-    try {
-      response = await storyblokApi.get(`cdn/stories/deep-dive/${slug}`, {
-        version: 'published'
-      });
-    } catch (prefixError) {
-      try {
-        response = await storyblokApi.get(`cdn/stories/deep-dives/${slug}`, {
-          version: 'published'
-        });
-      } catch (secondError) {
-        response = await storyblokApi.get(`cdn/stories/${slug}`, {
-          version: 'published'
-        });
-      }
-    }
-
-    const story = response.data.story;
-
-    const description = safeRenderText(story.content?.intro) || safeRenderText(story.content?.description) || 'In-depth exploration from Rhythm Lab Radio';
-
-    const pageTitle = story.content?.title || story.content?.show_title || story.name;
-
+    const { slug } = await params
+    const { data: deepDive } = await sanityFetch({ query: DEEP_DIVE_BY_SLUG_QUERY, params: { slug } })
+    if (!deepDive) return { title: 'Deep Dive | Rhythm Lab Radio' }
     return {
-      title: pageTitle + ' | Rhythm Lab Radio Deep Dives',
-      description: description,
+      title: deepDive.seo?.seoTitle || `${deepDive.title} | Rhythm Lab Radio Deep Dives`,
+      description: deepDive.seo?.metaDescription || deepDive.excerpt || 'In-depth exploration from Rhythm Lab Radio',
       openGraph: {
-        title: pageTitle,
-        description: description,
-        images: story.content?.featured_image?.filename ? [story.content.featured_image.filename] : [],
+        title: deepDive.seo?.seoTitle || deepDive.title,
+        description: deepDive.seo?.metaDescription || deepDive.excerpt || '',
+        images: deepDive.coverImage
+          ? [urlForImage(deepDive.coverImage).width(1200).height(630).url()]
+          : [],
       },
-    };
-  } catch (error) {
-    return {
-      title: 'Deep Dive | Rhythm Lab Radio',
-      description: 'In-depth exploration from Rhythm Lab Radio',
-    };
+    }
+  } catch {
+    return { title: 'Deep Dive | Rhythm Lab Radio' }
   }
 }
 
 export default async function DeepDivePage({ params }: DeepDivePageProps) {
-  try {
-    const { slug } = await params;
-    const storyblokApi = sb();
-    let response;
+  const { slug } = await params
+  const { data: deepDive } = await sanityFetch({ query: DEEP_DIVE_BY_SLUG_QUERY, params: { slug } })
+  if (!deepDive) return notFound()
 
-    try {
-      // Try deep-dive/ path first (singular)
-      response = await storyblokApi.get(`cdn/stories/deep-dive/${slug}`, {
-        version: 'published'
-      });
-    } catch (prefixError) {
-      try {
-        // Fallback to deep-dives/ path (plural)
-        response = await storyblokApi.get(`cdn/stories/deep-dives/${slug}`, {
-          version: 'published'
-        });
-      } catch (secondError) {
-        try {
-          // Final fallback to direct path
-          response = await storyblokApi.get(`cdn/stories/${slug}`, {
-            version: 'published'
-          });
-        } catch (error) {
-          notFound();
-        }
-      }
-    }
+  const postColor = getPostColor(slug)
 
-    const story = response.data.story;
-    const content = story.content;
-    const postColor = getPostColor(story.id);
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <Header />
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Back to Deep Dives */}
+        <div className="mb-8">
+          <Link
+            href="/deep-dives"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            ← Back to Deep Dives
+          </Link>
+        </div>
 
-    // Debug: Log the content structure to identify problematic fields
-    if (typeof window === 'undefined') {
-      console.log('Deep Dive Content Fields:', Object.keys(content || {}));
-      Object.entries(content || {}).forEach(([key, value]) => {
-        if (typeof value === 'object' && value !== null && 'type' in value && 'content' in value) {
-          console.warn(`Field "${key}" contains rich text object:`, value);
-        }
-      });
-    }
+        <article>
+          {/* Featured Image */}
+          {deepDive.coverImage && (
+            <div className="aspect-video w-full overflow-hidden rounded-xl mb-8">
+              <img
+                src={urlForImage(deepDive.coverImage).width(1200).height(675).url()}
+                alt={deepDive.coverImage.alt || deepDive.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
 
-    return (
-      <div className="min-h-screen bg-background text-foreground">
-        <Header />
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="mb-8">
-            <Link
-              href="/deep-dives"
-              className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ← Back to Deep Dives
-            </Link>
-          </div>
-
-          <article>
-            {content?.featured_image?.filename && (
-              <div className="aspect-video w-full overflow-hidden rounded-xl mb-8">
-                <img
-                  src={content.featured_image.filename}
-                  alt={content.featured_image.alt || story.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-
-            <header className="mb-8">
-              <div className="flex items-center gap-4 mb-4">
+          {/* Article Header */}
+          <header className="mb-8">
+            <div className="flex items-center gap-4 mb-4">
+              {deepDive.difficultyLevel ? (
                 <Badge
                   className="text-white text-sm px-4 py-2 rounded-full font-medium"
                   style={{ backgroundColor: postColor }}
                 >
-                  {safeRenderText(content?.category, 'DEEP DIVE')}
+                  {deepDive.difficultyLevel.toUpperCase()}
                 </Badge>
-                <span className="text-sm text-muted-foreground">
-                  {new Date(story.published_at || story.created_at).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
-              </div>
-
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
-                {content?.title || content?.show_title || story.name}
-              </h1>
-
-              {content?.intro && (
-                <div className="text-xl text-muted-foreground mb-8 leading-relaxed font-medium">
-                  {safeRenderText(content.intro)}
-                </div>
+              ) : (
+                <Badge
+                  className="text-white text-sm px-4 py-2 rounded-full font-medium"
+                  style={{ backgroundColor: postColor }}
+                >
+                  DEEP DIVE
+                </Badge>
               )}
+              <span className="text-sm text-muted-foreground">
+                {deepDive.publishedAt
+                  ? new Date(deepDive.publishedAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })
+                  : ''}
+              </span>
+            </div>
 
-              {content?.duration && (
-                <div className="bg-muted/20 border border-border rounded-xl p-6 mb-8">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Button
-                        size="lg"
-                        className="text-white text-lg px-8 py-4 rounded-full"
-                        style={{ backgroundColor: postColor }}
-                      >
-                        ▶ Play Deep Dive
-                      </Button>
-                      <div className="text-sm text-muted-foreground">
-                        <div className="font-medium">
-                          {safeRenderText(content.duration)}
-                        </div>
-                        <div>{safeRenderText(content.plays) || safeRenderText(content.play_count) || '1.2k'} plays</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
+              {deepDive.title}
+            </h1>
 
-              {(content?.tags || story.tag_list) && (
-                <div className="flex flex-wrap gap-2 mb-8">
-                  {(content.tags || story.tag_list || []).map((tag: any, index: number) => {
-                    const tagText = safeRenderText(tag);
-                    if (!tagText) return null;
-
-                    return (
-                      <Badge
-                        key={index}
-                        variant="outline"
-                        className="text-sm px-3 py-1 rounded-full"
-                        style={{ borderColor: postColor, color: postColor }}
-                      >
-                        {tagText}
-                      </Badge>
-                    );
-                  }).filter(Boolean)}
-                </div>
-              )}
-            </header>
-
-            {/* Podcast Play Button */}
-            {content?.podcast_audio_url && (
-              <div className="mb-8">
-                <PodcastPlayButton
-                  episode={{
-                    id: story.uuid || story.id.toString(),
-                    title: safeRenderText(content.podcast_audio_title) || story.name,
-                    audioUrl: content.podcast_audio_url,
-                    description: undefined,
-                    imageUrl: content?.featured_image?.filename
-                  }}
-                  variant="full"
-                  className="w-full"
-                />
+            {/* Excerpt / Intro */}
+            {deepDive.excerpt && (
+              <div className="text-xl text-muted-foreground mb-8 leading-relaxed font-medium">
+                {deepDive.excerpt}
               </div>
             )}
 
-            <div className="mb-12">
-              {content?.content && (
-                <EnhancedContentRenderer
-                  content={content.content}
-                  sourcesReferences={content?.sources_references || content?.sources_refernces}
-                  displayMode="compact"
-                  maxVisible={6}
-                  autoCollapse={true}
-                  className=""
-                />
-              )}
-
-              {content?.body && (
-                <EnhancedContentRenderer
-                  content={content.body}
-                  sourcesReferences={content?.sources_references || content?.sources_refernces}
-                  displayMode="compact"
-                  maxVisible={6}
-                  autoCollapse={true}
-                  className=""
-                />
-              )}
-
-              {content && !content.content && !content.body && (
-                <div className="text-foreground leading-relaxed">
-                  {typeof content === 'string' ? content : (
-                    <pre className="whitespace-pre-wrap font-sans">
-                      {JSON.stringify(content, null, 2)}
-                    </pre>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <footer className="border-t border-border pt-8">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  <span>Published on {new Date(story.published_at || story.created_at).toLocaleDateString()}</span>
-                  {content?.read_time && (
-                    <>
-                      <span className="mx-2">•</span>
-                      <span>
-                        {safeRenderText(content.read_time)}
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                <Link href="/deep-dives">
-                  <Button
-                    className="text-white"
-                    style={{ backgroundColor: postColor }}
+            {/* Tags */}
+            {deepDive.tags && deepDive.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-8">
+                {deepDive.tags.map((tag: { label: string; slug: string }) => (
+                  <Badge
+                    key={tag.slug}
+                    variant="outline"
+                    className="text-sm px-3 py-1 rounded-full"
+                    style={{ borderColor: postColor, color: postColor }}
                   >
-                    More Deep Dives
-                  </Button>
-                </Link>
+                    {tag.label.toUpperCase()}
+                  </Badge>
+                ))}
               </div>
-            </footer>
-          </article>
-        </main>
-      </div>
-    );
+            )}
 
-  } catch (error) {
-    console.error('Error fetching deep dive:', error);
-    notFound();
-  }
+            {/* Related Artists */}
+            {deepDive.relatedArtists && deepDive.relatedArtists.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Related Artists
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {deepDive.relatedArtists.map((artist: string) => (
+                    <Badge
+                      key={artist}
+                      variant="secondary"
+                      className="text-sm px-3 py-1 rounded-full"
+                    >
+                      {artist}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </header>
+
+          {/* Article Content */}
+          <div className="mb-12">
+            {deepDive.body && (
+              <PortableTextRenderer value={deepDive.body} className="prose prose-invert max-w-none" />
+            )}
+          </div>
+
+          {/* Article Footer */}
+          <footer className="border-t border-border pt-8">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                {deepDive.publishedAt && (
+                  <span>
+                    Published on {new Date(deepDive.publishedAt).toLocaleDateString()}
+                  </span>
+                )}
+                {deepDive.estimatedReadTime && (
+                  <>
+                    <span className="mx-2">•</span>
+                    <span>{deepDive.estimatedReadTime} min read</span>
+                  </>
+                )}
+              </div>
+
+              <Link href="/deep-dives">
+                <Button
+                  className="text-white"
+                  style={{ backgroundColor: postColor }}
+                >
+                  More Deep Dives
+                </Button>
+              </Link>
+            </div>
+          </footer>
+        </article>
+      </main>
+    </div>
+  )
 }
