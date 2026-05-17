@@ -49,6 +49,12 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.sanity.io',
+        port: '',
+        pathname: '/images/**',
+      },
     ],
     // Enable unoptimized images for debugging
     unoptimized: process.env.NODE_ENV === 'development',
