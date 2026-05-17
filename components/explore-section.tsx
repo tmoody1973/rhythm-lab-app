@@ -166,20 +166,10 @@ export function ExploreSection() {
       setLoading(true)
       const projectId = 'b9cutvrc'
       const dataset = 'production'
-      const apiVersion = '2026-05-17'
 
-      const query = encodeURIComponent(`*[_type in ["post","deepDive","artistProfile"]] | order(publishedAt desc) [0..49] {
-        _id, _type, title, "slug": slug.current, publishedAt,
-        excerpt, "coverImage": coverImage{asset, alt},
-        "featuredImage": featuredImage{asset, alt},
-        "tags": tags[]->{label}
-      }`)
-
-      const res = await fetch(
-        `https://${projectId}.api.sanity.io/v${apiVersion}/data/query/${dataset}?query=${query}`
-      )
+      const res = await fetch('/api/explore-content')
       const json = await res.json()
-      const docs = json.result ?? []
+      const docs = json.docs ?? []
 
       const combined: ContentItem[] = docs.map((doc: any, idx: number) => {
         const type: 'blog' | 'deep-dive' | 'profile' =
