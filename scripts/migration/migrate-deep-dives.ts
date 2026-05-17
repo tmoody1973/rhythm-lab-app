@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { fetchStoryblokStories } from './shared/storyblok-client'
+import { fetchStoryblokStories, extractPlainText } from './shared/storyblok-client'
 import { sanityWriteClient, uploadImageFromUrl } from './shared/sanity-client'
 import { storyblokRichtextToPortableText } from './shared/rich-text'
 
@@ -91,9 +91,10 @@ async function migrateDeepDives(): Promise<void> {
       ...(content.subtitle ? { subtitle: content.subtitle } : {}),
       slug: { _type: 'slug', current: slug },
       publishedAt: story.first_published_at ?? story.created_at,
-      ...(content.excerpt || content.intro || content.description
-        ? { excerpt: content.excerpt || content.intro || content.description }
-        : {}),
+      ...((() => {
+        const ex = extractPlainText(content.excerpt || content.intro || content.description)
+        return ex ? { excerpt: ex } : {}
+      })()),
       ...(content.difficulty_level ? { difficultyLevel: content.difficulty_level } : {}),
       ...(content.estimated_read_time ?? content.read_time
         ? { estimatedReadTime: content.estimated_read_time ?? content.read_time }

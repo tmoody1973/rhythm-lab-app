@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { fetchStoryblokStories } from './shared/storyblok-client'
+import { fetchStoryblokStories, extractPlainText } from './shared/storyblok-client'
 import { sanityWriteClient, uploadImageFromUrl } from './shared/sanity-client'
 import { storyblokRichtextToPortableText } from './shared/rich-text'
 
@@ -88,7 +88,7 @@ async function migratePosts(): Promise<void> {
       ...(content.subtitle ? { subtitle: content.subtitle } : {}),
       slug: { _type: 'slug', current: slug },
       publishedAt: story.first_published_at ?? story.created_at,
-      ...(content.excerpt || content.intro ? { excerpt: content.excerpt || content.intro } : {}),
+      ...((() => { const ex = extractPlainText(content.excerpt || content.intro); return ex ? { excerpt: ex } : {} })()),
       readingTime:
         content.reading_time ?? content.estimated_read_time ?? null,
       body,
