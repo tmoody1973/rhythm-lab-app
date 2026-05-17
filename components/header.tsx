@@ -91,15 +91,6 @@ export function Header() {
                   ABOUT
                 </Button>
               </Link>
-              <Link href="/ai-chat" >
-                <Button
-                  variant="ghost"
-                  className="nts-text-caps text-sm font-bold hover:bg-transparent hover:text-gray-700 px-0 text-black"
-                  style={{ color: "#000000" }}
-                >
-                  AI CHAT ✨
-                </Button>
-              </Link>
               <Link href="/archive" >
                 <Button
                   variant="ghost"

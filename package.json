@@ -50,7 +50,6 @@
     "@storyblok/richtext": "^3.8.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.57.4",
-    "@thesysai/genui-sdk": "^0.6.34",
     "@types/lodash": "^4.17.20",
     "@vercel/analytics": "1.3.1",
     "ai": "^5.0.60",
