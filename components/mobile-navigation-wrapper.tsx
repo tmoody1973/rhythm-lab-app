@@ -9,6 +9,7 @@ const navItems = [
   { label: 'Weekly Show', href: '/shows', icon: Radio },
   { label: 'Profiles', href: '/profiles', icon: Music },
   { label: 'Deep Dives', href: '/deep-dives', icon: BookOpen },
+  { label: 'Episodes', href: '/episodes', icon: BookOpen },
   { label: 'Search', href: '/search', icon: Search },
 ]
 

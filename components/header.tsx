@@ -73,6 +73,15 @@ export function Header() {
                   DEEP DIVES
                 </Button>
               </Link>
+              <Link href="/episodes">
+                <Button
+                  variant="ghost"
+                  className="nts-text-caps text-sm font-bold hover:bg-transparent hover:text-gray-700 px-0 text-black"
+                  style={{ color: "#000000" }}
+                >
+                  EPISODES
+                </Button>
+              </Link>
               <Link href="/profiles" >
                 <Button
                   variant="ghost"
