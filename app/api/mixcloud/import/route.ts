@@ -90,7 +90,7 @@ const handler = withAdminAuth(async (request: NextRequest): Promise<NextResponse
     // Check if show already exists (by slug or mixcloud_url)
     const { data: existingShow } = await supabase
       .from('shows')
-      .select('id, title, storyblok_id')
+      .select('id, title')
       .or(`slug.eq.${slug},mixcloud_url.eq.${body.mixcloud_url}`)
       .single()
 
