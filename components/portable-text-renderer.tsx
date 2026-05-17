@@ -12,8 +12,9 @@ const components: PortableTextComponents = {
             src={urlForImage(value).width(800).url()}
             alt={value.alt ?? ''}
             width={800}
-            height={450}
-            className="rounded-lg w-full object-cover"
+            height={600}
+            className="rounded-lg w-full"
+            style={{ height: 'auto' }}
           />
           {value.caption && (
             <figcaption className="text-center text-sm text-gray-500 mt-2">
