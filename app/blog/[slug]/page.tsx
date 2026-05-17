@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { PortableTextRenderer } from "@/components/portable-text-renderer"
 import { sanityFetch } from '@/lib/sanity/live'
+import { client } from '@/lib/sanity/client'
 import { POST_BY_SLUG_QUERY, ALL_POST_SLUGS_QUERY } from '@/lib/sanity/queries/posts'
 import { urlForImage } from '@/lib/sanity/image'
 import Link from "next/link"
@@ -26,9 +27,11 @@ function getPostColor(slug: string) {
 }
 
 // Pre-render known post slugs at build time
+// Use base client (not sanityFetch) — generateStaticParams runs outside a request
+// context and draftMode() cannot be called there
 export async function generateStaticParams() {
-  const { data } = await sanityFetch({ query: ALL_POST_SLUGS_QUERY })
-  return (data ?? []).map(({ slug }: { slug: string }) => ({ slug }))
+  const data = await client.fetch<Array<{ slug: string }>>(ALL_POST_SLUGS_QUERY)
+  return (data ?? []).map(({ slug }) => ({ slug }))
 }
 
 // Generate metadata for SEO
