@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs'
 import path from 'path'
-import { markdownToStoryblokRichtext } from '@storyblok/richtext/markdown-parser'
+// @storyblok/richtext removed — markdown stored as plain text for Sanity migration
 
 // Content types
 export type ContentType = 'artist-profile' | 'deep-dive' | 'blog-post' | 'show-description'
@@ -412,8 +412,8 @@ export async function generateContent(request: ContentRequest): Promise<Generate
   const parsedSEO = extractSEOMetadata(text)
   const cleanedText = cleanSEOMetadataFromContent(text)
 
-  // Convert cleaned markdown from Perplexity to Storyblok rich text format
-  const richTextContent = markdownToStoryblokRichtext(cleanedText)
+  // Store as plain markdown — Sanity migration handles rich text conversion
+  const richTextContent = cleanedText
 
   // Extract title and metadata from parsed SEO or fallback to content extraction
   const title = parsedSEO.title || extractTitle(cleanedText) || generateTitle(request.topic, request.type)

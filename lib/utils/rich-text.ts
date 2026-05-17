@@ -1,4 +1,3 @@
-import { render } from 'storyblok-rich-text-react-renderer';
 import React from 'react';
 
 /**
@@ -76,31 +75,10 @@ export function safeRenderText(content: any, fallback: string = ''): string {
 }
 
 /**
- * Render Storyblok rich text to React components
- * Use this for content that needs to preserve formatting
+ * Render rich text content — returns plain text extraction since Storyblok renderer is removed
  */
 export function renderRichText(content: any): React.ReactNode {
-  // Return primitives directly
-  if (typeof content === 'string' || typeof content === 'number') {
-    return content;
-  }
-
-  // Return null for empty content
-  if (!content) {
-    return null;
-  }
-
-  // Check if it's a Storyblok rich text object
-  if (content.type === 'doc' || (content.type && content.content)) {
-    try {
-      return render(content);
-    } catch (error) {
-      console.warn('Failed to render rich text:', error);
-      // Fallback to text extraction
-      return extractTextFromRichText(content);
-    }
-  }
-
-  // For non-rich text objects, extract text
-  return extractTextFromRichText(content);
+  if (typeof content === 'string' || typeof content === 'number') return content
+  if (!content) return null
+  return extractTextFromRichText(content)
 }

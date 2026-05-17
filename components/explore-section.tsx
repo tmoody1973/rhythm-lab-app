@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { FavoriteButton } from "@/components/favorite-button"
-import { sb } from "@/src/lib/storyblok"
 import Link from "next/link"
 
 type ContentType = 'all' | 'blog' | 'deep-dives' | 'profiles'
@@ -27,7 +26,8 @@ function getContentColor(id: number) {
     "#8b5cf6", "#ec4899", "#b12e2e", "#f59e0b",
     "#10b981", "#ef4444", "#b12e2e", "#8b5a2b"
   ];
-  return colors[id % colors.length];
+  // Hash slug string to a number for consistent color
+  return colors[Math.abs(id) % colors.length];
 }
 
 // Helper function to get content type label
@@ -164,65 +164,50 @@ export function ExploreSection() {
   const fetchAllContent = async () => {
     try {
       setLoading(true)
-      const storyblokApi = sb()
+      const projectId = 'b9cutvrc'
+      const dataset = 'production'
+      const apiVersion = '2026-05-17'
 
-      // Fetch content from all three sources
-      const [blogResponse, deepDiveResponse, profilesResponse] = await Promise.all([
-        // Blog posts
-        storyblokApi.get('cdn/stories', {
-          version: 'published',
-          per_page: 50,
-          sort_by: 'first_published_at:desc',
-          starts_with: 'blog/'
-        }).catch(() => ({ data: { stories: [] } })),
+      const query = encodeURIComponent(`*[_type in ["post","deepDive","artistProfile"]] | order(publishedAt desc) [0..49] {
+        _id, _type, title, "slug": slug.current, publishedAt,
+        excerpt, "coverImage": coverImage{asset, alt},
+        "featuredImage": featuredImage{asset, alt},
+        "tags": tags[]->{label}
+      }`)
 
-        // Deep dives
-        storyblokApi.get('cdn/stories', {
-          version: 'published',
-          per_page: 50,
-          sort_by: 'first_published_at:desc',
-          starts_with: 'deep-dives/'
-        }).catch(() => ({ data: { stories: [] } })),
+      const res = await fetch(
+        `https://${projectId}.api.sanity.io/v${apiVersion}/data/query/${dataset}?query=${query}`
+      )
+      const json = await res.json()
+      const docs = json.result ?? []
 
-        // Profiles
-        storyblokApi.get('cdn/stories', {
-          version: 'published',
-          per_page: 50,
-          sort_by: 'first_published_at:desc',
-          starts_with: 'profiles/'
-        }).catch(() => ({ data: { stories: [] } }))
-      ])
+      const combined: ContentItem[] = docs.map((doc: any, idx: number) => {
+        const type: 'blog' | 'deep-dive' | 'profile' =
+          doc._type === 'post' ? 'blog' :
+          doc._type === 'deepDive' ? 'deep-dive' : 'profile'
+        const slug = doc.slug ?? ''
+        const image = doc.coverImage ?? doc.featuredImage
+        const imageUrl = image?.asset?._ref
+          ? `https://cdn.sanity.io/images/${projectId}/${dataset}/${image.asset._ref.replace('image-', '').replace(/-(\w+)$/, '.$1')}`
+          : null
 
-      // Combine and type all content
-      const blogPosts: ContentItem[] = (blogResponse.data.stories || []).map((story: any) => ({
-        ...story,
-        type: 'blog' as const
-      }))
-
-      const deepDives: ContentItem[] = (deepDiveResponse.data.stories || []).map((story: any) => ({
-        ...story,
-        type: 'deep-dive' as const
-      }))
-
-      const profiles: ContentItem[] = (profilesResponse.data.stories || []).map((story: any) => ({
-        ...story,
-        type: 'profile' as const
-      }))
-
-      // Combine all content and sort by date
-      const combined = [...blogPosts, ...deepDives, ...profiles].sort((a, b) => {
-        const dateA = new Date(a.published_at || a.created_at).getTime()
-        const dateB = new Date(b.published_at || b.created_at).getTime()
-        return dateB - dateA // Most recent first
+        return {
+          id: idx,
+          slug,
+          name: doc.title ?? '',
+          full_slug: slug,
+          published_at: doc.publishedAt ?? '',
+          created_at: doc.publishedAt ?? '',
+          type,
+          content: {
+            featured_image: imageUrl ? { filename: imageUrl, alt: image?.alt ?? doc.title } : null,
+            intro: doc.excerpt ?? '',
+            tags: doc.tags?.map((t: any) => t.label) ?? [],
+          }
+        }
       })
 
       setAllContent(combined)
-      console.log('Fetched explore content:', {
-        blog: blogPosts.length,
-        deepDives: deepDives.length,
-        profiles: profiles.length,
-        total: combined.length
-      })
 
     } catch (err) {
       console.error('Error fetching explore content:', err)

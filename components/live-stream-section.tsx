@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge"
 import { NowPlaying } from "@/components/now-playing"
 import { FavoriteButton } from "@/components/favorite-button"
 import { useRadio } from "@/lib/radio/context"
-import { sb } from "@/src/lib/storyblok"
 import { safeRenderText, renderRichText } from '@/lib/utils/rich-text'
 import type { Song } from "@/lib/database/types"
 
@@ -39,53 +38,12 @@ export function LiveStreamSection() {
     setMounted(true)
   }, [])
 
-  // Fetch current show content from Storyblok
+  // Static show content — previously fetched from Storyblok, now hardcoded
   useEffect(() => {
-    const fetchCurrentShowContent = async () => {
-      try {
-        const storyblokApi = sb()
-        let response
-
-        // Try multiple possible paths for the story
-        const possiblePaths = [
-          'cdn/stories/about-rhythm-lab-selector',
-          'cdn/stories/current-show-section',
-          'cdn/stories/current_show_section',
-          'cdn/stories/home/current-show-section',
-          'cdn/stories/homepage/current-show-section'
-        ]
-
-        for (const path of possiblePaths) {
-          try {
-            console.log(`Trying to fetch from: ${path}`)
-            response = await storyblokApi.get(path, {
-              version: 'published'
-            })
-
-            if (response.data?.story?.content) {
-              console.log('Successfully fetched current show content:', response.data.story.content)
-              setCurrentShowContent(response.data.story.content)
-              return
-            }
-          } catch (pathError) {
-            console.log(`Path ${path} failed:`, pathError)
-            continue
-          }
-        }
-
-        throw new Error('No valid story found at any path')
-
-      } catch (error) {
-        console.error('Failed to fetch current show content from all paths:', error)
-        // Set fallback content
-        setCurrentShowContent({
-          title: 'RHYTHM LAB RADIO',
-          description: 'Live electronic music featuring deep house, ambient, jazz fusion, and experimental sounds from around the world.'
-        })
-      }
-    }
-
-    fetchCurrentShowContent()
+    setCurrentShowContent({
+      title: 'RHYTHM LAB RADIO',
+      description: 'Live electronic music featuring deep house, ambient, jazz fusion, and experimental sounds from around the world.'
+    })
   }, [])
 
   useEffect(() => {
