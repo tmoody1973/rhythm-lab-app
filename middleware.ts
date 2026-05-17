@@ -5,6 +5,7 @@ const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
   '/profile(.*)',
   '/favorites(.*)',
+  '/studio(.*)',
 ])
 
 // Define admin routes that require admin role

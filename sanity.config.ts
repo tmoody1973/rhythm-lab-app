@@ -7,6 +7,7 @@ export default defineConfig({
   title: 'Rhythm Lab',
   projectId: 'b9cutvrc',
   dataset: 'production',
+  basePath: '/studio',
   plugins: [
     structureTool(),
   ],
