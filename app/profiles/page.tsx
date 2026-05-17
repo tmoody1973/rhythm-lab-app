@@ -2,295 +2,45 @@ import { Header } from "@/components/header"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { FavoriteButton } from "@/components/favorite-button"
-import { sb } from "@/src/lib/storyblok"
+import { sanityFetch } from '@/lib/sanity/live'
+import { ALL_ARTIST_PROFILES_QUERY } from '@/lib/sanity/queries/artistProfiles'
+import { urlForImage } from '@/lib/sanity/image'
 import Link from "next/link"
 import { Metadata } from 'next'
-import { safeRenderText } from '@/lib/utils/rich-text'
 
 // Generate metadata for the profiles page
 export const metadata: Metadata = {
   title: 'Artist Profiles | Rhythm Lab Radio',
-  description: 'Deep conversations with music\'s most innovative creators covering electronic music, jazz, and experimental sounds.',
+  description: "Deep conversations with music's most innovative creators covering electronic music, jazz, and experimental sounds.",
   openGraph: {
     title: 'Artist Profiles | Rhythm Lab Radio',
-    description: 'Deep conversations with music\'s most innovative creators covering electronic music, jazz, and experimental sounds.',
+    description: "Deep conversations with music's most innovative creators covering electronic music, jazz, and experimental sounds.",
   },
 }
 
-// Helper function to generate consistent colors for profiles
-function getProfileColor(id: number) {
+// Helper function to generate consistent colors for profiles based on slug hash
+function getProfileColor(slug: string) {
   const colors = [
     "#10b981", "#b12e2e", "#8b5cf6", "#ec4899",
     "#f59e0b", "#ef4444", "#b12e2e", "#8b5a2b"
-  ];
-  return colors[id % colors.length];
-}
-
-// Helper function to extract meaningful genre tags from profile content
-function extractGenreTagsFromContent(content: any, artistName: string = ''): string[] {
-  // Comprehensive genre mapping
-  const genreMap: Record<string, string[]> = {
-    // Electronic genres
-    'electronic': ['electronic', 'electronica', 'edm', 'synthesizer', 'synth'],
-    'house': ['house', 'deep house', 'tech house', 'progressive house'],
-    'techno': ['techno', 'detroit techno', 'minimal techno'],
-    'ambient': ['ambient', 'atmospheric', 'drone', 'soundscape'],
-    'experimental': ['experimental', 'avant-garde', 'abstract', 'noise'],
-    'idm': ['idm', 'intelligent dance music', 'braindance'],
-    'dnb': ['drum and bass', 'dnb', 'jungle', 'liquid'],
-    'dubstep': ['dubstep', 'bass music', 'future bass'],
-    'trap': ['trap', 'future trap', 'hybrid trap'],
-
-    // Jazz genres
-    'jazz': ['jazz', 'bebop', 'hard bop', 'free jazz'],
-    'fusion': ['fusion', 'jazz fusion', 'jazz rock'],
-    'smooth jazz': ['smooth jazz', 'contemporary jazz'],
-    'neo-soul': ['neo-soul', 'nu-soul', 'future soul'],
-
-    // Hip-hop genres
-    'hip-hop': ['hip-hop', 'hip hop', 'rap', 'hiphop'],
-    'lo-fi': ['lo-fi', 'lofi', 'chillhop', 'boom bap'],
-
-    // Rock genres
-    'rock': ['rock', 'indie rock', 'alt rock', 'alternative'],
-    'post-rock': ['post-rock', 'instrumental rock', 'math rock'],
-
-    // World/Folk
-    'afrobeat': ['afrobeat', 'afro', 'african'],
-    'latin': ['latin', 'salsa', 'reggaeton', 'bossa nova'],
-    'folk': ['folk', 'acoustic', 'singer-songwriter'],
-
-    // Pop/R&B
-    'r&b': ['r&b', 'rnb', 'rhythm and blues'],
-    'soul': ['soul', 'funk', 'motown'],
-    'pop': ['pop', 'synth-pop', 'indie pop'],
-
-    // Specific producer/artist styles
-    'uk garage': ['uk garage', 'garage', 'grime'],
-    'footwork': ['footwork', 'juke', 'chicago footwork'],
-    'vaporwave': ['vaporwave', 'synthwave', 'retrowave'],
-    'breakbeat': ['breakbeat', 'breaks', 'big beat']
-  };
-
-  // Get all text content to analyze
-  const textContent = [
-    content?.title || '',
-    content?.subtitle || '',
-    content?.artist_name || '',
-    content?.full_biography?.content?.[0]?.content?.[0]?.text || '',
-    content?.content?.content?.[0]?.content?.[0]?.text || '',
-    content?.description || '',
-    artistName
-  ].join(' ').toLowerCase();
-
-  // Find matching genres
-  const foundGenres: string[] = [];
-
-  for (const [genre, keywords] of Object.entries(genreMap)) {
-    if (keywords.some(keyword => textContent.includes(keyword))) {
-      foundGenres.push(genre);
-    }
-  }
-
-  // Artist-specific mappings (hardcoded for known artists)
-  const artistGenreMap: Record<string, string[]> = {
-    'sudan archives': ['experimental', 'electronic', 'r&b'],
-    'nubya garcia': ['jazz', 'neo-soul', 'uk garage'],
-    'floating points': ['electronic', 'ambient', 'jazz'],
-    'kerri chandler': ['house', 'deep house', 'soul'],
-    'aphex twin': ['electronic', 'experimental', 'idm'],
-    'nina kraviz': ['techno', 'house'],
-    'kokoroko': ['jazz', 'afrobeat', 'funk'],
-    'boiler room': ['electronic', 'house', 'techno'],
-    'four tet': ['electronic', 'experimental', 'house'],
-    'burial': ['electronic', 'dubstep', 'ambient']
-  };
-
-  // Check for specific artist mappings
-  const lowerArtistName = artistName.toLowerCase();
-  for (const [artist, genres] of Object.entries(artistGenreMap)) {
-    if (lowerArtistName.includes(artist) || textContent.includes(artist)) {
-      foundGenres.push(...genres);
-    }
-  }
-
-  // Remove duplicates and return top 3
-  const uniqueGenres = [...new Set(foundGenres)];
-
-  // If no genres found, provide sensible defaults based on context
-  if (uniqueGenres.length === 0) {
-    return ['electronic', 'experimental', 'music'];
-  }
-
-  return uniqueGenres.slice(0, 3);
+  ]
+  const hash = slug.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return colors[hash % colors.length]
 }
 
 export default async function ProfilesPage() {
-  let profiles: any[] = [];
-  let error: string | null = null;
+  let profiles: any[] = []
+  let fetchError = false
 
   try {
-    // Fetch artist profiles from Storyblok
-    const storyblokApi = sb();
-
-    // Fetch artist profiles from the profiles folder
-    let response;
-    try {
-      // Fetch stories from the profiles folder
-      response = await storyblokApi.get('cdn/stories', {
-        version: 'published',
-        per_page: 100,
-        sort_by: 'first_published_at:desc',
-        starts_with: 'profiles/', // Fetch from the profiles folder (correct path)
-        cv: Date.now() // Cache busting to get latest content
-      });
-
-      // If the folder approach doesn't work, try getting by parent_id
-      if (!response.data.stories || response.data.stories.length === 0) {
-        const profilesFolderId = process.env.NEXT_PUBLIC_STORYBLOK_PROFILES_FOLDER_ID || '91849981506993';
-
-        // Get all stories and filter by parent folder
-        const allStoriesResponse = await storyblokApi.get('cdn/stories', {
-          version: 'published',
-          per_page: 100,
-          sort_by: 'first_published_at:desc'
-        });
-
-        // Note: We can't filter by parent_id in the CDN API, so we get all and filter
-        // The proper way would be to check the full_slug for the folder path
-        response.data.stories = allStoriesResponse.data.stories.filter((story: any) => {
-          // Check if the story's full_slug starts with a profiles folder path
-          return story.full_slug?.startsWith('artist-profiles/') ||
-                 story.full_slug?.startsWith('profiles/') ||
-                 // Fallback to component type check
-                 story.content?.component === 'artist-profile' ||
-                 story.content?.component === 'artist_profile';
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching artist profiles:', error);
-      response = { data: { stories: [] } };
-    }
-
-    profiles = response.data.stories || [];
-    console.log('Found artist profiles:', profiles.length, profiles.map(p => ({ slug: p.slug, name: p.name, full_slug: p.full_slug })));
-
+    const { data } = await sanityFetch({ query: ALL_ARTIST_PROFILES_QUERY })
+    profiles = data ?? []
   } catch (err) {
-    console.error('Error fetching artist profiles:', err);
-    error = 'Failed to load artist profiles. Please try again later.';
+    console.error('Failed to fetch artist profiles from Sanity:', err)
+    fetchError = true
   }
 
-  // If we have no dynamic content, use fallback static data
-  const hasProfiles = profiles.length > 0;
-
-  // Fallback static data for when Storyblok is unavailable
-  const fallbackProfiles = [
-    {
-      id: 1,
-      title: "FLOATING POINTS: NEUROSCIENCE MEETS ELECTRONIC MUSIC",
-      description: "How Sam Shepherd bridges scientific research and musical innovation",
-      image: "/images/ALBUM-DEFAULT.png",
-      date: "16.09.25",
-      duration: "35m",
-      plays: "1.5k",
-      tags: ["ELECTRONIC", "AMBIENT", "JAZZ"],
-      color: "#10b981",
-      artist: "Floating Points"
-    },
-    {
-      id: 2,
-      title: "KERRI CHANDLER: THE SOUL OF DEEP HOUSE",
-      description: "Exploring the legendary producer's influence on house music culture",
-      image: "/images/ALBUM-DEFAULT.png",
-      date: "14.09.25",
-      duration: "42m",
-      plays: "2.1k",
-      tags: ["HOUSE", "DEEP HOUSE", "SOUL"],
-      color: "#b12e2e",
-      artist: "Kerri Chandler"
-    },
-    {
-      id: 3,
-      title: "APHEX TWIN: THE ENIGMA OF ELECTRONIC EXPERIMENTATION",
-      description: "Decoding Richard D. James's impact on experimental electronic music",
-      image: "/images/ALBUM-DEFAULT.png",
-      date: "12.09.25",
-      duration: "48m",
-      plays: "2.8k",
-      tags: ["ELECTRONIC", "EXPERIMENTAL", "IDM"],
-      color: "#8b5cf6",
-      artist: "Aphex Twin"
-    },
-    {
-      id: 4,
-      title: "NINA KRAVIZ: FROM DENTIST TO TECHNO ICON",
-      description: "The journey of Russia's most influential techno ambassador",
-      image: "/images/ALBUM-DEFAULT.png",
-      date: "10.09.25",
-      duration: "39m",
-      plays: "1.9k",
-      tags: ["TECHNO", "ELECTRONIC", "UNDERGROUND"],
-      color: "#ec4899",
-      artist: "Nina Kraviz"
-    },
-    {
-      id: 5,
-      title: "ROBERT GLASPER: REDEFINING MODERN JAZZ",
-      description: "How the pianist revolutionized jazz with hip-hop and R&B influences",
-      image: "/images/ALBUM-DEFAULT.png",
-      date: "08.09.25",
-      duration: "44m",
-      plays: "1.7k",
-      tags: ["JAZZ", "HIP HOP", "R&B"],
-      color: "#f59e0b",
-      artist: "Robert Glasper"
-    },
-    {
-      id: 6,
-      title: "JAMIE XX: THE EVOLUTION OF UK ELECTRONIC",
-      description: "From The xx to solo success: a journey through UK's electronic landscape",
-      image: "/images/ALBUM-DEFAULT.png",
-      date: "06.09.25",
-      duration: "41m",
-      plays: "2.3k",
-      tags: ["ELECTRONIC", "UK", "INDIE"],
-      color: "#10b981",
-      artist: "Jamie xx"
-    },
-    {
-      id: 7,
-      title: "KAMASI WASHINGTON: THE MODERN JAZZ RENAISSANCE",
-      description: "Leading the new wave of spiritual jazz and cosmic consciousness",
-      image: "/images/ALBUM-DEFAULT.png",
-      date: "04.09.25",
-      duration: "52m",
-      plays: "2.0k",
-      tags: ["JAZZ", "SPIRITUAL", "FUSION"],
-      color: "#f59e0b",
-      artist: "Kamasi Washington"
-    },
-    {
-      id: 8,
-      title: "BURIAL: GHOST IN THE UK GARAGE MACHINE",
-      description: "The mysterious producer who redefined underground electronic music",
-      image: "/images/ALBUM-DEFAULT.png",
-      date: "02.09.25",
-      duration: "46m",
-      plays: "2.5k",
-      tags: ["UK GARAGE", "DUBSTEP", "AMBIENT"],
-      color: "#8b5cf6",
-      artist: "Burial"
-    }
-  ]
-
-  // Use dynamic content if available, otherwise fallback to static
-  const featuredProfiles = hasProfiles
-    ? profiles.filter(profile => profile.content?.featured === true)
-    : fallbackProfiles.slice(0, 2);
-  const regularProfiles = hasProfiles
-    ? profiles.filter(profile => profile.content?.featured !== true)
-    : fallbackProfiles.slice(2);
+  const hasProfiles = !fetchError && profiles.length > 0
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -302,13 +52,13 @@ export default async function ProfilesPage() {
             <p className="text-muted-foreground">Deep conversations with music's most innovative creators</p>
           </div>
 
-          {error && (
+          {fetchError && (
             <div className="text-center py-12">
-              <p className="text-red-500 text-lg">{error}</p>
+              <p className="text-red-500 text-lg">Failed to load artist profiles. Please try again later.</p>
             </div>
           )}
 
-          {!error && !hasProfiles && (
+          {!fetchError && !hasProfiles && (
             <div className="text-center py-12">
               <p className="text-muted-foreground text-lg">
                 No artist profiles available yet. Check back soon for in-depth conversations!
@@ -316,278 +66,95 @@ export default async function ProfilesPage() {
             </div>
           )}
 
-          {/* Featured Profiles Section */}
-          {featuredProfiles.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold nts-text-caps mb-6">Featured</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {featuredProfiles.map((profile) => {
-                const profileColor = hasProfiles ? getProfileColor(profile.id) : profile.color;
-                return (
-                <Card
-                  key={profile.id}
-                  className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl"
-                >
-                  <Link href={hasProfiles ? `/profiles/${profile.slug}` : '#'}>
-                    <div className="aspect-[16/10] relative overflow-hidden">
-                      {hasProfiles ? (
-                        profile.content?.seo?.[0]?.og_image?.filename ? (
-                          <img
-                            src={profile.content.seo[0].og_image.filename}
-                            alt={profile.content.seo[0].og_image.alt || profile.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : profile.content?.artist_photo?.filename ? (
-                          <img
-                            src={profile.content.artist_photo.filename}
-                            alt={profile.content.artist_photo.alt || profile.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div
-                            className="w-full h-full flex items-center justify-center text-white text-xl font-bold"
-                            style={{ backgroundColor: profileColor }}
-                          >
-                            {profile.name}
-                          </div>
-                        )
-                      ) : (
-                        <img
-                          src={profile.image}
-                          alt={profile.title}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                    </div>
-                  </Link>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <Badge
-                        className="text-white text-sm px-4 py-2 rounded-full font-medium"
-                        style={{ backgroundColor: profileColor }}
-                      >
-                        FEATURED
-                      </Badge>
-                      <span className="text-sm text-muted-foreground font-medium">
-                        {hasProfiles
-                          ? new Date(profile.published_at || profile.created_at).toLocaleDateString()
-                          : profile.date
-                        }
-                      </span>
-                    </div>
-                    <div className="mb-3">
-                      <span className="text-sm text-muted-foreground nts-text-caps">
-                        {hasProfiles ? (profile.content?.artist_name || profile.content?.artist || profile.name) : profile.artist}
-                      </span>
-                    </div>
-                    <Link href={hasProfiles ? `/profiles/${profile.slug}` : '#'}>
-                      <h3 className="text-foreground font-bold text-xl mb-3 leading-tight hover:text-primary transition-colors">
-                        {hasProfiles ? profile.name : profile.title}
-                      </h3>
-                    </Link>
-                    <p className="text-muted-foreground text-base mb-4 leading-relaxed">
-                      {hasProfiles
-                        ? (safeRenderText(profile.content?.subtitle) || safeRenderText(profile.content?.intro) || safeRenderText(profile.content?.description) || 'Discover in-depth conversations with music\'s most innovative creators.')
-                        : profile.description
-                      }
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {hasProfiles ? (
-                        (() => {
-                          // Extract genre tags from content, excluding generic tags
-                          const contentTags = profile.content?.tags || [];
-                          const genreTags = contentTags.filter((tag: string) =>
-                            !['artist', 'profile', 'music'].includes(tag.toLowerCase())
-                          );
+          {hasProfiles && (
+            <div>
+              <h2 className="text-2xl font-bold nts-text-caps mb-6">All Profiles</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {profiles.map((profile) => {
+                  const profileColor = getProfileColor(profile.slug)
+                  const imageUrl = profile.featuredImage
+                    ? urlForImage(profile.featuredImage).width(600).height(400).url()
+                    : null
 
-                          // If no genre tags found, create meaningful ones based on content
-                          const displayTags = genreTags.length > 0 ? genreTags :
-                            extractGenreTagsFromContent(profile.content, profile.name);
-
-                          return displayTags.slice(0, 3).map((tag: string, index: number) => (
-                            <Badge
-                              key={index}
-                              variant="outline"
-                              className="text-xs px-3 py-1 rounded-full font-medium"
-                              style={{ borderColor: profileColor, color: profileColor }}
-                              title={`Genre tag: ${tag} (from ${genreTags.length > 0 ? 'content' : 'extraction'})`}
+                  return (
+                    <Card
+                      key={profile._id}
+                      className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl"
+                    >
+                      <Link href={`/profiles/${profile.slug}`}>
+                        <div className="aspect-[16/9] relative overflow-hidden">
+                          {imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={profile.featuredImage?.alt || profile.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div
+                              className="w-full h-full flex items-center justify-center text-white text-lg font-bold p-4 text-center"
+                              style={{ backgroundColor: profileColor }}
                             >
-                              {String(tag).toUpperCase()}
-                            </Badge>
-                          ));
-                        })()
-                      ) : (
-                        profile.tags.map((tag: string, index: number) => (
-                          <Badge
-                            key={index}
-                            variant="outline"
-                            className="text-xs px-3 py-1 rounded-full font-medium"
-                            style={{ borderColor: profileColor, color: profileColor }}
-                          >
-                            {tag}
-                          </Badge>
-                        ))
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <div className="flex items-center gap-3">
-                        <span>
-                          {hasProfiles
-                            ? `${safeRenderText(profile.content?.duration) || '45m'} • ${safeRenderText(profile.content?.plays) || safeRenderText(profile.content?.play_count) || '1.2k'} plays`
-                            : `${profile.duration} • ${profile.plays} plays`
-                          }
-                        </span>
-                        {hasProfiles && (
-                          <FavoriteButton
-                            content={{
-                              id: profile.id,
-                              title: profile.name,
-                              type: 'artist_profile',
-                              image: profile.content?.artist_photo?.filename,
-                              description: safeRenderText(profile.content?.intro) || safeRenderText(profile.content?.description)
-                            }}
-                            size="sm"
-                          />
-                        )}
-                      </div>
-                      <Link href={hasProfiles ? `/profiles/${profile.slug}` : '#'}>
-                        <Button
-                          size="sm"
-                          className="text-white text-sm px-6 py-2"
-                          style={{ backgroundColor: profileColor }}
-                        >
-                          Read More
-                        </Button>
+                              {profile.title}
+                            </div>
+                          )}
+                        </div>
                       </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-                );
-              })}
-            </div>
-          </div>
-          )}
-
-          {/* Regular Profiles Grid */}
-          <div>
-            <h2 className="text-2xl font-bold nts-text-caps mb-6">All Profiles</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {regularProfiles.map((profile) => {
-                const profileColor = hasProfiles ? getProfileColor(profile.id) : profile.color;
-                return (
-                <Card
-                  key={profile.id}
-                  className="bg-card/80 backdrop-blur-sm hover:shadow-lg hover:bg-card/90 transition-all duration-200 cursor-pointer overflow-hidden border border-border/30 rounded-xl"
-                >
-                  <Link href={hasProfiles ? `/profiles/${profile.slug}` : '#'}>
-                    <div className="aspect-[16/9] relative overflow-hidden">
-                      {hasProfiles ? (
-                        profile.content?.seo?.[0]?.og_image?.filename ? (
-                          <img
-                            src={profile.content.seo[0].og_image.filename}
-                            alt={profile.content.seo[0].og_image.alt || profile.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : profile.content?.artist_photo?.filename ? (
-                          <img
-                            src={profile.content.artist_photo.filename}
-                            alt={profile.content.artist_photo.alt || profile.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div
-                            className="w-full h-full flex items-center justify-center text-white text-lg font-bold p-4 text-center"
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <Badge
+                            className="text-white text-xs px-3 py-1 rounded-full font-medium"
                             style={{ backgroundColor: profileColor }}
                           >
-                            {profile.name}
-                          </div>
-                        )
-                      ) : (
-                        <img
-                          src={profile.image}
-                          alt={profile.title}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                    </div>
-                  </Link>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <Badge
-                        className="text-white text-xs px-3 py-1 rounded-full font-medium"
-                        style={{ backgroundColor: profileColor }}
-                      >
-                        PROFILE
-                      </Badge>
-                      <span className="text-sm text-muted-foreground font-medium">
-                        {hasProfiles
-                          ? new Date(profile.published_at || profile.created_at).toLocaleDateString()
-                          : profile.date
-                        }
-                      </span>
-                    </div>
-                    <div className="mb-2">
-                      <span className="text-xs text-muted-foreground nts-text-caps">
-                        {hasProfiles ? (profile.content?.artist_name || profile.content?.artist || profile.name) : profile.artist}
-                      </span>
-                    </div>
-                    <Link href={hasProfiles ? `/profiles/${profile.slug}` : '#'}>
-                      <h3 className="text-foreground font-bold text-base mb-2 leading-tight hover:text-primary transition-colors">
-                        {hasProfiles ? profile.name : profile.title}
-                      </h3>
-                    </Link>
-                    {(hasProfiles ? (safeRenderText(profile.content?.subtitle) || safeRenderText(profile.content?.intro) || safeRenderText(profile.content?.description)) : profile.description) && (
-                      <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-3">
-                        {hasProfiles
-                          ? (safeRenderText(profile.content?.subtitle) || safeRenderText(profile.content?.intro) || safeRenderText(profile.content?.description))
-                          : profile.description
-                        }
-                      </p>
-                    )}
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {(() => {
-                        const contentTags = hasProfiles ? (profile.content?.tags || []) : profile.tags;
-                        const genreTags = contentTags.filter((tag: string) =>
-                          !['artist', 'profile', 'music'].includes(tag.toLowerCase())
-                        );
-                        const displayTags = genreTags.length > 0 ? genreTags :
-                          extractGenreTagsFromContent(hasProfiles ? profile.content : null, hasProfiles ? profile.name : profile.title);
-
-                        return displayTags.slice(0, 2).map((tag: string, index: number) => (
-                          <Badge
-                            key={index}
-                            variant="outline"
-                            className="text-xs px-2 py-1 rounded-full font-medium"
-                            style={{ borderColor: profileColor, color: profileColor }}
-                          >
-                            {String(tag).toUpperCase()}
+                            PROFILE
                           </Badge>
-                        ));
-                      })()}
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span className="text-xs">
-                        {hasProfiles
-                          ? `${safeRenderText(profile.content?.duration) || '45m'} • ${safeRenderText(profile.content?.plays) || safeRenderText(profile.content?.play_count) || '1.2k'} plays`
-                          : `${profile.duration} • ${profile.plays} plays`
-                        }
-                      </span>
-                      <Link href={hasProfiles ? `/profiles/${profile.slug}` : '#'}>
-                        <Button
-                          size="sm"
-                          className="text-white text-xs px-3 py-1"
-                          style={{ backgroundColor: profileColor }}
-                        >
-                          Read More
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-                );
-              })}
+                          {profile.genre && (
+                            <span className="text-xs text-muted-foreground nts-text-caps">
+                              {profile.genre}
+                            </span>
+                          )}
+                        </div>
+                        <Link href={`/profiles/${profile.slug}`}>
+                          <h3 className="text-foreground font-bold text-base mb-2 leading-tight hover:text-primary transition-colors">
+                            {profile.title}
+                          </h3>
+                        </Link>
+                        {profile.subtitle && (
+                          <p className="text-muted-foreground text-sm mb-3 leading-relaxed line-clamp-3">
+                            {profile.subtitle}
+                          </p>
+                        )}
+                        {profile.tags && profile.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {profile.tags.slice(0, 2).map((tag: { label: string; slug: string }) => (
+                              <Badge
+                                key={tag.slug}
+                                variant="outline"
+                                className="text-xs px-2 py-1 rounded-full font-medium"
+                                style={{ borderColor: profileColor, color: profileColor }}
+                              >
+                                {tag.label.toUpperCase()}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex items-center justify-end text-sm text-muted-foreground">
+                          <Link href={`/profiles/${profile.slug}`}>
+                            <Button
+                              size="sm"
+                              className="text-white text-xs px-3 py-1"
+                              style={{ backgroundColor: profileColor }}
+                            >
+                              Read More
+                            </Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
     </div>
