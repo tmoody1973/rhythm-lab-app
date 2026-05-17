@@ -1,106 +1,37 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { storyblokComponents } from '@/components/storyblok/StoryblokComponents'
+import Link from 'next/link'
+import { Home, Radio, Music, Search, BookOpen } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 
-interface MobileNavData {
-  success: boolean
-  story?: any
-  message?: string
-  error?: string
-}
-
-// Dynamic renderer for Storyblok mobile navigation
-const renderMobileNavigation = (content: any) => {
-  const Component = storyblokComponents['mobile_navigation' as keyof typeof storyblokComponents]
-
-  if (!Component) {
-    console.warn(`Mobile navigation component not found in storyblokComponents`)
-    return null
-  }
-
-  console.log('Rendering mobile navigation with content:', content)
-  console.log('Menu items:', content.menu_items)
-
-  return <Component blok={content} />
-}
+const navItems = [
+  { label: 'Home', href: '/', icon: Home },
+  { label: 'Weekly Show', href: '/shows', icon: Radio },
+  { label: 'Profiles', href: '/profiles', icon: Music },
+  { label: 'Deep Dives', href: '/deep-dives', icon: BookOpen },
+  { label: 'Search', href: '/search', icon: Search },
+]
 
 export default function MobileNavigationWrapper() {
-  const [navData, setNavData] = useState<MobileNavData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const pathname = usePathname()
 
-  useEffect(() => {
-    const fetchNavData = async () => {
-      try {
-        const response = await fetch('/api/storyblok/mobile-nav')
-        const data = await response.json()
-        setNavData(data)
-
-        if (data.success) {
-          console.log('Mobile navigation loaded from Storyblok:', data.message)
-        } else {
-          console.error('Failed to load mobile navigation:', data.error)
-        }
-      } catch (error) {
-        console.error('Error fetching mobile navigation:', error)
-        setNavData({
-          success: false,
-          error: 'Failed to fetch mobile navigation content'
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchNavData()
-  }, [])
-
-  // Show fallback navigation if Storyblok data fails to load
-  if (loading || !navData?.success || !navData.story) {
-    // Fallback navigation with basic menu items
-    const fallbackContent = {
-      menu_items: [
-        {
-          _uid: 'home',
-          menu_label: 'Home',
-          menu_link: { url: '/' },
-          icon: { filename: 'home-icon.svg' }
-        },
-        {
-          _uid: 'shows',
-          menu_label: 'Weekly Show',
-          menu_link: { url: '/shows' },
-          icon: { filename: 'music-icon.svg' }
-        },
-        {
-          _uid: 'artists',
-          menu_label: 'Artist Profiles',
-          menu_link: { url: '/artists' },
-          icon: { filename: 'user-icon.svg' }
-        },
-        {
-          _uid: 'search',
-          menu_label: 'Deep Dives',
-          menu_link: { url: '/search' },
-          icon: { filename: 'search-icon.svg' }
-        },
-        {
-          _uid: 'blog',
-          menu_label: 'Blog',
-          menu_link: { url: '/blog' },
-          icon: { filename: 'chat-icon.svg' }
-        }
-      ]
-    }
-
-    if (loading) {
-      return null // Still loading, don't show anything yet
-    }
-
-    return renderMobileNavigation(fallbackContent)
-  }
-
-  const content = navData.story.content
-
-  return renderMobileNavigation(content)
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border flex md:hidden">
+      {navItems.map(({ label, href, icon: Icon }) => {
+        const active = pathname === href
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={`flex flex-col items-center justify-center flex-1 py-2 text-xs gap-1 transition-colors ${
+              active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Icon className="w-5 h-5" />
+            <span>{label}</span>
+          </Link>
+        )
+      })}
+    </nav>
+  )
 }
