@@ -1,11 +1,12 @@
 import { client } from '../client'
 import { imageUrlBuilder } from '../image'
+import { SANITY_PROJECT_ID, SANITY_DATASET } from '../config'
 
 describe('Sanity client', () => {
   it('has correct project config', () => {
     const config = client.config()
-    expect(config.projectId).toBe('b9cutvrc')
-    expect(config.dataset).toBe('production')
+    expect(config.projectId).toBe(SANITY_PROJECT_ID)
+    expect(config.dataset).toBe(SANITY_DATASET)
     expect(config.useCdn).toBe(true)
   })
 
