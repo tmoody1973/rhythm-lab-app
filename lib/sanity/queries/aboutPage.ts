@@ -11,6 +11,7 @@ export const ABOUT_PAGE_QUERY = defineQuery(`
 export const SITE_SETTINGS_QUERY = defineQuery(`
   *[_type == "siteSettings"][0] {
     siteTitle,
-    navItems
+    navItems,
+    mobileNavItems
   }
 `)

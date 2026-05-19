@@ -22,26 +22,45 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
 interface SiteSettingsResult {
   siteTitle?: string
   navItems?: NavItem[]
+  mobileNavItems?: NavItem[]
+}
+
+function validNavItems(items: unknown): NavItem[] | null {
+  if (!Array.isArray(items) || items.length === 0) return null
+  const valid = items.filter((item): item is NavItem =>
+    typeof item?.label === 'string' && typeof item?.href === 'string'
+  )
+  return valid.length > 0 ? valid : null
 }
 
 /**
- * Fetch navigation items from Sanity siteSettings singleton.
+ * Fetch desktop nav items from Sanity siteSettings.
  * Returns hardcoded defaults if Sanity has no items or the fetch fails.
  */
 export async function getNavItems(): Promise<NavItem[]> {
   try {
     const data = await client.fetch<SiteSettingsResult | null>(SITE_SETTINGS_QUERY)
-    const items = data?.navItems
-    if (Array.isArray(items) && items.length > 0) {
-      const valid = items.filter((item): item is NavItem =>
-        typeof item?.label === 'string' && typeof item?.href === 'string'
-      )
-      if (valid.length > 0) return valid
-    }
-    return DEFAULT_NAV_ITEMS
+    return validNavItems(data?.navItems) ?? DEFAULT_NAV_ITEMS
   } catch (err) {
     console.error('Failed to fetch nav items from Sanity:', err)
     return DEFAULT_NAV_ITEMS
+  }
+}
+
+/**
+ * Fetch curated mobile nav items (max 5) from Sanity siteSettings.
+ * Falls back to first 5 of desktop navItems if mobileNavItems is empty.
+ */
+export async function getMobileNavItems(): Promise<NavItem[]> {
+  try {
+    const data = await client.fetch<SiteSettingsResult | null>(SITE_SETTINGS_QUERY)
+    const mobile = validNavItems(data?.mobileNavItems)
+    if (mobile) return mobile.slice(0, 5)
+    const desktop = validNavItems(data?.navItems) ?? DEFAULT_NAV_ITEMS
+    return desktop.slice(0, 5)
+  } catch (err) {
+    console.error('Failed to fetch mobile nav items from Sanity:', err)
+    return DEFAULT_NAV_ITEMS.slice(0, 5)
   }
 }
 
