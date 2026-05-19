@@ -288,57 +288,46 @@ export function ArchiveImport() {
       return
     }
 
-    // Get the database UUID for this show
-    const showId = importedShows.get(show.key)
-    if (!showId) {
-      console.error('Show not imported yet - cannot update playlist')
-      return
-    }
-
     setIsSavingPlaylist(true)
 
+    // Parse the tracklist first — used by both Supabase and Sanity
+    const parsed = parsePlaylistText(playlistText)
+    const tracklist = parsed.tracks
+      .filter((t: any) => t.artist && t.track)
+      .map((t: any) => ({
+        startTime: 0,
+        artistName: String(t.artist ?? ''),
+        trackName: String(t.track ?? ''),
+      }))
+
     try {
-      // Use the sync endpoint to update the show with playlist data
-      const updateData = {
-        show_id: showId,
-        playlist_text: playlistText
+      // Always push to Sanity (only needs show.url, works regardless of session state)
+      if (tracklist.length > 0) {
+        fetch('/api/episodes/update-tracklist', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mixcloudUrl: show.url, tracklist }),
+        }).catch(err => console.warn('Failed to update Sanity tracklist:', err))
       }
 
-      const response = await fetch('/api/mixcloud/sync', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData)
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        setEditingPlaylist(null)
-        setPlaylistText('')
-
-        // Also push tracklist to Sanity episode (fire-and-forget)
-        const parsed = parsePlaylistText(playlistText)
-        if (parsed.tracks.length > 0) {
-          const tracklist = parsed.tracks
-            .filter((t: any) => t.artist && t.track)
-            .map((t: any) => ({
-              startTime: 0, // text-based playlists have no timestamps
-              artistName: String(t.artist ?? ''),
-              trackName: String(t.track ?? ''),
-            }))
-          fetch('/api/episodes/update-tracklist', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mixcloudUrl: show.url, tracklist }),
-          }).catch(err => console.warn('Failed to update Sanity tracklist:', err))
+      // Also sync to Supabase if we have the show ID from this session
+      const showId = importedShows.get(show.key)
+      if (showId) {
+        const response = await fetch('/api/mixcloud/sync', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ show_id: showId, playlist_text: playlistText }),
+        })
+        const result = await response.json()
+        if (!result.success) {
+          console.error('Failed to sync playlist to Supabase:', result.message)
         }
-      } else {
-        console.error('Failed to update playlist:', result.message)
       }
+
+      setEditingPlaylist(null)
+      setPlaylistText('')
     } catch (error) {
-      console.error('Error updating playlist:', error)
+      console.error('Error saving playlist:', error)
     } finally {
       setIsSavingPlaylist(false)
     }
