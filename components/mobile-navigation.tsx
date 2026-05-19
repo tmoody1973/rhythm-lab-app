@@ -46,6 +46,7 @@ export function MobileNavigation({ navItems }: MobileNavigationProps) {
           <Link
             key={item.href}
             href={item.href}
+            aria-current={active ? 'page' : undefined}
             className={`flex flex-col items-center justify-center flex-1 py-2 text-xs gap-1 transition-colors ${
               active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
             }`}
