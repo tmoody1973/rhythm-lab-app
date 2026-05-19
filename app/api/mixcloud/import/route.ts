@@ -95,11 +95,34 @@ const handler = withAdminAuth(async (request: NextRequest): Promise<NextResponse
       .single()
 
     if (existingShow) {
-      return NextResponse.json({
-        success: false,
-        message: `Show already exists: "${existingShow.title}". Use the edit feature to update it.`,
-        show_id: existingShow.id,
-      }, { status: 409 })
+      // Show already in Supabase — still try to create the Sanity episode in case it wasn't made
+      try {
+        const mixcloudKey = body.mixcloud_url.startsWith('https://www.mixcloud.com')
+          ? body.mixcloud_url.replace('https://www.mixcloud.com', '')
+          : body.mixcloud_url
+        const { upsertEpisode } = await import('@/lib/sanity/episodeHelpers')
+        const episodeResult = await upsertEpisode({
+          mixcloudKey,
+          title: body.title,
+          date: body.date,
+          duration: body.duration,
+          coverImageUrl: body.cover_image,
+          tracklist: [],
+        })
+        return NextResponse.json({
+          success: true,
+          message: `Show already existed in database. Sanity episode ${episodeResult.created ? 'created' : 'updated'}: /episodes/${episodeResult.slug}`,
+          show_id: existingShow.id,
+          sanity_episode_id: episodeResult.sanityId,
+          sanity_slug: episodeResult.slug,
+        }, { status: 200 })
+      } catch {
+        return NextResponse.json({
+          success: false,
+          message: `Show already exists: "${existingShow.title}". Use the edit feature to update it.`,
+          show_id: existingShow.id,
+        }, { status: 409 })
+      }
     }
 
     // 1. Insert show into Supabase
