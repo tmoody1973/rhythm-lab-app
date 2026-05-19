@@ -185,11 +185,11 @@ const handler = withAdminAuth(async (request: NextRequest): Promise<NextResponse
 
     try {
       const tracklist: TracklistItem[] = parseResult.tracks
-        .filter((t: any) => t.artist && t.title)
+        .filter((t: any) => t.artist && t.track)
         .map((t: any) => ({
-          startTime: t.start_time ?? 0,
+          startTime: 0, // text-based playlists have no timestamps
           artistName: String(t.artist ?? ''),
-          trackName: String(t.title ?? ''),
+          trackName: String(t.track ?? ''),
         }))
 
       // Extract mixcloudKey from URL (remove https://www.mixcloud.com prefix)
