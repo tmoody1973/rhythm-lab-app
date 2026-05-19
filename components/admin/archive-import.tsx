@@ -46,6 +46,13 @@ interface MixcloudShow {
     name: string
     url: string
   }>
+  sections?: Array<{
+    start_time: number
+    track?: {
+      name: string
+      artist: { name: string }
+    }
+  }>
 }
 
 interface ArchiveResponse {
@@ -178,7 +185,9 @@ export function ArchiveImport() {
         mixcloud_url: fullShow.url,
         embed_code: `<iframe width="100%" height="60" src="https://www.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&feed=%2F${fullShow.key.replace('/', '%2F')}%2F" frameborder="0"></iframe>`,
         cover_image: fullShow.picture.large || fullShow.picture.medium,
-        playlist_text: '', // Archive imports typically won't have playlist data
+        playlist_text: '', // Tracklist comes from sections[] below
+        duration: fullShow.audio_length,
+        sections: fullShow.sections || [],
         slug: `${fullShow.user.username}-${fullShow.slug}`,
         status: 'published'
       }
@@ -308,7 +317,23 @@ export function ArchiveImport() {
       if (result.success) {
         setEditingPlaylist(null)
         setPlaylistText('')
-        // Could show success message here
+
+        // Also push tracklist to Sanity episode (fire-and-forget)
+        const parsed = parsePlaylistText(playlistText)
+        if (parsed.tracks.length > 0) {
+          const tracklist = parsed.tracks
+            .filter((t: any) => t.artist && t.title)
+            .map((t: any) => ({
+              startTime: t.start_time ?? 0,
+              artistName: String(t.artist ?? ''),
+              trackName: String(t.title ?? ''),
+            }))
+          fetch('/api/episodes/update-tracklist', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mixcloudUrl: show.url, tracklist }),
+          }).catch(err => console.warn('Failed to update Sanity tracklist:', err))
+        }
       } else {
         console.error('Failed to update playlist:', result.message)
       }

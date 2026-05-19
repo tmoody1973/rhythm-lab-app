@@ -80,9 +80,9 @@ export async function upsertEpisode(input: UpsertEpisodeInput): Promise<UpsertEp
   }
 
   const docFields: Record<string, unknown> = {
-    title: input.title,
-    slug: { _type: 'slug', current: slug },
     mixcloudKey: input.mixcloudKey,
+    // Only include title/slug if non-empty — prevents overwriting existing title on tracklist-only patches
+    ...(input.title ? { title: input.title, slug: { _type: 'slug', current: slug } } : {}),
     ...(input.date ? { date: input.date } : {}),
     ...(input.duration !== undefined ? { duration: input.duration } : {}),
     ...(featuredImageRef ? { featuredImage: featuredImageRef } : {}),
