@@ -50,8 +50,9 @@ export async function POST(request: NextRequest) {
     revalidatePath('/about')
     revalidated.push('/about')
   } else if (_type === 'siteSettings') {
-    revalidatePath('/')
-    revalidated.push('/')
+    // Nav renders on every page — revalidate the entire layout tree
+    revalidatePath('/', 'layout')
+    revalidated.push('/* (layout)')
   } else if (_type === 'showOverride') {
     revalidatePath('/shows')
     revalidated.push('/shows')
